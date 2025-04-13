@@ -1,0 +1,93 @@
+# Project Tetris aka Gridfall
+
+## Meilensteinplan: Tetris-Spiel mit TypeScript und Phaser
+
+### Phase 1: Projektsetup und Grundlagen (Woche 1-2)
+
+Entwicklungsumgebung einrichten:
+  ☐ TypeScript und Abhängigkeiten installieren @started(25-04-13 20:06)
+  ☐ Phaser Framework einbinden @started(25-04-13 20:06)
+  ☐ Lokalen HTTP-Server konfigurieren
+  ☐ Build-Prozess einrichten (Webpack/Parcel)
+Projektstruktur erstellen:
+  ☐ Asset-Verzeichnisse anlegen
+  ☐ TypeScript-Konfiguration optimieren
+  ☐ Git-Repository initialisieren (empfohlen)
+Basis-Spielgerüst entwickeln:
+  ☐ Phaser Game-Instanz erstellen
+  ☐ Grundlegende Szenen definieren (Hauptmenü, Spielbildschirm, Game Over)
+  ☐ Einfache Navigation zwischen Szenen implementieren
+
+### Phase 2: Spielmechaniken implementieren (Woche 3-4)
+
+Tetromino-Grundlagen:
+  ☐ Tetromino-Klassen und -Typen definieren
+  ☐ Raster für das Spielfeld erstellen
+  ☐ Grundlegende Bewegungsfunktionen (links, rechts, rotieren)
+Spiellogik:
+  ☐ Kollisionserkennung implementieren
+  ☐ Tetrominoes fallen lassen
+  ☐ Zeilen vervollständigen und entfernen
+  ☐ Spieler-Input verarbeiten (Tastatur)
+Spielregeln:
+  ☐ Punktesystem implementieren
+  ☐ Level- und Geschwindigkeitssteigerung
+  ☐ Game Over-Bedingungen festlegen
+
+### Phase 3: Grafik und Sound (Woche 5-6)
+
+Grafisches Design:
+  ☐ Sprites für Tetrominos erstellen/integrieren
+  ☐ Spielfeldhintergrund gestalten
+  ☐ UI-Elemente entwerfen (Punkteanzeige, Next-Tetromino, etc.)
+Animation und Effekte:
+  ☐ Zeilen-Entfernungs-Animation
+  ☐ Level-Up-Effekte
+  ☐ Game Over-Animation
+Sound:
+  ☐ Hintergrundmusik einbinden
+  ☐ Soundeffekte für Bewegung, Rotation, Platzierung
+  ☐ Spezielle Sounds für Tetris (4 Zeilen auf einmal)
+
+### Phase 4: Erweiterungen und Verfeinerung (Woche 7-8)
+
+Erweiterte Funktionen:
+  ☐ "Halten"-Funktion für Tetrominos
+  ☐ Vorschau der nächsten Tetrominos
+  ☐ Ghost-Piece für einfachere Platzierung
+Benutzererfahrung verbessern:
+  ☐ Einstellungsmenü (Sound, Steuerung)
+  ☐ Bestenliste implementieren
+  ☐ Tutorial/Hilfebildschirm
+Responsive Design:
+  ☐ Mobile Touch-Steuerung hinzufügen
+  ☐ Verschiedene Bildschirmgrößen unterstützen
+
+### Phase 5: Tests und Optimierung (Woche 9)
+
+Testing:
+  ☐ Spielmechaniken auf Bugs prüfen
+  ☐ Performance testen und optimieren
+  ☐ Cross-Browser-Kompatibilität sicherstellen
+Code-Qualität:
+  ☐ Code refaktorieren
+  ☐ TypeScript-Typen überprüfen und verbessern
+  ☐ Dokumentation vervollständigen
+
+### Phase 6: Bereitstellung (Woche 10)
+
+Finalisierung:
+  ☐ Build-Prozess für Produktion optimieren
+  ☐ Assets komprimieren
+  ☐ Letzter Feinschliff an UI und Spielerfahrung
+Deployment:
+  ☐ HTTP-Server für Produktion konfigurieren
+  ☐ Spiel auf lokalem Server bereitstellen
+  ☐ Optional: Deployment auf Webhost vorbereiten
+
+### Nächste Schritte und Erweiterungsmöglichkeiten
+
+☐ Multiplayer-Modus
+☐ Mehr Spielmodi (z.B. Zeitrennen, Marathon)
+☐ Anpassbare Tetromino-Skins
+☐ Achievements-System
