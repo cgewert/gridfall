@@ -15,7 +15,7 @@ Projektstruktur erstellen:
   ✔ Git-Repository initialisieren (empfohlen) @done(25-04-14 21:31)
 Basis-Spielgerüst entwickeln:
   ✔ Phaser Game-Instanz erstellen @done(25-04-14 21:31)
-  ☐ Grundlegende Szenen definieren (Hauptmenü, Spielbildschirm, Game Over)
+  ✔ Grundlegende Szenen definieren (Hauptmenü, Spielbildschirm, Game Over) @started(25-04-14 21:48) @done(25-04-14 22:29) @lasted(41m10s)
   ☐ Einfache Navigation zwischen Szenen implementieren
 
 ### Phase 2: Spielmechaniken implementieren (Woche 3-4)

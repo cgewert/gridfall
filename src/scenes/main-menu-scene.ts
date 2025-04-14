@@ -1,29 +1,32 @@
-import * as PHASER from "phaser";
+import { BaseScene } from "./base-scene";
 
-export class Scene extends PHASER.Scene {
+export class MainMenuScene extends BaseScene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
-    key: "scene",
+    key: "MainMenuScene",
   };
 
   private gameOver: boolean = false;
 
   constructor() {
-    super(Scene.CONFIG);
+    super(MainMenuScene.CONFIG);
   }
 
   /* Scene initialization logic. */
-  public init(data: any) {}
+  public init(data: unknown) {}
 
   public preload() {
     // Load scene assets here.
   }
 
   /*
-   * Create your game objects here.
    * @param data - Custom data provided to the scene.
    */
-  public create(data: any) {
-    // Create game objects here.
+  public create(data: unknown) {
+    this._main = this.cameras.main;
+    this._viewPortHalfHeight = this._main.height / 2;
+    this._viewPortHalfWidth = this._main.width / 2;
+    this._viewPortHeight = this._main.height;
+    this._viewPortWidth = this._main.width;
   }
 
   /**

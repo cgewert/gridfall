@@ -8,7 +8,7 @@
     "node": ">=0.22"
   },
   "scripts": {
-    "prebuild": "tsc -p ./tsconfig.json",
+    "prebuild": "tsc -p ./tsconfig.dev.json",
     "build": "webpack",
     "start": "webpack serve --live-reload",
     "test": "echo \"Error: no test specified\" && exit 1"

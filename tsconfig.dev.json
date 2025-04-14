@@ -9,11 +9,11 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,                   
-    "outDir": "./dist",                     
-    "rootDir": "./src",                     
+    "rootDir": "./src",
     "sourceMap": true,                      
     "resolveJsonModule": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "removeComments": false, // Set to true to remove comments in the output files
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
