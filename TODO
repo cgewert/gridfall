@@ -1,20 +1,20 @@
-# Project Tetris aka Gridfall
+# Project Gridfall
 
-## Meilensteinplan: Tetris-Spiel mit TypeScript und Phaser
+## Meilensteinplan: Stacking Spiel mit TypeScript und Phaser
 
 ### Phase 1: Projektsetup und Grundlagen (Woche 1-2)
 
 Entwicklungsumgebung einrichten:
-  ☐ TypeScript und Abhängigkeiten installieren @started(25-04-13 20:06)
-  ☐ Phaser Framework einbinden @started(25-04-13 20:06)
-  ☐ Lokalen HTTP-Server konfigurieren
-  ☐ Build-Prozess einrichten (Webpack/Parcel)
+  ✔ TypeScript und Abhängigkeiten installieren @started(25-04-13 20:06) @done(25-04-14 20:53) @lasted(1d47m20s)
+  ✔ Phaser Framework einbinden @started(25-04-13 20:06) @done(25-04-14 20:53) @lasted(1d47m24s)
+  ✔ Lokalen HTTP-Server konfigurieren @done(25-04-14 20:53)
+  ✔ Build-Prozess einrichten (Webpack/Parcel) @done(25-04-14 20:53)
 Projektstruktur erstellen:
-  ☐ Asset-Verzeichnisse anlegen
-  ☐ TypeScript-Konfiguration optimieren
-  ☐ Git-Repository initialisieren (empfohlen)
+  ✔ Asset-Verzeichnisse anlegen @done(25-04-14 20:55)
+  ✔ TypeScript-Konfiguration optimieren @done(25-04-14 21:31)
+  ✔ Git-Repository initialisieren (empfohlen) @done(25-04-14 21:31)
 Basis-Spielgerüst entwickeln:
-  ☐ Phaser Game-Instanz erstellen
+  ✔ Phaser Game-Instanz erstellen @done(25-04-14 21:31)
   ☐ Grundlegende Szenen definieren (Hauptmenü, Spielbildschirm, Game Over)
   ☐ Einfache Navigation zwischen Szenen implementieren
 

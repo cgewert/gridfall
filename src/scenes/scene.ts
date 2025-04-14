@@ -5,7 +5,7 @@ export class Scene extends PHASER.Scene {
     key: "scene",
   };
 
-  private gameOver: boolean;
+  private gameOver: boolean = false;
 
   constructor() {
     super(Scene.CONFIG);
