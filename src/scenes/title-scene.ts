@@ -1,3 +1,4 @@
+import { Soundtrack } from "../audio";
 import { BaseScene } from "./base-scene";
 
 export class TitleScene extends BaseScene {
@@ -17,7 +18,7 @@ export class TitleScene extends BaseScene {
   public init(data: unknown) {}
 
   public preload() {
-    this.load.audio("title_music", "assets/audio/music/stack-to-win.mp3");
+    this.load.audio("title_music", Soundtrack.track1);
     this.load.image("title_logo", "assets/gfx/Gridfall.png");
   }
 
@@ -89,7 +90,7 @@ export class TitleScene extends BaseScene {
   private addStartInputListener(): void {
     if (this.input?.keyboard) {
       this.input.keyboard.once("keydown", () => {
-        // this.music.stop(); // Musik beenden
+        this.music.stop(); // Musik beenden
         this.scene.start("MainMenuScene");
       });
     } else {

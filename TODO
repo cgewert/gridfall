@@ -16,19 +16,19 @@ Projektstruktur erstellen:
 Basis-Spielgerüst entwickeln:
   ✔ Phaser Game-Instanz erstellen @done(25-04-14 21:31)
   ✔ Grundlegende Szenen definieren (Hauptmenü, Spielbildschirm, Game Over) @started(25-04-14 21:48) @done(25-04-14 22:29) @lasted(41m10s)
-  ☐ Einfache Navigation zwischen Szenen implementieren
+  ✔ Einfache Navigation zwischen Szenen implementieren @started(25-04-15 18:01) @done(25-04-15 18:38) @lasted(37m13s)
 
 ### Phase 2: Spielmechaniken implementieren (Woche 3-4)
 
 Tetromino-Grundlagen:
-  ☐ Tetromino-Klassen und -Typen definieren
-  ☐ Raster für das Spielfeld erstellen
-  ☐ Grundlegende Bewegungsfunktionen (links, rechts, rotieren)
+  ✔ Tetromino-Klassen und -Typen definieren @done(25-04-15 21:25)
+  ✔ Raster für das Spielfeld erstellen @done(25-04-15 18:38)
+  ✔ Grundlegende Bewegungsfunktionen (links, rechts, rotieren) @started(25-04-15 20:49) @done(25-04-15 21:25) @lasted(36m21s)
 Spiellogik:
-  ☐ Kollisionserkennung implementieren
-  ☐ Tetrominoes fallen lassen
-  ☐ Zeilen vervollständigen und entfernen
-  ☐ Spieler-Input verarbeiten (Tastatur)
+  ☐ Kollisionserkennung implementieren @started(25-04-15 21:25)
+  ✔ Tetrominoes fallen lassen @done(25-04-15 21:25)
+  ☐ Zeilen vervollständigen und entfernen @started(25-04-15 22:57)
+  ☐ Spieler-Input verarbeiten (Tastatur) @started(25-04-15 21:26)
 Spielregeln:
   ☐ Punktesystem implementieren
   ☐ Level- und Geschwindigkeitssteigerung

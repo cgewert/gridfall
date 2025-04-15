@@ -1,11 +1,13 @@
 import { BaseScene } from "./base-scene";
+import * as Phaser from "phaser";
 
 export class MainMenuScene extends BaseScene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
     key: "MainMenuScene",
   };
 
-  private gameOver: boolean = false;
+  private menuText!: Phaser.GameObjects.Text;
+  private newGameText!: Phaser.GameObjects.Text;
 
   constructor() {
     super(MainMenuScene.CONFIG);
@@ -27,6 +29,10 @@ export class MainMenuScene extends BaseScene {
     this._viewPortHalfWidth = this._main.width / 2;
     this._viewPortHeight = this._main.height;
     this._viewPortWidth = this._main.width;
+
+    this.addMenuTitle();
+    this.addNewGameOption();
+    this.setupInput();
   }
 
   /**
@@ -36,5 +42,41 @@ export class MainMenuScene extends BaseScene {
    */
   public update(time: number, delta: number) {
     // Update the game logic here.
+  }
+
+  private addMenuTitle(): void {
+    this.menuText = this.add
+      .text(
+        this._viewPortHalfWidth,
+        this._viewPortHalfHeight - 100,
+        "MAIN MENU",
+        {
+          fontFamily: "Arial",
+          fontSize: "48px",
+          color: "#ffffff",
+        }
+      )
+      .setOrigin(0.5);
+  }
+
+  private addNewGameOption(): void {
+    this.newGameText = this.add
+      .text(this._viewPortHalfWidth, this._viewPortHalfHeight, "> NEW GAME", {
+        fontFamily: "Arial",
+        fontSize: "32px",
+        color: "#00ff00",
+      })
+      .setOrigin(0.5);
+  }
+
+  private setupInput(): void {
+    if (this.input?.keyboard) {
+      this.input.keyboard.once("keydown-ENTER", () => {
+        // this.music.stop(); // Musik beenden
+        this.scene.start("GameScene");
+      });
+    } else {
+      throw new Error("Keyboard input not available.");
+    }
   }
 }

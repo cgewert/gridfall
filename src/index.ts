@@ -1,5 +1,7 @@
 import * as PHASER from "phaser";
 import { TitleScene } from "./scenes/title-scene";
+import { MainMenuScene } from "./scenes/main-menu-scene";
+import { GameScene } from "./scenes/game-scene";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -22,7 +24,7 @@ export class Game extends PHASER.Game {
       },
     },
     backgroundColor: "#000000",
-    scene: [TitleScene],
+    scene: [TitleScene, MainMenuScene, GameScene],
     audio: {
       disableWebAudio: false,
     },
