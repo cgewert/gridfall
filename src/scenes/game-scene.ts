@@ -102,6 +102,8 @@ export class GameScene extends BaseScene {
     key: "GameScene",
   };
   private currentTetrimino!: Phaser.GameObjects.Group;
+  private ghostGroup!: Phaser.GameObjects.Group;
+  private previewGroup!: Phaser.GameObjects.Group;
   private lockedBlocksGroup!: Phaser.GameObjects.Group;
   private currentShape!: TetriminoShape;
   private currentPosition = { x: 3, y: 0 }; // Startposition
@@ -109,10 +111,12 @@ export class GameScene extends BaseScene {
   private currentTetriminoType = "T"; // Start mit T-Tetrimino
   private fallInterval = 1000; // 1 Sekunde pro Block
   private lastFallTime = 0;
+  private nextQueue: string[] = [];
 
   private music!: Phaser.Sound.BaseSound;
 
   private gameOver: boolean = false;
+  private static readonly previewSize = 5; // Größe der Tetrimino Vorschau
   private static readonly emptyGridValue = "Q"; // Platzhalter für leere Felder
   private static readonly gridWidth = 10;
   private static readonly gridHeight = 20;
@@ -132,7 +136,10 @@ export class GameScene extends BaseScene {
   }
 
   /* Scene initialization logic. */
-  public init(data: unknown) {}
+  public init(data: unknown) {
+    this.gameOver = false;
+    this.generateNextQueue();
+  }
 
   public preload() {
     this.load.audio("track2", Soundtrack.track2);
@@ -151,6 +158,8 @@ export class GameScene extends BaseScene {
     this.gridOffsetX = this._viewPortHalfWidth - GameScene.totalGridWidth / 2;
     this.gridOffsetY = this._viewPortHalfHeight - GameScene.totalGridHeight / 2;
 
+    this.generateNextQueue();
+    this.renderNextQueue();
     this.lockedBlocksGroup = this.add.group();
 
     this.music = this.sound.add("track2", {
@@ -191,6 +200,15 @@ export class GameScene extends BaseScene {
     }
   }
 
+  private generateNextQueue(): void {
+    const types = Object.keys(TETRIMINOS);
+
+    while (this.nextQueue.length < GameScene.previewSize + 1) {
+      const shuffled = Phaser.Utils.Array.Shuffle(types);
+      this.nextQueue.push(...shuffled);
+    }
+  }
+
   private initializeGrid(): void {
     this.grid = Array.from({ length: GameScene.gridHeight }, () =>
       Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
@@ -224,13 +242,15 @@ export class GameScene extends BaseScene {
   }
 
   private spawnTetrimino(): void {
-    const types = Object.keys(TETRIMINOS);
-    this.currentTetriminoType = types[Math.floor(Math.random() * types.length)];
+    this.generateNextQueue();
+    this.currentTetriminoType = this.nextQueue.shift()!; // Hole den nächsten Tetrimino aus der Warteschlange
     this.currentRotationIndex = 0;
     this.currentShape = TETRIMINOS[this.currentTetriminoType][0];
     this.currentPosition = { x: 3, y: 0 };
-    this.currentTetrimino = this.add.group();
 
+    this.renderNextQueue(); // aktualisiere die Vorschau
+
+    this.currentTetrimino = this.add.group();
     this.currentShape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
@@ -254,28 +274,86 @@ export class GameScene extends BaseScene {
         }
       });
     });
+
+    this.updateGhost();
+
+    if (this.checkCollision(0, 0)) {
+      this.handleGameOver(); // ⛔️ Spiel beenden
+      return;
+    }
+  }
+
+  private renderNextQueue(): void {
+    this.previewGroup?.clear(true, true);
+    this.previewGroup = this.add.group();
+
+    const startX =
+      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 40;
+    const startY = this.gridOffsetY;
+
+    this.nextQueue.slice(0, GameScene.previewSize).forEach((type, index) => {
+      const shape = TETRIMINOS[type][0];
+      shape.forEach((row, y) => {
+        row.forEach((cell, x) => {
+          if (cell) {
+            const block = this.add
+              .rectangle(
+                startX + x * (GameScene.blockSize / 2),
+                startY +
+                  index * 4 * (GameScene.blockSize / 2) +
+                  y * (GameScene.blockSize / 2),
+                GameScene.blockSize / 2,
+                GameScene.blockSize / 2,
+                COLORS[type]
+              )
+              .setOrigin(0);
+
+            this.previewGroup.add(block);
+          }
+        });
+      });
+    });
   }
 
   private moveTetrimino(direction: number): void {
+    if (this.checkCollision(direction, 0)) return;
+
     this.currentPosition.x += direction;
 
-    let blockIndex = 0;
+    this.updateTetriminoPosition();
+    this.updateGhost();
+  }
+
+  private updateGhost(): void {
+    // Clear previous ghost
+    this.ghostGroup?.clear(true, true);
+    this.ghostGroup = this.add.group();
+
+    let ghostY = this.currentPosition.y;
+    while (!this.checkCollision(0, ghostY - this.currentPosition.y + 1)) {
+      ghostY++;
+    }
+
     this.currentShape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
-          const blockX =
+          const posX =
             (this.currentPosition.x + x) * GameScene.blockSize +
             this.gridOffsetX;
-          const blockY =
-            (this.currentPosition.y + y) * GameScene.blockSize +
-            this.gridOffsetY;
+          const posY = (ghostY + y) * GameScene.blockSize + this.gridOffsetY;
 
-          const block = this.currentTetrimino.getChildren()[
-            blockIndex
-          ] as Phaser.GameObjects.Rectangle;
-          block.setPosition(blockX, blockY);
+          const block = this.add
+            .rectangle(
+              posX,
+              posY,
+              GameScene.blockSize,
+              GameScene.blockSize,
+              COLORS[this.currentTetriminoType]
+            )
+            .setAlpha(0.2)
+            .setOrigin(0); // Transparente Darstellung
 
-          blockIndex++;
+          this.ghostGroup.add(block);
         }
       });
     });
@@ -315,6 +393,8 @@ export class GameScene extends BaseScene {
         }
       });
     });
+
+    this.updateGhost();
   }
 
   private softDrop(): void {
@@ -349,7 +429,6 @@ export class GameScene extends BaseScene {
           const gridY = posY + y;
 
           // Prüfe Grid-Grenzen
-          console.log("Checking", { gridX, gridY });
           if (
             gridX < 0 ||
             gridX >= GameScene.gridWidth ||
@@ -397,11 +476,14 @@ export class GameScene extends BaseScene {
         }
       });
     });
-
     this.currentTetrimino.clear(true, true);
-    this.drawLockedBlocks();
     this.checkAndClearLines();
+    this.drawLockedBlocks();
     this.spawnTetrimino();
+    // ⏱️ 100ms Delay zum Spawnen (wirkt natürlicher), macht aber wahrscheinlich Probleme bei der Update Methode
+    // this.time.delayedCall(100, () => {
+    //   this.spawnTetrimino();
+    // });
   }
 
   private drawLockedBlocks(): void {
@@ -430,7 +512,7 @@ export class GameScene extends BaseScene {
     for (let y = GameScene.gridHeight - 1; y >= 0; y--) {
       if (this.grid[y].every((cell) => cell !== GameScene.emptyGridValue)) {
         this.clearLine(y);
-        y++; // erneuten Check der Zeile nachrückend
+        y++; // Zeile erneut prüfen, da alles nachgerutscht ist
       }
     }
   }
@@ -442,6 +524,12 @@ export class GameScene extends BaseScene {
     );
 
     // Später noch Grafik aktualisieren (für jetzt reicht erstmal die Grid-Logik)
+  }
+
+  private handleGameOver(): void {
+    this.gameOver = true;
+    this.music.stop(); // Musik stoppen
+    this.scene.start("GameOverScene"); // oder zeig ein Overlay etc.
   }
 
   /**

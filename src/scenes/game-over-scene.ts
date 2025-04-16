@@ -5,8 +5,6 @@ export class GameOverScene extends BaseScene {
     key: "GameOverScene",
   };
 
-  private gameOver: boolean = false;
-
   constructor() {
     super(GameOverScene.CONFIG);
   }
@@ -27,6 +25,38 @@ export class GameOverScene extends BaseScene {
     this._viewPortHalfWidth = this._main.width / 2;
     this._viewPortHeight = this._main.height;
     this._viewPortWidth = this._main.width;
+
+    this.add
+      .text(this._viewPortHalfWidth, this._viewPortHalfHeight, "Game Over", {
+        fontSize: "32px",
+        color: "#fff",
+      })
+      .setOrigin(0.5, 0.5);
+
+    const restartButton = this.add
+      .text(this._viewPortHalfWidth, this._viewPortHalfHeight + 50, "Restart", {
+        fontSize: "24px",
+        color: "#fff",
+      })
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+      .on("pointerdown", () => {
+        this.scene.start("GameScene");
+      });
+
+    restartButton.on("pointerover", () => {
+      restartButton.setStyle({ color: "#ff0" });
+    });
+
+    restartButton.on("pointerout", () => {
+      restartButton.setStyle({ color: "#fff" });
+    });
+
+    if (this.input.keyboard) {
+      this.input.keyboard.on("keydown-ENTER", () => {
+        this.scene.start("GameScene");
+      });
+    }
   }
 
   /**
