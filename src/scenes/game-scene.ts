@@ -112,6 +112,13 @@ export class GameScene extends BaseScene {
   private fallInterval = 1000; // 1 Sekunde pro Block
   private lastFallTime = 0;
   private nextQueue: string[] = [];
+  private holdType: string | null = null;
+  private holdUsedThisTurn: boolean = false;
+  private holdGroup!: Phaser.GameObjects.Group;
+  private holdBox!: Phaser.GameObjects.Rectangle;
+  private previewBox!: Phaser.GameObjects.Rectangle;
+  private linesCleared: number = 0;
+  private linesText!: Phaser.GameObjects.Text;
 
   private music!: Phaser.Sound.BaseSound;
 
@@ -138,11 +145,51 @@ export class GameScene extends BaseScene {
   /* Scene initialization logic. */
   public init(data: unknown) {
     this.gameOver = false;
+    this.initializeGrid();
     this.generateNextQueue();
   }
 
   public preload() {
     this.load.audio("track2", Soundtrack.track2);
+  }
+
+  private createHoldBox(): void {
+    const boxX = this.gridOffsetX - GameScene.blockSize * 4;
+    const boxY = this.gridOffsetY;
+    const boxWidth = GameScene.blockSize * 3;
+    const boxHeight = GameScene.blockSize * 3;
+
+    this.holdBox = this.add
+      .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
+      .setOrigin(0)
+      .setStrokeStyle(2, 0xffffff, 0.5); // weißer Rahmen mit 50% Deckkraft
+    this.add
+      .text(boxX, boxY - 24, "HOLD", {
+        fontSize: "16px",
+        color: "#ffffff",
+        fontFamily: "monospace",
+      })
+      .setOrigin(0, 0);
+  }
+
+  private createPreviewBox(): void {
+    const boxX =
+      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32;
+    const boxY = this.gridOffsetY;
+    const boxWidth = GameScene.blockSize * 4;
+    const boxHeight = GameScene.blockSize * 10; // genug für 5 Vorschauen
+    this.add
+      .text(boxX, boxY - 24, "NEXT", {
+        fontSize: "16px",
+        color: "#ffffff",
+        fontFamily: "monospace",
+      })
+      .setOrigin(0, 0);
+
+    this.previewBox = this.add
+      .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
+      .setOrigin(0)
+      .setStrokeStyle(2, 0xffffff, 0.5); // Weißer Rahmen, halbtransparent
   }
 
   /*
@@ -159,6 +206,10 @@ export class GameScene extends BaseScene {
     this.gridOffsetY = this._viewPortHalfHeight - GameScene.totalGridHeight / 2;
 
     this.generateNextQueue();
+    this.previewGroup = this.add.group();
+    this.currentTetrimino = this.add.group();
+    this.ghostGroup = this.add.group();
+    this.holdGroup = this.add.group();
     this.renderNextQueue();
     this.lockedBlocksGroup = this.add.group();
 
@@ -168,9 +219,22 @@ export class GameScene extends BaseScene {
     });
     this.music.play();
 
+    this.linesText = this.add.text(
+      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
+      this.gridOffsetY + GameScene.blockSize * 11,
+      "LINES: 0",
+      {
+        fontSize: "24px",
+        color: "#ffffff",
+        fontFamily: "monospace",
+      }
+    );
+
     this.initializeGrid();
     this.createGridGraphics();
     this.spawnTetrimino();
+    this.createHoldBox();
+    this.createPreviewBox();
     if (this.input?.keyboard) {
       this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
         switch (event.key.toLowerCase()) {
@@ -193,7 +257,7 @@ export class GameScene extends BaseScene {
             this.hardDrop();
             break;
           case " ":
-            // this.holdTetrimino();
+            this.holdTetrimino();
             break;
         }
       });
@@ -241,16 +305,24 @@ export class GameScene extends BaseScene {
     }
   }
 
-  private spawnTetrimino(): void {
-    this.generateNextQueue();
-    this.currentTetriminoType = this.nextQueue.shift()!; // Hole den nächsten Tetrimino aus der Warteschlange
+  private spawnHeldTetrimino(): void {
     this.currentRotationIndex = 0;
     this.currentShape = TETRIMINOS[this.currentTetriminoType][0];
     this.currentPosition = { x: 3, y: 0 };
 
-    this.renderNextQueue(); // aktualisiere die Vorschau
+    if (this.checkCollision(0, 0)) {
+      this.handleGameOver();
+      return;
+    }
 
-    this.currentTetrimino = this.add.group();
+    this.createTetriminoBlocks();
+    this.updateTetriminoPosition();
+    this.updateGhost();
+  }
+
+  private createTetriminoBlocks(): void {
+    this.currentTetrimino?.clear(true, true);
+
     this.currentShape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
@@ -274,7 +346,17 @@ export class GameScene extends BaseScene {
         }
       });
     });
+  }
 
+  private spawnTetrimino(): void {
+    this.generateNextQueue();
+    this.currentTetriminoType = this.nextQueue.shift()!; // Hole den nächsten Tetrimino aus der Warteschlange
+    this.currentRotationIndex = 0;
+    this.currentShape = TETRIMINOS[this.currentTetriminoType][0];
+    this.currentPosition = { x: 3, y: 0 };
+
+    this.renderNextQueue(); // aktualisiere die Vorschau
+    this.createTetriminoBlocks(); // Erstelle die Blöcke für den aktuellen Tetrimino
     this.updateGhost();
 
     if (this.checkCollision(0, 0)) {
@@ -283,25 +365,99 @@ export class GameScene extends BaseScene {
     }
   }
 
+  private renderHold(): void {
+    this.holdGroup?.clear(true, true);
+    this.holdGroup = this.add.group();
+
+    if (!this.holdType) return;
+
+    const shape = TETRIMINOS[this.holdType][0];
+
+    const cols = shape[0].length;
+    const rows = shape.length;
+
+    // Anzahl belegter Zellen berechnen
+    const offsetX =
+      (GameScene.blockSize * 3 - cols * (GameScene.blockSize / 2)) / 2;
+    const offsetY =
+      (GameScene.blockSize * 3 - rows * (GameScene.blockSize / 2)) / 2;
+
+    const startX = this.gridOffsetX - GameScene.blockSize * 4 + offsetX;
+    const startY = this.gridOffsetY + offsetY;
+
+    shape.forEach((row, y) => {
+      row.forEach((cell, x) => {
+        if (cell) {
+          const block = this.add
+            .rectangle(
+              startX + x * (GameScene.blockSize / 2),
+              startY + y * (GameScene.blockSize / 2),
+              GameScene.blockSize / 2,
+              GameScene.blockSize / 2,
+              COLORS[this.holdType!]
+            )
+            .setOrigin(0);
+
+          this.holdGroup.add(block);
+        }
+      });
+    });
+  }
+
+  private holdTetrimino(): void {
+    if (this.holdUsedThisTurn) return;
+
+    this.holdUsedThisTurn = true;
+    this.currentTetrimino?.clear(true, true);
+
+    if (this.holdType) {
+      const temp = this.currentTetriminoType;
+      this.currentTetriminoType = this.holdType;
+      this.holdType = temp;
+      this.spawnHeldTetrimino();
+    } else {
+      this.holdType = this.currentTetriminoType;
+      this.spawnTetrimino();
+    }
+
+    this.renderHold();
+  }
+
   private renderNextQueue(): void {
     this.previewGroup?.clear(true, true);
-    this.previewGroup = this.add.group();
 
+    const previewBoxHeight = GameScene.blockSize * 10;
+    const tetriminoHeight = GameScene.blockSize * 2;
+    const previewContentHeight = GameScene.previewSize * tetriminoHeight;
     const startX =
-      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 40;
-    const startY = this.gridOffsetY;
+      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32;
+
+    const adjustedStartY =
+      this.gridOffsetY +
+      (previewBoxHeight - previewContentHeight) / 2 -
+      GameScene.blockSize;
 
     this.nextQueue.slice(0, GameScene.previewSize).forEach((type, index) => {
       const shape = TETRIMINOS[type][0];
+      const cols = shape[0].length;
+      const rows = shape.length;
+
+      const offsetX =
+        (GameScene.blockSize * 4 - cols * (GameScene.blockSize / 2)) / 2;
+      const offsetY =
+        (GameScene.blockSize * 4 - rows * (GameScene.blockSize / 2)) / 2;
+
+      const previewX = startX + offsetX;
+      const previewY =
+        adjustedStartY + index * GameScene.blockSize * 2 + offsetY;
+
       shape.forEach((row, y) => {
         row.forEach((cell, x) => {
           if (cell) {
             const block = this.add
               .rectangle(
-                startX + x * (GameScene.blockSize / 2),
-                startY +
-                  index * 4 * (GameScene.blockSize / 2) +
-                  y * (GameScene.blockSize / 2),
+                previewX + x * (GameScene.blockSize / 2),
+                previewY + y * (GameScene.blockSize / 2),
                 GameScene.blockSize / 2,
                 GameScene.blockSize / 2,
                 COLORS[type]
@@ -360,41 +516,31 @@ export class GameScene extends BaseScene {
   }
 
   private rotateTetrimino(direction: number): void {
-    const shapes = TETRIMINOS[this.currentTetriminoType];
-    this.currentRotationIndex =
-      (this.currentRotationIndex + direction + shapes.length) % shapes.length;
+    const shapeVariants = TETRIMINOS[this.currentTetriminoType];
+    const nextIndex =
+      (this.currentRotationIndex + direction + shapeVariants.length) %
+      shapeVariants.length;
+    const nextShape = shapeVariants[nextIndex];
 
-    this.currentShape = shapes[this.currentRotationIndex];
+    const kicks = [
+      { x: 0, y: 0 },
+      { x: -1, y: 0 },
+      { x: 1, y: 0 },
+      { x: 0, y: -1 },
+      { x: 0, y: 1 },
+    ];
 
-    this.currentTetrimino.clear(true, true); // alte Blöcke entfernen
-    this.currentTetrimino = this.add.group();
-
-    this.currentShape.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        if (cell) {
-          const blockX =
-            (this.currentPosition.x + x) * GameScene.blockSize +
-            this.gridOffsetX;
-          const blockY =
-            (this.currentPosition.y + y) * GameScene.blockSize +
-            this.gridOffsetY;
-
-          const block = this.add
-            .rectangle(
-              blockX,
-              blockY,
-              GameScene.blockSize,
-              GameScene.blockSize,
-              COLORS[this.currentTetriminoType]
-            )
-            .setOrigin(0);
-
-          this.currentTetrimino.add(block);
-        }
-      });
-    });
-
-    this.updateGhost();
+    for (const kick of kicks) {
+      if (!this.checkCollision(kick.x, kick.y, nextShape)) {
+        this.currentRotationIndex = nextIndex;
+        this.currentShape = nextShape;
+        this.currentPosition.x += kick.x;
+        this.currentPosition.y += kick.y;
+        this.updateTetriminoPosition();
+        this.updateGhost();
+        return;
+      }
+    }
   }
 
   private softDrop(): void {
@@ -480,6 +626,7 @@ export class GameScene extends BaseScene {
     this.checkAndClearLines();
     this.drawLockedBlocks();
     this.spawnTetrimino();
+    this.holdUsedThisTurn = false;
     // ⏱️ 100ms Delay zum Spawnen (wirkt natürlicher), macht aber wahrscheinlich Probleme bei der Update Methode
     // this.time.delayedCall(100, () => {
     //   this.spawnTetrimino();
@@ -509,11 +656,18 @@ export class GameScene extends BaseScene {
   }
 
   private checkAndClearLines(): void {
+    let clearedLinesCount = 0;
     for (let y = GameScene.gridHeight - 1; y >= 0; y--) {
       if (this.grid[y].every((cell) => cell !== GameScene.emptyGridValue)) {
         this.clearLine(y);
+        clearedLinesCount++;
         y++; // Zeile erneut prüfen, da alles nachgerutscht ist
       }
+    }
+
+    if (clearedLinesCount > 0) {
+      this.linesCleared += clearedLinesCount;
+      this.linesText.setText(`LINES: ${this.linesCleared}`);
     }
   }
 

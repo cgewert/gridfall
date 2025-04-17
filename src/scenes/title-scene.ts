@@ -1,5 +1,6 @@
 import { Soundtrack } from "../audio";
 import { BaseScene } from "./base-scene";
+import * as Phaser from "phaser";
 
 export class TitleScene extends BaseScene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -34,10 +35,10 @@ export class TitleScene extends BaseScene {
 
     this.music = this.sound.add("title_music", {
       loop: true,
-      volume: 0.5, // Lautstärke anpassbar
+      volume: 0.01,
     });
 
-    this.music.play();
+    this.music.play(); // Play the music
 
     this.addTitle();
     this.addPressKeyPrompt();
