@@ -1,105 +1,9 @@
 import { Soundtrack } from "../audio";
 import { COLORS } from "../colors";
+import { SHAPE_TYPES, SHAPES, TetriminoShape } from "../shapes";
+import { ShapesSpawner, SpawnSystem } from "../spawn";
 import { BaseScene } from "./base-scene";
-import * as Phaser from "phaser";
-
-export type TetriminoShape = number[][];
-export enum SpawnSystem {
-  RANDOM,
-  SEVEN_BAG,
-}
-
-const TETRIMINOS: Record<string, TetriminoShape[]> = {
-  I: [[[1, 1, 1, 1]], [[1], [1], [1], [1]]],
-  O: [
-    [
-      [1, 1],
-      [1, 1],
-    ],
-  ],
-  T: [
-    [
-      [0, 1, 0],
-      [1, 1, 1],
-    ],
-    [
-      [1, 0],
-      [1, 1],
-      [1, 0],
-    ],
-    [
-      [1, 1, 1],
-      [0, 1, 0],
-    ],
-    [
-      [0, 1],
-      [1, 1],
-      [0, 1],
-    ],
-  ],
-  S: [
-    [
-      [0, 1, 1],
-      [1, 1, 0],
-    ],
-    [
-      [1, 0],
-      [1, 1],
-      [0, 1],
-    ],
-  ],
-  Z: [
-    [
-      [1, 1, 0],
-      [0, 1, 1],
-    ],
-    [
-      [0, 1],
-      [1, 1],
-      [1, 0],
-    ],
-  ],
-  J: [
-    [
-      [1, 0, 0],
-      [1, 1, 1],
-    ],
-    [
-      [1, 1],
-      [1, 0],
-      [1, 0],
-    ],
-    [
-      [1, 1, 1],
-      [0, 0, 1],
-    ],
-    [
-      [0, 1],
-      [0, 1],
-      [1, 1],
-    ],
-  ],
-  L: [
-    [
-      [0, 0, 1],
-      [1, 1, 1],
-    ],
-    [
-      [1, 0],
-      [1, 0],
-      [1, 1],
-    ],
-    [
-      [1, 1, 1],
-      [1, 0, 0],
-    ],
-    [
-      [1, 1],
-      [0, 1],
-      [0, 1],
-    ],
-  ],
-};
+import Phaser from "phaser";
 
 export class GameScene extends BaseScene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -115,7 +19,6 @@ export class GameScene extends BaseScene {
   private currentTetriminoType = "T"; // Start mit T-Tetrimino
   private fallInterval = 1000; // 1 Sekunde pro Block
   private lastFallTime = 0;
-  private nextQueue: string[] = [];
   private tetriminoBag: string[] = [];
   private holdType: string | null = null;
   private holdUsedThisTurn: boolean = false;
@@ -124,7 +27,7 @@ export class GameScene extends BaseScene {
   private previewBox!: Phaser.GameObjects.Rectangle;
   private linesCleared: number = 0;
   private linesText!: Phaser.GameObjects.Text;
-  private spawnSystem: SpawnSystem = SpawnSystem.SEVEN_BAG;
+  private currentSpawnSystem: SpawnSystem = SpawnSystem.SEVEN_BAG;
 
   private music!: Phaser.Sound.BaseSound;
 
@@ -143,6 +46,7 @@ export class GameScene extends BaseScene {
 
   private grid!: string[][];
   private blocksGroup!: Phaser.GameObjects.Group;
+  private spawner!: ShapesSpawner;
 
   constructor() {
     super(GameScene.CONFIG);
@@ -152,7 +56,8 @@ export class GameScene extends BaseScene {
   public init(data: unknown) {
     this.gameOver = false;
     this.initializeGrid();
-    this.generateNextQueue();
+    //this.generateNextQueue();
+    this.spawner = new ShapesSpawner(this.currentSpawnSystem);
   }
 
   public preload() {
@@ -211,7 +116,7 @@ export class GameScene extends BaseScene {
     this.gridOffsetX = this._viewPortHalfWidth - GameScene.totalGridWidth / 2;
     this.gridOffsetY = this._viewPortHalfHeight - GameScene.totalGridHeight / 2;
 
-    this.generateNextQueue();
+    this.spawner.generateNextQueue(5); // Generiere 5 Tetriminos für die Vorschau
     this.previewGroup = this.add.group();
     this.currentTetrimino = this.add.group();
     this.ghostGroup = this.add.group();
@@ -270,21 +175,6 @@ export class GameScene extends BaseScene {
     }
   }
 
-  private generateNextQueue(): void {
-    const types = Object.keys(TETRIMINOS);
-
-    while (this.nextQueue.length < GameScene.previewSize + 1) {
-      const shuffled = Phaser.Utils.Array.Shuffle(types);
-      this.nextQueue.push(...shuffled);
-    }
-  }
-
-  private refillTetriminoBag(): void {
-    const types = Object.keys(TETRIMINOS);
-    this.tetriminoBag = Phaser.Utils.Array.Shuffle(types);
-    this.nextQueue.push(...this.tetriminoBag);
-  }
-
   private initializeGrid(): void {
     this.grid = Array.from({ length: GameScene.gridHeight }, () =>
       Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
@@ -319,7 +209,7 @@ export class GameScene extends BaseScene {
 
   private spawnHeldTetrimino(): void {
     this.currentRotationIndex = 0;
-    this.currentShape = TETRIMINOS[this.currentTetriminoType][0];
+    this.currentShape = SHAPES[this.currentTetriminoType][0];
     this.currentPosition = { x: 3, y: 0 };
 
     if (this.checkCollision(0, 0)) {
@@ -361,21 +251,16 @@ export class GameScene extends BaseScene {
   }
 
   private spawnTetrimino(): void {
-    switch (this.spawnSystem) {
-      case SpawnSystem.RANDOM:
-        this.generateNextQueue();
-        this.currentTetriminoType = this.nextQueue.shift()!; // Hole den nächsten Tetrimino aus der Warteschlange
-        break;
-      case SpawnSystem.SEVEN_BAG:
-        if (this.tetriminoBag.length === 0) {
-          this.refillTetriminoBag();
-        }
-        this.currentTetriminoType = this.tetriminoBag.pop()!; // Hole den nächsten Tetrimino aus dem Bag
-        break;
-    }
+    this.currentTetriminoType = this.spawner.NextQueue.shift()!;
+    this.spawner.NextQueue.push(this.spawner.getNext()); // korrekt auffüllen
 
     this.currentRotationIndex = 0;
-    this.currentShape = TETRIMINOS[this.currentTetriminoType][0];
+    if (SHAPE_TYPES.includes(this.currentTetriminoType)) {
+      this.currentShape = SHAPES[this.currentTetriminoType][0];
+    } else {
+      throw new Error("Invalid Tetrimino Type");
+    }
+
     this.currentPosition = { x: 3, y: 0 };
 
     this.renderNextQueue(); // aktualisiere die Vorschau
@@ -394,7 +279,7 @@ export class GameScene extends BaseScene {
 
     if (!this.holdType) return;
 
-    const shape = TETRIMINOS[this.holdType][0];
+    const shape = SHAPES[this.holdType][0];
 
     const cols = shape[0].length;
     const rows = shape.length;
@@ -460,38 +345,40 @@ export class GameScene extends BaseScene {
       (previewBoxHeight - previewContentHeight) / 2 -
       GameScene.blockSize;
 
-    this.nextQueue.slice(0, GameScene.previewSize).forEach((type, index) => {
-      const shape = TETRIMINOS[type][0];
-      const cols = shape[0].length;
-      const rows = shape.length;
+    this.spawner.NextQueue.slice(0, GameScene.previewSize).forEach(
+      (type, index) => {
+        const shape = SHAPES[type][0];
+        const cols = shape[0].length;
+        const rows = shape.length;
 
-      const offsetX =
-        (GameScene.blockSize * 4 - cols * (GameScene.blockSize / 2)) / 2;
-      const offsetY =
-        (GameScene.blockSize * 4 - rows * (GameScene.blockSize / 2)) / 2;
+        const offsetX =
+          (GameScene.blockSize * 4 - cols * (GameScene.blockSize / 2)) / 2;
+        const offsetY =
+          (GameScene.blockSize * 4 - rows * (GameScene.blockSize / 2)) / 2;
 
-      const previewX = startX + offsetX;
-      const previewY =
-        adjustedStartY + index * GameScene.blockSize * 2 + offsetY;
+        const previewX = startX + offsetX;
+        const previewY =
+          adjustedStartY + index * GameScene.blockSize * 2 + offsetY;
 
-      shape.forEach((row, y) => {
-        row.forEach((cell, x) => {
-          if (cell) {
-            const block = this.add
-              .rectangle(
-                previewX + x * (GameScene.blockSize / 2),
-                previewY + y * (GameScene.blockSize / 2),
-                GameScene.blockSize / 2,
-                GameScene.blockSize / 2,
-                COLORS[type]
-              )
-              .setOrigin(0);
+        shape.forEach((row, y) => {
+          row.forEach((cell, x) => {
+            if (cell) {
+              const block = this.add
+                .rectangle(
+                  previewX + x * (GameScene.blockSize / 2),
+                  previewY + y * (GameScene.blockSize / 2),
+                  GameScene.blockSize / 2,
+                  GameScene.blockSize / 2,
+                  COLORS[type]
+                )
+                .setOrigin(0);
 
-            this.previewGroup.add(block);
-          }
+              this.previewGroup.add(block);
+            }
+          });
         });
-      });
-    });
+      }
+    );
   }
 
   private moveTetrimino(direction: number): void {
@@ -539,7 +426,7 @@ export class GameScene extends BaseScene {
   }
 
   private rotateTetrimino(direction: number): void {
-    const shapeVariants = TETRIMINOS[this.currentTetriminoType];
+    const shapeVariants = SHAPES[this.currentTetriminoType];
     const nextIndex =
       (this.currentRotationIndex + direction + shapeVariants.length) %
       shapeVariants.length;
