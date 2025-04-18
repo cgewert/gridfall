@@ -4,6 +4,7 @@ import { SHAPE_TYPES, SHAPES, TetriminoShape } from "../shapes";
 import { ShapesSpawner, SpawnSystem } from "../spawn";
 import { BaseScene } from "./base-scene";
 import Phaser from "phaser";
+import { Rotation, GetKickData } from "../rotation";
 
 export class GameScene extends BaseScene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -15,7 +16,7 @@ export class GameScene extends BaseScene {
   private lockedBlocksGroup!: Phaser.GameObjects.Group;
   private currentShape!: TetriminoShape;
   private currentPosition = { x: 3, y: 0 }; // Startposition
-  private currentRotationIndex = 0;
+  private currentRotationIndex: Rotation = Rotation.SPAWN; // Startrotation
   private currentTetriminoType = "T"; // Start mit T-Tetrimino
   private fallInterval = 1000; // 1 Sekunde pro Block
   private lastFallTime = 0;
@@ -47,6 +48,7 @@ export class GameScene extends BaseScene {
   private grid!: string[][];
   private blocksGroup!: Phaser.GameObjects.Group;
   private spawner!: ShapesSpawner;
+  private lastMoveWasRotation: boolean = false;
 
   constructor() {
     super(GameScene.CONFIG);
@@ -156,10 +158,10 @@ export class GameScene extends BaseScene {
             this.moveTetrimino(1);
             break;
           case "y":
-            this.rotateTetrimino(-1);
+            this.rotateTetrimino("left");
             break;
           case "x":
-            this.rotateTetrimino(1);
+            this.rotateTetrimino("right");
             break;
           case "arrowdown":
             this.softDrop();
@@ -425,32 +427,40 @@ export class GameScene extends BaseScene {
     });
   }
 
-  private rotateTetrimino(direction: number): void {
-    const shapeVariants = SHAPES[this.currentTetriminoType];
-    const nextIndex =
-      (this.currentRotationIndex + direction + shapeVariants.length) %
-      shapeVariants.length;
-    const nextShape = shapeVariants[nextIndex];
-
-    const kicks = [
-      { x: 0, y: 0 },
-      { x: -1, y: 0 },
-      { x: 1, y: 0 },
-      { x: 0, y: -1 },
-      { x: 0, y: 1 },
-    ];
+  private rotateTetrimino(direction: "left" | "right"): void {
+    const from = this.currentRotationIndex;
+    const to = this.getNextRotation(from, direction);
+    const kicks = GetKickData(this.currentTetriminoType, from, to);
+    const shape = SHAPES[this.currentTetriminoType][to];
 
     for (const kick of kicks) {
-      if (!this.checkCollision(kick.x, kick.y, nextShape)) {
-        this.currentRotationIndex = nextIndex;
-        this.currentShape = nextShape;
-        this.currentPosition.x += kick.x;
-        this.currentPosition.y += kick.y;
-        this.updateTetriminoPosition();
-        this.updateGhost();
+      const newX = this.currentPosition.x + kick.x;
+      const newY = this.currentPosition.y + kick.y;
+
+      if (!this.checkCollision(newX, newY, shape)) {
+        this.currentRotationIndex = to;
+        this.currentShape = shape;
+        this.currentPosition.x = newX;
+        this.currentPosition.y = newY;
+        this.lastMoveWasRotation = true;
+        this.createTetriminoBlocks();
         return;
+      } else {
+        console.log(`Collision detected at (${newX}, ${newY})`);
       }
     }
+
+    // Kein gültiger Kick → keine Rotation
+    this.lastMoveWasRotation = false;
+  }
+
+  private getNextRotation(
+    from: Rotation,
+    direction: "left" | "right"
+  ): Rotation {
+    if (direction === "right") return (from + 1) % 4;
+    if (direction === "left") return (from + 3) % 4; // -1 + 4 = +3
+    return from;
   }
 
   private softDrop(): void {
@@ -468,6 +478,15 @@ export class GameScene extends BaseScene {
     }
     this.updateTetriminoPosition();
     this.lockTetrimino();
+  }
+
+  private canPlaceAt(x: number, y: number, rotation: Rotation): boolean {
+    const shape = this.getRotatedShape(this.currentTetriminoType, rotation);
+    return !this.checkCollision(x, y, shape);
+  }
+
+  private getRotatedShape(type: string, rotation: Rotation): number[][] {
+    return SHAPES[type][rotation];
   }
 
   private checkCollision(
@@ -595,6 +614,28 @@ export class GameScene extends BaseScene {
     this.music.stop(); // Musik stoppen
     this.scene.start("GameOverScene"); // oder zeig ein Overlay etc.
   }
+
+  // private isTSpin(): boolean {
+  //   if (this.currentTetriminoType !== "T") return false;
+  //   if (!this.lastMoveWasRotation) return false;
+
+  //   let corners = 0;
+  //   const cx = this.tetriminoX + 1;
+  //   const cy = this.tetriminoY + 1;
+
+  //   const checks = [
+  //     { x: cx - 1, y: cy - 1 },
+  //     { x: cx + 1, y: cy - 1 },
+  //     { x: cx - 1, y: cy + 1 },
+  //     { x: cx + 1, y: cy + 1 },
+  //   ];
+
+  //   for (const check of checks) {
+  //     if (this.grid[check.y]?.[check.x] !== GameScene.emptyGridValue) corners++;
+  //   }
+
+  //   return corners >= 3;
+  // }
 
   /**
    * Updates the scene logic.
