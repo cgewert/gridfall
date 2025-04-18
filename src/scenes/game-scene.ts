@@ -4,6 +4,10 @@ import { BaseScene } from "./base-scene";
 import * as Phaser from "phaser";
 
 export type TetriminoShape = number[][];
+export enum SpawnSystem {
+  RANDOM,
+  SEVEN_BAG,
+}
 
 const TETRIMINOS: Record<string, TetriminoShape[]> = {
   I: [[[1, 1, 1, 1]], [[1], [1], [1], [1]]],
@@ -112,6 +116,7 @@ export class GameScene extends BaseScene {
   private fallInterval = 1000; // 1 Sekunde pro Block
   private lastFallTime = 0;
   private nextQueue: string[] = [];
+  private tetriminoBag: string[] = [];
   private holdType: string | null = null;
   private holdUsedThisTurn: boolean = false;
   private holdGroup!: Phaser.GameObjects.Group;
@@ -119,6 +124,7 @@ export class GameScene extends BaseScene {
   private previewBox!: Phaser.GameObjects.Rectangle;
   private linesCleared: number = 0;
   private linesText!: Phaser.GameObjects.Text;
+  private spawnSystem: SpawnSystem = SpawnSystem.SEVEN_BAG;
 
   private music!: Phaser.Sound.BaseSound;
 
@@ -273,6 +279,12 @@ export class GameScene extends BaseScene {
     }
   }
 
+  private refillTetriminoBag(): void {
+    const types = Object.keys(TETRIMINOS);
+    this.tetriminoBag = Phaser.Utils.Array.Shuffle(types);
+    this.nextQueue.push(...this.tetriminoBag);
+  }
+
   private initializeGrid(): void {
     this.grid = Array.from({ length: GameScene.gridHeight }, () =>
       Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
@@ -349,8 +361,19 @@ export class GameScene extends BaseScene {
   }
 
   private spawnTetrimino(): void {
-    this.generateNextQueue();
-    this.currentTetriminoType = this.nextQueue.shift()!; // Hole den nächsten Tetrimino aus der Warteschlange
+    switch (this.spawnSystem) {
+      case SpawnSystem.RANDOM:
+        this.generateNextQueue();
+        this.currentTetriminoType = this.nextQueue.shift()!; // Hole den nächsten Tetrimino aus der Warteschlange
+        break;
+      case SpawnSystem.SEVEN_BAG:
+        if (this.tetriminoBag.length === 0) {
+          this.refillTetriminoBag();
+        }
+        this.currentTetriminoType = this.tetriminoBag.pop()!; // Hole den nächsten Tetrimino aus dem Bag
+        break;
+    }
+
     this.currentRotationIndex = 0;
     this.currentShape = TETRIMINOS[this.currentTetriminoType][0];
     this.currentPosition = { x: 3, y: 0 };
