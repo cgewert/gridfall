@@ -25,36 +25,36 @@ Tetromino-Grundlagen:
   ✔ Raster für das Spielfeld erstellen @done(25-04-15 18:38)
   ✔ Grundlegende Bewegungsfunktionen (links, rechts, rotieren) @started(25-04-15 20:49) @done(25-04-15 21:25) @lasted(36m21s)
 Spiellogik:
-  ☐ Kollisionserkennung implementieren @started(25-04-15 21:25)
+  ✔ Kollisionserkennung implementieren @started(25-04-15 21:25) @done(25-04-19 15:27) @lasted(3d18h2m38s)
   ✔ Tetrominoes fallen lassen @done(25-04-15 21:25)
-  ☐ Zeilen vervollständigen und entfernen @started(25-04-15 22:57)
-  ☐ Spieler-Input verarbeiten (Tastatur) @started(25-04-15 21:26)
+  ✔ Zeilen vervollständigen und entfernen @started(25-04-15 22:57) @done(25-04-19 15:27) @lasted(3d16h30m40s)
+  ✔ Spieler-Input verarbeiten (Tastatur) @started(25-04-15 21:26) @done(25-04-19 15:27) @lasted(3d18h1m44s)
 Spielregeln:
   ☐ Punktesystem implementieren
   ☐ Level- und Geschwindigkeitssteigerung
-  ☐ Game Over-Bedingungen festlegen
+  ✔ Game Over-Bedingungen festlegen @done(25-04-19 15:27)
 
 ### Phase 3: Grafik und Sound (Woche 5-6)
 
 Grafisches Design:
-  ☐ Sprites für Tetrominos erstellen/integrieren
-  ☐ Spielfeldhintergrund gestalten
-  ☐ UI-Elemente entwerfen (Punkteanzeige, Next-Tetromino, etc.)
+  ☐ Sprites für Tetrominos erstellen/integrieren @started(25-04-19 15:28)
+  ☐ Spielfeldhintergrund gestalten @started(25-04-19 15:28)
+  ☐ UI-Elemente entwerfen (Punkteanzeige, Next-Tetromino, etc.) @started(25-04-19 15:28)
 Animation und Effekte:
   ☐ Zeilen-Entfernungs-Animation
   ☐ Level-Up-Effekte
   ☐ Game Over-Animation
 Sound:
-  ☐ Hintergrundmusik einbinden
+  ☐ Hintergrundmusik einbinden @started(25-04-19 15:28)
   ☐ Soundeffekte für Bewegung, Rotation, Platzierung
   ☐ Spezielle Sounds für Tetris (4 Zeilen auf einmal)
 
 ### Phase 4: Erweiterungen und Verfeinerung (Woche 7-8)
 
 Erweiterte Funktionen:
-  ☐ "Halten"-Funktion für Tetrominos
-  ☐ Vorschau der nächsten Tetrominos
-  ☐ Ghost-Piece für einfachere Platzierung
+  ✔ "Halten"-Funktion für Tetrominos @done(25-04-19 15:28)
+  ✔ Vorschau der nächsten Tetrominos @done(25-04-19 15:28)
+  ✔ Ghost-Piece für einfachere Platzierung @done(25-04-19 15:28)
 Benutzererfahrung verbessern:
   ☐ Einstellungsmenü (Sound, Steuerung)
   ☐ Bestenliste implementieren
