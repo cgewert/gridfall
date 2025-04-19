@@ -431,7 +431,7 @@ export class GameScene extends BaseScene {
   private rotateTetrimino(direction: "left" | "right"): void {
     const from = this.currentRotationIndex;
     const to = this.getNextRotation(from, direction);
-    const kicks = GetKickData(this.currentTetriminoType, from, to);
+    const kicks = GetKickData(this.currentTetriminoType, from, to) ?? [];
     const shape = SHAPES[this.currentTetriminoType][to];
 
     for (const kick of kicks) {

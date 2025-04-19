@@ -37,10 +37,10 @@ export const T_KICK_DATA: KickData = {
     ],
     [Rotation.SPAWN]: [
       { x: 0, y: 0 },
-      { x: -1, y: 0 },
-      { x: -1, y: -1 },
+      { x: 1, y: 0 },
+      { x: 1, y: -1 },
       { x: 0, y: 2 },
-      { x: -1, y: 2 },
+      { x: 1, y: 2 },
     ],
   },
   [Rotation.REVERSE]: {
@@ -69,10 +69,10 @@ export const T_KICK_DATA: KickData = {
     ],
     [Rotation.REVERSE]: [
       { x: 0, y: 0 },
-      { x: 1, y: 0 },
-      { x: 1, y: -1 },
+      { x: -1, y: 0 },
+      { x: -1, y: -1 },
       { x: 0, y: 2 },
-      { x: 1, y: 2 },
+      { x: -1, y: 2 },
     ],
   },
 } as Record<Rotation, Record<Rotation, KickOffset[]>>;
@@ -166,7 +166,72 @@ export const O_KICK_DATA: KickData = {
 } as Record<Rotation, Record<Rotation, KickOffset[]>>;
 
 // Alle anderen (J, L, S, Z) verwenden dieselben Kickdaten wie T
-export const JLZS_KICK_DATA = T_KICK_DATA;
+export const JLZS_KICK_DATA: KickData = {
+  [Rotation.SPAWN]: {
+    [Rotation.RIGHT]: [
+      { x: 0, y: 0 },
+      { x: -1, y: 0 },
+      { x: -1, y: 1 },
+      { x: 0, y: -2 },
+      { x: -1, y: -2 },
+    ],
+    [Rotation.LEFT]: [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: -2 },
+      { x: 1, y: -2 },
+    ],
+  },
+  [Rotation.RIGHT]: {
+    [Rotation.REVERSE]: [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: -1 },
+      { x: 0, y: 2 },
+      { x: 1, y: 2 },
+    ],
+    [Rotation.SPAWN]: [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: -1 },
+      { x: 0, y: 2 },
+      { x: 1, y: 2 },
+    ],
+  },
+  [Rotation.REVERSE]: {
+    [Rotation.LEFT]: [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: -2 },
+      { x: 1, y: -2 },
+    ],
+    [Rotation.RIGHT]: [
+      { x: 0, y: 0 },
+      { x: -1, y: 0 },
+      { x: -1, y: 1 },
+      { x: 0, y: -2 },
+      { x: -1, y: -2 },
+    ],
+  },
+  [Rotation.LEFT]: {
+    [Rotation.SPAWN]: [
+      { x: 0, y: 0 },
+      { x: -1, y: 0 },
+      { x: -1, y: -1 },
+      { x: 0, y: 2 },
+      { x: -1, y: 2 },
+    ],
+    [Rotation.REVERSE]: [
+      { x: 0, y: 0 },
+      { x: -1, y: 0 },
+      { x: -1, y: -1 },
+      { x: 0, y: 2 },
+      { x: -1, y: 2 },
+    ],
+  },
+} as Record<Rotation, Record<Rotation, KickOffset[]>>;
 
 export function GetKickData(
   type: string,
