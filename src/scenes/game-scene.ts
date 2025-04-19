@@ -29,6 +29,7 @@ export class GameScene extends BaseScene {
   private linesCleared: number = 0;
   private linesText!: Phaser.GameObjects.Text;
   private currentSpawnSystem: SpawnSystem = SpawnSystem.SEVEN_BAG;
+  private _gravity: number = 0; // Schwerkraft
 
   private music!: Phaser.Sound.BaseSound;
 
@@ -437,20 +438,20 @@ export class GameScene extends BaseScene {
       const newX = this.currentPosition.x + kick.x;
       const newY = this.currentPosition.y + kick.y;
 
-      if (!this.checkCollision(newX, newY, shape)) {
+      if (!this.checkCollision(kick.x, kick.y, shape)) {
         this.currentRotationIndex = to;
         this.currentShape = shape;
         this.currentPosition.x = newX;
         this.currentPosition.y = newY;
         this.lastMoveWasRotation = true;
         this.createTetriminoBlocks();
+        this.updateGhost();
         return;
-      } else {
-        console.log(`Collision detected at (${newX}, ${newY})`);
       }
     }
 
     // Kein gültiger Kick → keine Rotation
+    console.log(`Rotation ${direction} nicht möglich`);
     this.lastMoveWasRotation = false;
   }
 
@@ -507,7 +508,13 @@ export class GameScene extends BaseScene {
           if (
             gridX < 0 ||
             gridX >= GameScene.gridWidth ||
-            gridY >= GameScene.gridHeight ||
+            gridY >= GameScene.gridHeight
+          ) {
+            return true;
+          }
+
+          if (
+            gridY >= 0 &&
             this.grid[gridY][gridX] !== GameScene.emptyGridValue
           ) {
             return true;
@@ -644,7 +651,9 @@ export class GameScene extends BaseScene {
    */
   public update(time: number, delta: number) {
     if (time > this.lastFallTime + this.fallInterval) {
-      this.softDrop();
+      for (let x = 0; x < this._gravity; x++) {
+        this.softDrop();
+      }
       this.lastFallTime = time;
     }
   }
