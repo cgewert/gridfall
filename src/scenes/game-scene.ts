@@ -29,7 +29,7 @@ export class GameScene extends BaseScene {
   private linesCleared: number = 0;
   private linesText!: Phaser.GameObjects.Text;
   private currentSpawnSystem: SpawnSystem = SpawnSystem.SEVEN_BAG;
-  private _gravity: number = 0; // Schwerkraft
+  private _gravity: number = 1; // Schwerkraft
 
   private music!: Phaser.Sound.BaseSound;
 
