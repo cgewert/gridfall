@@ -1,0 +1,21 @@
+combo.mp3:
+https://pixabay.com/sound-effects/collect-points-190037/
+License: https://pixabay.com/service/license-summary/
+
+clear.wav
+OWNED
+
+lock.wav
+OWNED
+
+rotate.wav
+OWNED
+
+number1.wav
+OWNED
+number2.wav
+OWNED
+number3.wav
+OWNED
+number4.wav
+OWNED

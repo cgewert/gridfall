@@ -1,26 +1,93 @@
 import { Soundtrack } from "../audio";
-import { COLORS } from "../colors";
-import { SHAPE_TYPES, SHAPES, TetriminoShape } from "../shapes";
+import {
+  COLORS,
+  PAUSE_OVERLAY_BACKGROUND_COLOR,
+  PAUSE_OVERLAY_OPACITY,
+} from "../colors";
+import {
+  BlockSkin,
+  SHAPE_TO_BLOCKSKIN_FRAME,
+  SHAPE_TYPES,
+  SHAPES,
+  TetriminoShape,
+} from "../shapes";
 import { ShapesSpawner, SpawnSystem } from "../spawn";
-import { BaseScene } from "./base-scene";
+import { gravityLevels } from "../speedCurves";
 import Phaser from "phaser";
 import { Rotation, GetKickData } from "../rotation";
+import { ENGLISH } from "../translation/english";
+import {
+  DEFAULT_MENU_FONT,
+  GUI_LABEL_HOLDBOX_STYLE,
+  PAUSE_OVERLAY_FONT_STYLE,
+  PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
+} from "../fonts";
 
-export class GameScene extends BaseScene {
+export enum GameMode {
+  MARATHON = 1,
+  SPRINT = 2,
+  ENDLESS = 3,
+}
+
+export interface GameSceneConfiguration {
+  spawnSystem: SpawnSystem;
+  blockSkin: BlockSkin;
+  gameMode: GameMode;
+  DAS?: number;
+  ARR?: number;
+  softDropDAS?: number;
+  softDropARR?: number;
+  musicVolume?: number;
+  sfxVolume?: number;
+}
+
+export interface GameSceneConfiguration {
+  spawnSystem: SpawnSystem;
+  //blockSkin: BlockSkin;
+  gameMode: GameMode;
+  DAS?: number;
+  ARR?: number;
+  softDropDAS?: number;
+  softDropARR?: number;
+  musicVolume?: number;
+  sfxVolume?: number;
+}
+
+export class GameScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
     key: "GameScene",
   };
+  private static readonly PAUSE_OVERLAY_DEPTH = 9999;
   private currentTetrimino!: Phaser.GameObjects.Group;
   private ghostGroup!: Phaser.GameObjects.Group;
   private previewGroup!: Phaser.GameObjects.Group;
   private lockedBlocksGroup!: Phaser.GameObjects.Group;
   private currentShape!: TetriminoShape;
-  private currentPosition = { x: 3, y: 0 }; // Startposition
-  private currentRotationIndex: Rotation = Rotation.SPAWN; // Startrotation
-  private currentTetriminoType = "T"; // Start mit T-Tetrimino
-  private fallInterval = 1000; // 1 Sekunde pro Block
-  private lastFallTime = 0;
-  private tetriminoBag: string[] = [];
+  private currentPosition = { x: 3, y: 0 }; // Starting position
+  private currentRotationIndex: Rotation = Rotation.SPAWN; // Starting rotation
+  private currentTetriminoType = "T"; // Starting with T-Tetrimino
+  private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+
+  private DAS = 166; // Delay Auto-Shift (DAS) in milliseconds
+  private ARR = 33; // Auto-Repeat Rate (ARR) in milliseconds
+  // private softDropDAS = 100; // Softdrop Delay Auto-Shift in milliseconds
+  // private softDropARR = 1; // Softdrop speed in cells per second
+  private leftHeld = false;
+  private rightHeld = false;
+  private dasTimer: number = 0;
+  private arrTimer: number = 0;
+
+  // Gravity Fields
+  private fallSpeed: number = 1.0; // in cells per second (level-based adjustable)
+  private fallProgress: number = 0; // accumulated fall cells
+
+  // Softdrop Fields
+  private readonly softDropMultiplier: number = 20; // Addition for softdrop speed
+  private softDropActive: boolean = false;
+
+  // Gamemode Fields
+  private useSpeedCurve: boolean = false;
+
   private holdType: string | null = null;
   private holdUsedThisTurn: boolean = false;
   private holdGroup!: Phaser.GameObjects.Group;
@@ -29,42 +96,165 @@ export class GameScene extends BaseScene {
   private linesCleared: number = 0;
   private linesText!: Phaser.GameObjects.Text;
   private currentSpawnSystem: SpawnSystem = SpawnSystem.SEVEN_BAG;
-  private _gravity: number = 1; // Schwerkraft
 
+  private pauseContainer!: Phaser.GameObjects.Container;
+  private isPaused = false;
+  private pauseIndex = 0;
+
+  // Sounds
+  private comboSound!: Phaser.Sound.BaseSound;
+  private lineClearSound!: Phaser.Sound.BaseSound;
+  private rotateSound!: Phaser.Sound.BaseSound;
+  private lockSound!: Phaser.Sound.BaseSound;
+  private rotateKickSound!: Phaser.Sound.BaseSound;
+  private doubleClearSound!: Phaser.Sound.BaseSound;
+  private tripleClearSound!: Phaser.Sound.BaseSound;
+  private tetrisClearSound!: Phaser.Sound.BaseSound;
+  private tSpinSound!: Phaser.Sound.BaseSound;
+  private allClearSound!: Phaser.Sound.BaseSound;
+  private holdSound!: Phaser.Sound.BaseSound;
+  private moveSound!: Phaser.Sound.BaseSound;
+  private softDropSound!: Phaser.Sound.BaseSound;
+  private particleManager!: Phaser.GameObjects.Particles.ParticleEmitter;
   private music!: Phaser.Sound.BaseSound;
 
   private gameOver: boolean = false;
-  private static readonly previewSize = 5; // Größe der Tetrimino Vorschau
-  private static readonly emptyGridValue = "Q"; // Platzhalter für leere Felder
+  private static readonly previewSize = 5; // Size of the Tetrimino preview
+  private static readonly emptyGridValue = "Q"; // Placeholder for empty grid cells
   private static readonly gridWidth = 10;
   private static readonly gridHeight = 20;
-  private static readonly blockSize = 40; // Größe in Pixel
+  private static readonly blockSize = 40; // Size in pixels
   private static readonly totalGridWidth =
     GameScene.gridWidth * GameScene.blockSize;
   private static readonly totalGridHeight =
     GameScene.gridHeight * GameScene.blockSize;
   private gridOffsetX = 0;
   private gridOffsetY = 0;
+  private score: number = 0;
+  private combo: number = 0;
+  private level: number = 1;
+  private scoreText!: Phaser.GameObjects.Text;
+  private levelText!: Phaser.GameObjects.Text;
+  private comboText!: Phaser.GameObjects.Text;
+  private comboActive: boolean = false;
 
   private grid!: string[][];
   private blocksGroup!: Phaser.GameObjects.Group;
   private spawner!: ShapesSpawner;
   private lastMoveWasRotation: boolean = false;
+  private lastWasTSpin: boolean = false;
+
+  private _main: Phaser.Cameras.Scene2D.Camera | null = null;
+  private _viewPortHalfHeight: number = 0;
+  private _viewPortHalfWidth: number = 0;
+
+  // Game configuration fields
+  private blockSkin!: BlockSkin;
+  private gameMode!: GameMode;
 
   constructor() {
     super(GameScene.CONFIG);
   }
 
   /* Scene initialization logic. */
-  public init(data: unknown) {
+  public init(data: GameSceneConfiguration) {
+    this.currentSpawnSystem = data?.spawnSystem ?? SpawnSystem.SEVEN_BAG;
+    this.blockSkin = data?.blockSkin ?? BlockSkin.MINOS4;
+    this.gameMode = data?.gameMode ?? GameMode.MARATHON;
+    if (this.gameMode === GameMode.MARATHON) {
+      this.useSpeedCurve = true;
+    } else {
+      this.useSpeedCurve = false;
+    }
+
     this.gameOver = false;
+    this.isPaused = false;
+    this.holdUsedThisTurn = false;
+    this.linesCleared = 0;
+    this.score = 0;
+    this.combo = 0;
+    this.level = 1;
+    this.fallSpeed = 1.0;
+    this.leftHeld = false;
+    this.rightHeld = false;
+    this.softDropActive = false;
+    this.useSpeedCurve = false;
+    this.dasTimer = 0;
+    this.arrTimer = 0;
     this.initializeGrid();
-    //this.generateNextQueue();
     this.spawner = new ShapesSpawner(this.currentSpawnSystem);
   }
 
   public preload() {
+    // Loading music
     this.load.audio("track2", Soundtrack.track2);
+    // Loading sfx
+    this.load.audio("comboSound", "assets/audio/sfx/combo.mp3");
+    this.load.audio("lineClearSound", "assets/audio/sfx/clear.wav");
+    this.load.audio("rotateSound", "assets/audio/sfx/rotate.wav");
+    this.load.audio("lockSound", "assets/audio/sfx/lock.wav");
+    this.load.audio("rotatekick", "assets/audio/sfx/rotatekick.ogg");
+    this.load.audio("double", "assets/audio/sfx/double.ogg");
+    this.load.audio("triple", "assets/audio/sfx/triple.ogg");
+    this.load.audio("tetra", "assets/audio/sfx/tetra.wav");
+    this.load.audio("tSpin", "assets/audio/sfx/tspin.ogg");
+    this.load.audio("allClear", "assets/audio/sfx/all_clear.ogg");
+    this.load.audio("hold", "assets/audio/sfx/hold.ogg");
+    this.load.audio("move", "assets/audio/sfx/move.ogg");
+    this.load.audio("softDrop", "assets/audio/sfx/soft-drop.wav");
+    // Loading images
+    this.load.image("sparkle", "assets/gfx/sprites/sparkle.png");
+    this.load.image(
+      "sakuraParticle",
+      "assets/gfx/particles/sakura_particle.png"
+    );
+    this.load.image(
+      "sakuraParticle2",
+      "assets/gfx/particles/sakura_particle2.png"
+    );
+  }
+
+  private createPauseOverlay(): void {
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    const bg = this.add.rectangle(
+      width / 2,
+      height / 2,
+      width,
+      height,
+      PAUSE_OVERLAY_BACKGROUND_COLOR,
+      PAUSE_OVERLAY_OPACITY
+    );
+
+    const title = this.add
+      .text(
+        width / 2,
+        height / 2 - 80,
+        ENGLISH.PAUSE_OVERLAY.title,
+        PAUSE_OVERLAY_FONT_STYLE
+      )
+      .setOrigin(0.5);
+
+    const options = [
+      ENGLISH.PAUSE_OVERLAY.resume,
+      ENGLISH.PAUSE_OVERLAY.backToMenu,
+    ];
+    const optionTexts = options.map((text, i) =>
+      this.add
+        .text(
+          width / 2,
+          height / 2 + i * 50,
+          text,
+          PAUSE_OVERLAY_FONT_STYLE_ENTRIES
+        )
+        .setOrigin(0.5)
+    );
+    this.pauseContainer = this.add.container(0, 0, [bg, title, ...optionTexts]);
+    this.pauseContainer
+      .setAlpha(0)
+      .setVisible(true)
+      .setDepth(GameScene.PAUSE_OVERLAY_DEPTH);
   }
 
   private createHoldBox(): void {
@@ -76,13 +266,14 @@ export class GameScene extends BaseScene {
     this.holdBox = this.add
       .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
       .setOrigin(0)
-      .setStrokeStyle(2, 0xffffff, 0.5); // weißer Rahmen mit 50% Deckkraft
+      .setStrokeStyle(2, 0xffffff, 0.5);
     this.add
-      .text(boxX, boxY - 24, "HOLD", {
-        fontSize: "16px",
-        color: "#ffffff",
-        fontFamily: "monospace",
-      })
+      .text(
+        boxX,
+        boxY - 24,
+        ENGLISH.GUI_LABELS.holdBox,
+        GUI_LABEL_HOLDBOX_STYLE
+      )
       .setOrigin(0, 0);
   }
 
@@ -91,35 +282,44 @@ export class GameScene extends BaseScene {
       this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32;
     const boxY = this.gridOffsetY;
     const boxWidth = GameScene.blockSize * 4;
-    const boxHeight = GameScene.blockSize * 10; // genug für 5 Vorschauen
+    const boxHeight = GameScene.blockSize * 10;
     this.add
-      .text(boxX, boxY - 24, "NEXT", {
-        fontSize: "16px",
-        color: "#ffffff",
-        fontFamily: "monospace",
-      })
+      .text(
+        boxX,
+        boxY - 24,
+        ENGLISH.GUI_LABELS.nextBox,
+        GUI_LABEL_HOLDBOX_STYLE
+      )
       .setOrigin(0, 0);
 
     this.previewBox = this.add
       .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
       .setOrigin(0)
-      .setStrokeStyle(2, 0xffffff, 0.5); // Weißer Rahmen, halbtransparent
+      .setStrokeStyle(2, 0xffffff, 0.5);
   }
 
   /*
    * @param data - Custom data provided to the scene.
    */
-  public create(data: unknown) {
+  public create(data: GameSceneConfiguration) {
     this._main = this.cameras.main;
-    this._viewPortHalfHeight = this._main.height / 2;
-    this._viewPortHalfWidth = this._main.width / 2;
-    this._viewPortHeight = this._main.height;
-    this._viewPortWidth = this._main.width;
+    this._viewPortHalfHeight = this.scale.height / 2;
+    this._viewPortHalfWidth = this.scale.width / 2;
+
+    this.currentSpawnSystem = data.spawnSystem;
+    this.blockSkin = data.blockSkin;
+    this.gameMode = data.gameMode;
+
+    // TODO: Game mode specific creation logic
+    if (this.gameMode === GameMode.ENDLESS) {
+    } else if (this.gameMode === GameMode.SPRINT) {
+    } else if (this.gameMode === GameMode.MARATHON) {
+    }
 
     this.gridOffsetX = this._viewPortHalfWidth - GameScene.totalGridWidth / 2;
     this.gridOffsetY = this._viewPortHalfHeight - GameScene.totalGridHeight / 2;
 
-    this.spawner.generateNextQueue(5); // Generiere 5 Tetriminos für die Vorschau
+    this.spawner.generateNextQueue(5);
     this.previewGroup = this.add.group();
     this.currentTetrimino = this.add.group();
     this.ghostGroup = this.add.group();
@@ -129,9 +329,88 @@ export class GameScene extends BaseScene {
 
     this.music = this.sound.add("track2", {
       loop: true,
-      volume: 0.5, // Lautstärke anpassbar
+      volume: 0.5,
     });
-    this.music.play();
+    //this.music.play();
+
+    this.comboSound = this.sound.add("comboSound");
+    this.lineClearSound = this.sound.add("lineClearSound");
+    this.rotateSound = this.sound.add("rotateSound");
+    this.lockSound = this.sound.add("lockSound");
+    this.rotateKickSound = this.sound.add("rotatekick");
+    this.doubleClearSound = this.sound.add("double");
+    this.tripleClearSound = this.sound.add("triple");
+    this.tetrisClearSound = this.sound.add("tetra");
+    this.tSpinSound = this.sound.add("tSpin");
+    this.allClearSound = this.sound.add("allClear");
+    this.holdSound = this.sound.add("hold");
+    this.moveSound = this.sound.add("move");
+    this.softDropSound = this.sound
+      .add("softDrop")
+      .setVolume(0.5)
+      .on("finish", () => {
+        this.softDropSound.play();
+      });
+
+    this.particleManager = this.add
+      .particles(0, 0, "sparkle", {
+        quantity: 2,
+        lifespan: { min: 300, max: 700 },
+        speed: { min: 80, max: 160 },
+        angle: { min: 0, max: 360 },
+        scale: { start: 0.35, end: 0 },
+        alpha: { start: 1, end: 0 },
+        rotate: { min: 0, max: 360 },
+        emitting: false,
+        blendMode: "ADD",
+      })
+      .setDepth(1001);
+
+    this.sakuraEmitter = this.add
+      .particles(0, 0, "sakuraParticle", {
+        x: {
+          onEmit: (
+            particle: Phaser.GameObjects.Particles.Particle | undefined
+          ) => {
+            const x = Phaser.Math.Between(0, this.scale.width);
+            return x;
+          },
+        },
+        y: {
+          onUpdate: (
+            _particle: Phaser.GameObjects.Particles.Particle,
+            _key,
+            t,
+            value
+          ) => {
+            return value + t * 10;
+          },
+        },
+        lifespan: 5000,
+        speedY: { min: 60, max: 80 },
+        speedX: { min: -10, max: 10 },
+        scale: { start: 0.1, end: 0.01 },
+        alpha: { start: 1, end: 1 },
+        rotate: {
+          onEmit: (_particle) => {
+            return 0;
+          },
+          onUpdate: (particle) => {
+            return (particle.angle += 0.5);
+          },
+        },
+        angle: { min: 0, max: 360 },
+        frequency: 800,
+        quantity: 1,
+        gravityY: 0,
+        emitZone: {
+          source: new Phaser.Geom.Rectangle(0, -10, this.scale.width, 1),
+          type: "edge",
+          quantity: this.scale.width / 30,
+        },
+        active: false,
+      })
+      .setDepth(10000);
 
     this.linesText = this.add.text(
       this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
@@ -140,42 +419,161 @@ export class GameScene extends BaseScene {
       {
         fontSize: "24px",
         color: "#ffffff",
-        fontFamily: "monospace",
+        fontFamily: DEFAULT_MENU_FONT,
       }
     );
+
+    this.scoreText = this.add.text(20, 20, "Score: 0", {
+      fontFamily: DEFAULT_MENU_FONT,
+      fontSize: "20px",
+      color: "#ffffff",
+    });
+
+    this.levelText = this.add.text(
+      20,
+      50,
+      `Level: 1 (Gravity ${this.fallSpeed.toFixed(2)})`,
+      {
+        fontFamily: DEFAULT_MENU_FONT,
+        fontSize: "20px",
+        color: "#ffffff",
+      }
+    );
+
+    this.comboText = this.add.text(20, 80, "", {
+      fontFamily: DEFAULT_MENU_FONT,
+      fontSize: "20px",
+      color: "#ffcc00",
+    });
 
     this.initializeGrid();
     this.createGridGraphics();
     this.spawnTetrimino();
     this.createHoldBox();
     this.createPreviewBox();
-    if (this.input?.keyboard) {
-      this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
-        switch (event.key.toLowerCase()) {
-          case "arrowleft":
-            this.moveTetrimino(-1);
-            break;
-          case "arrowright":
-            this.moveTetrimino(1);
-            break;
-          case "y":
-            this.rotateTetrimino("left");
-            break;
-          case "x":
-            this.rotateTetrimino("right");
-            break;
-          case "arrowdown":
-            this.softDrop();
-            break;
-          case "arrowup":
-            this.hardDrop();
-            break;
-          case " ":
-            this.holdTetrimino();
-            break;
-        }
-      });
-    }
+    this.createPauseOverlay();
+    this.setUpKeyboardControls();
+  }
+
+  private setUpKeyboardControls() {
+    if (!this.input?.keyboard) return;
+
+    this.input.keyboard.on("keydown-LEFT", () => {
+      this.leftHeld = true;
+      this.moveTetrimino(-1);
+      this.dasTimer = this.time.now + this.DAS;
+    });
+
+    this.input.keyboard.on("keyup-LEFT", () => {
+      this.leftHeld = false;
+    });
+
+    this.input.keyboard.on("keydown-RIGHT", () => {
+      this.rightHeld = true;
+      this.moveTetrimino(1);
+      this.dasTimer = this.time.now + this.DAS;
+    });
+
+    this.input.keyboard.on("keyup-RIGHT", () => {
+      this.rightHeld = false;
+    });
+
+    this.input.keyboard.on("keydown-P", () => {
+      if (!this.isPaused) {
+        this.pauseGame();
+      } else {
+        this.resumeGame();
+      }
+    });
+
+    this.input.keyboard.on("keydown-UP", () => {
+      if (this.isPaused) {
+        this.pauseIndex = (this.pauseIndex + 1) % 2;
+        this.updatePauseHighlight();
+      } else {
+        this.hardDrop();
+      }
+    });
+
+    this.input.keyboard.on("keyup-DOWN", () => {
+      this.softDropActive = false;
+      // this.fallProgress = Math.floor(this.fallProgress); // Activate SDF Behaviour?
+      // this.softDropSound.stop();
+    });
+
+    this.input.keyboard.on("keydown-DOWN", () => {
+      if (this.isPaused) {
+        this.pauseIndex = (this.pauseIndex + 1) % 2;
+        this.updatePauseHighlight();
+      } else {
+        if (this.softDropActive) return;
+        this.softDropActive = true;
+        // this.softDropSound.play();
+      }
+    });
+
+    this.input.keyboard.on("keydown-ENTER", () => {
+      if (!this.isPaused) return;
+      if (this.pauseIndex === 0) {
+        this.resumeGame();
+      } else {
+        this.scene.start("MainMenuScene");
+      }
+    });
+
+    this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
+      if (this.isPaused) return;
+
+      switch (event.key.toLowerCase()) {
+        case "y":
+          this.rotateTetrimino("left");
+          break;
+        case "x":
+          this.rotateTetrimino("right");
+          break;
+        case " ":
+          this.holdTetrimino();
+          break;
+      }
+    });
+  }
+
+  private pauseGame(): void {
+    this.physics.world.pause();
+    this.isPaused = true;
+    this.tweens.add({
+      targets: this.pauseContainer,
+      alpha: 1,
+      duration: 250,
+      ease: "Sine.easeOut",
+    });
+    this.pauseIndex = 0;
+    this.sakuraEmitter.setActive(true);
+    this.updatePauseHighlight();
+  }
+
+  private resumeGame(): void {
+    this.physics.world.resume();
+    this.isPaused = false;
+    this.sakuraEmitter.killAll();
+    this.sakuraEmitter.setActive(false);
+    this.tweens.add({
+      targets: this.pauseContainer,
+      alpha: 0,
+      duration: 250,
+      ease: "Sine.easeOut",
+    });
+  }
+
+  private updatePauseHighlight(): void {
+    this.pauseContainer.iterate((obj: Phaser.GameObjects.Text) => {
+      if (
+        obj instanceof Phaser.GameObjects.Text &&
+        obj.text !== "Game Paused"
+      ) {
+        obj.setColor("#aaaaaa");
+      }
+    });
   }
 
   private initializeGrid(): void {
@@ -186,8 +584,6 @@ export class GameScene extends BaseScene {
 
   private createGridGraphics(): void {
     this.blocksGroup = this.add.group();
-
-    // Zentrierung berechnen
 
     for (let y = 0; y < GameScene.gridHeight; y++) {
       for (let x = 0; x < GameScene.gridWidth; x++) {
@@ -238,15 +634,10 @@ export class GameScene extends BaseScene {
             (this.currentPosition.y + y) * GameScene.blockSize +
             this.gridOffsetY;
 
-          const block = this.add
-            .rectangle(
-              blockX,
-              blockY,
-              GameScene.blockSize,
-              GameScene.blockSize,
-              COLORS[this.currentTetriminoType]
-            )
-            .setOrigin(0);
+          const frame = SHAPE_TO_BLOCKSKIN_FRAME[this.currentTetriminoType];
+          const block = this.add.sprite(blockX, blockY, this.blockSkin, frame);
+          block.setDisplaySize(GameScene.blockSize, GameScene.blockSize);
+          block.setOrigin(0);
           this.currentTetrimino.add(block);
         }
       });
@@ -255,7 +646,7 @@ export class GameScene extends BaseScene {
 
   private spawnTetrimino(): void {
     this.currentTetriminoType = this.spawner.NextQueue.shift()!;
-    this.spawner.NextQueue.push(this.spawner.getNext()); // korrekt auffüllen
+    this.spawner.NextQueue.push(this.spawner.getNext());
 
     this.currentRotationIndex = 0;
     if (SHAPE_TYPES.includes(this.currentTetriminoType)) {
@@ -266,8 +657,8 @@ export class GameScene extends BaseScene {
 
     this.currentPosition = { x: 3, y: 0 };
 
-    this.renderNextQueue(); // aktualisiere die Vorschau
-    this.createTetriminoBlocks(); // Erstelle die Blöcke für den aktuellen Tetrimino
+    this.renderNextQueue();
+    this.createTetriminoBlocks();
     this.updateGhost();
 
     if (this.checkCollision(0, 0)) {
@@ -300,14 +691,14 @@ export class GameScene extends BaseScene {
       row.forEach((cell, x) => {
         if (cell) {
           const block = this.add
-            .rectangle(
+            .sprite(
               startX + x * (GameScene.blockSize / 2),
               startY + y * (GameScene.blockSize / 2),
-              GameScene.blockSize / 2,
-              GameScene.blockSize / 2,
-              COLORS[this.holdType!]
+              this.blockSkin,
+              SHAPE_TO_BLOCKSKIN_FRAME[this.holdType!]
             )
-            .setOrigin(0);
+            .setOrigin(0)
+            .setDisplaySize(GameScene.blockSize / 2, GameScene.blockSize / 2);
 
           this.holdGroup.add(block);
         }
@@ -331,6 +722,7 @@ export class GameScene extends BaseScene {
       this.spawnTetrimino();
     }
 
+    this.holdSound.play();
     this.renderHold();
   }
 
@@ -367,14 +759,17 @@ export class GameScene extends BaseScene {
           row.forEach((cell, x) => {
             if (cell) {
               const block = this.add
-                .rectangle(
+                .sprite(
                   previewX + x * (GameScene.blockSize / 2),
                   previewY + y * (GameScene.blockSize / 2),
-                  GameScene.blockSize / 2,
-                  GameScene.blockSize / 2,
-                  COLORS[type]
+                  this.blockSkin,
+                  SHAPE_TO_BLOCKSKIN_FRAME[type]
                 )
-                .setOrigin(0);
+                .setOrigin(0)
+                .setDisplaySize(
+                  GameScene.blockSize / 2,
+                  GameScene.blockSize / 2
+                );
 
               this.previewGroup.add(block);
             }
@@ -388,13 +783,13 @@ export class GameScene extends BaseScene {
     if (this.checkCollision(direction, 0)) return;
 
     this.currentPosition.x += direction;
-
     this.updateTetriminoPosition();
     this.updateGhost();
+    this.moveSound.play();
   }
 
   private updateGhost(): void {
-    // Clear previous ghost
+    const frame = SHAPE_TO_BLOCKSKIN_FRAME[this.currentTetriminoType];
     this.ghostGroup?.clear(true, true);
     this.ghostGroup = this.add.group();
 
@@ -412,15 +807,10 @@ export class GameScene extends BaseScene {
           const posY = (ghostY + y) * GameScene.blockSize + this.gridOffsetY;
 
           const block = this.add
-            .rectangle(
-              posX,
-              posY,
-              GameScene.blockSize,
-              GameScene.blockSize,
-              COLORS[this.currentTetriminoType]
-            )
-            .setAlpha(0.2)
-            .setOrigin(0); // Transparente Darstellung
+            .sprite(posX, posY, this.blockSkin, frame)
+            .setAlpha(0.3)
+            .setOrigin(0)
+            .setDisplaySize(GameScene.blockSize, GameScene.blockSize);
 
           this.ghostGroup.add(block);
         }
@@ -445,7 +835,15 @@ export class GameScene extends BaseScene {
         this.currentPosition.y = newY;
         this.lastMoveWasRotation = true;
         this.createTetriminoBlocks();
-        this.updateGhost();
+        this.moveTetrimino(0);
+        if (this.isTSpin()) {
+          this.rotateKickSound.play();
+          this.lastWasTSpin = true;
+        } else {
+          this.rotateSound.play();
+          this.lastWasTSpin = false;
+        }
+
         return;
       }
     }
@@ -526,22 +924,22 @@ export class GameScene extends BaseScene {
   }
 
   private updateTetriminoPosition(): void {
+    const landed = this.checkCollision(0, 1, this.currentShape);
+    const useFraction = !landed;
+    const baseY =
+      this.currentPosition.y + (useFraction ? this.fallProgress : 0);
+    const blockSize = GameScene.blockSize;
     let blockIndex = 0;
     this.currentShape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           const blockX =
-            (this.currentPosition.x + x) * GameScene.blockSize +
-            this.gridOffsetX;
-          const blockY =
-            (this.currentPosition.y + y) * GameScene.blockSize +
-            this.gridOffsetY;
-
+            (this.currentPosition.x + x) * blockSize + this.gridOffsetX;
+          const blockY = (baseY + y) * GameScene.blockSize + this.gridOffsetY;
           const block = this.currentTetrimino.getChildren()[
             blockIndex
           ] as Phaser.GameObjects.Rectangle;
-          block.setPosition(blockX, blockY);
-
+          block.setPosition(Math.round(blockX), Math.round(blockY));
           blockIndex++;
         }
       });
@@ -563,10 +961,8 @@ export class GameScene extends BaseScene {
     this.drawLockedBlocks();
     this.spawnTetrimino();
     this.holdUsedThisTurn = false;
-    // ⏱️ 100ms Delay zum Spawnen (wirkt natürlicher), macht aber wahrscheinlich Probleme bei der Update Methode
-    // this.time.delayedCall(100, () => {
-    //   this.spawnTetrimino();
-    // });
+    this._main?.shake(50, 0.005);
+    this.lockSound.play();
   }
 
   private drawLockedBlocks(): void {
@@ -576,14 +972,14 @@ export class GameScene extends BaseScene {
       row.forEach((cell, x) => {
         if (cell !== GameScene.emptyGridValue) {
           const block = this.add
-            .rectangle(
+            .sprite(
               x * GameScene.blockSize + this.gridOffsetX,
               y * GameScene.blockSize + this.gridOffsetY,
-              GameScene.blockSize,
-              GameScene.blockSize,
-              COLORS[cell]
+              this.blockSkin,
+              7
             )
-            .setOrigin(0);
+            .setOrigin(0)
+            .setDisplaySize(GameScene.blockSize, GameScene.blockSize);
 
           this.lockedBlocksGroup.add(block);
         }
@@ -595,15 +991,74 @@ export class GameScene extends BaseScene {
     let clearedLinesCount = 0;
     for (let y = GameScene.gridHeight - 1; y >= 0; y--) {
       if (this.grid[y].every((cell) => cell !== GameScene.emptyGridValue)) {
+        const offset = GameScene.blockSize / 2;
+        for (let x = 0; x < GameScene.gridWidth; x++) {
+          const posX = this.gridOffsetX + x * GameScene.blockSize + offset;
+          const posY = (y + 1) * GameScene.blockSize + offset;
+
+          this.particleManager.emitParticleAt(posX, posY);
+        }
         this.clearLine(y);
         clearedLinesCount++;
-        y++; // Zeile erneut prüfen, da alles nachgerutscht ist
+        if (this.gameMode === GameMode.MARATHON) {
+          if (this.linesCleared >= 5) {
+            //this.triggerVictory();
+            return;
+          }
+
+          if (this.linesCleared % 10 === 0) {
+            this.level++;
+            this.updateFallSpeed();
+          }
+        }
+        y++;
       }
     }
 
     if (clearedLinesCount > 0) {
       this.linesCleared += clearedLinesCount;
+      if (this.comboActive) {
+        this.combo++;
+        this.comboText.setText(`Combo x${this.combo}`);
+        const maxPitch = 2.0;
+        const pitch = 1.0 + ((this.combo - 2) / 13) * (maxPitch - 1.0);
+        const clampedPitch = Phaser.Math.Clamp(pitch, 1.0, maxPitch);
+        this.comboSound.play({
+          rate: clampedPitch,
+        });
+      } else {
+        this.comboActive = true;
+        this.combo = 0;
+      }
+
+      this.playLineClearSound(clearedLinesCount);
+      this.addScore(clearedLinesCount);
+
+      // Level-Up all 10 lines
+      const levelBefore = this.level;
+      this.level = Math.floor(this.linesCleared / 10) + 1;
+
+      if (this.level > levelBefore) {
+        this.levelText.setText(
+          `Level: ${this.level} (Gravity ${this.fallSpeed.toFixed(2)})`
+        );
+        // Change fall speed based on level
+        this.fallSpeed = 1.0 + (this.level - 1) * 0.15; // e.g. slightly increasing
+      }
       this.linesText.setText(`LINES: ${this.linesCleared}`);
+    } else {
+      this.combo = 0;
+      this.comboActive = false;
+      this.comboText.setText("");
+    }
+  }
+
+  private updateFallSpeed(): void {
+    if (this.useSpeedCurve) {
+      this.fallSpeed =
+        gravityLevels[Math.min(this.level - 1, gravityLevels.length - 1)] * 60;
+    } else {
+      this.fallSpeed = 1.0 + (this.level - 1) * 0.15;
     }
   }
 
@@ -612,37 +1067,109 @@ export class GameScene extends BaseScene {
     this.grid.unshift(
       new Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
     );
+  }
 
-    // Später noch Grafik aktualisieren (für jetzt reicht erstmal die Grid-Logik)
+  private addScore(linesCleared: number) {
+    let basePoints = 0;
+
+    switch (linesCleared) {
+      case 1:
+        basePoints = 100;
+        break;
+      case 2:
+        basePoints = 300;
+        break;
+      case 3:
+        basePoints = 500;
+        break;
+      case 4:
+        basePoints = 800;
+        break;
+    }
+
+    const comboBonus = this.combo * 50;
+    const points = (basePoints + comboBonus) * this.level;
+    this.score += points;
+
+    this.scoreText.setText(`Score: ${this.score}`);
+  }
+
+  private playLineClearSound(clearedLinesCount: number) {
+    if (clearedLinesCount > 0) {
+      if (this.comboActive) {
+        this.time.delayedCall(100, () => {
+          this.playLineClearActionSfx(clearedLinesCount);
+        });
+      } else {
+        this.playLineClearActionSfx(clearedLinesCount);
+      }
+    }
+    if (
+      this.grid.every((row) =>
+        row.every((cell) => cell === GameScene.emptyGridValue)
+      )
+    ) {
+      this.allClearSound.play();
+    }
+  }
+
+  playLineClearActionSfx(clearedLinesCount: number) {
+    if (clearedLinesCount < 1) return;
+
+    this.lineClearSound.play();
+
+    if (this.lastWasTSpin) {
+      // TODO: Zwischen T-Spin Arten unterscheiden und verschiedene Sounds abspielen
+      this.tSpinSound.play();
+      return;
+    }
+
+    switch (clearedLinesCount) {
+      case 2:
+        this.doubleClearSound.play();
+        break;
+      case 3:
+        this.tripleClearSound.play();
+        break;
+      case 4:
+        this.tetrisClearSound.play();
+        break;
+      default:
+        break;
+    }
   }
 
   private handleGameOver(): void {
     this.gameOver = true;
-    this.music.stop(); // Musik stoppen
-    this.scene.start("GameOverScene"); // oder zeig ein Overlay etc.
+    this.sound.stopAll();
+    this.music.stop();
+    this.scene.start("GameOverScene", {
+      spawnSystem: this.currentSpawnSystem,
+      blockSkin: this.blockSkin,
+    });
   }
 
-  // private isTSpin(): boolean {
-  //   if (this.currentTetriminoType !== "T") return false;
-  //   if (!this.lastMoveWasRotation) return false;
+  private isTSpin(): boolean {
+    if (this.currentTetriminoType !== "T") return false;
+    if (!this.lastMoveWasRotation) return false;
 
-  //   let corners = 0;
-  //   const cx = this.tetriminoX + 1;
-  //   const cy = this.tetriminoY + 1;
+    let corners = 0;
+    const cx = this.currentPosition.x + 1;
+    const cy = this.currentPosition.y + 1;
 
-  //   const checks = [
-  //     { x: cx - 1, y: cy - 1 },
-  //     { x: cx + 1, y: cy - 1 },
-  //     { x: cx - 1, y: cy + 1 },
-  //     { x: cx + 1, y: cy + 1 },
-  //   ];
+    const checks = [
+      { x: cx - 1, y: cy - 1 },
+      { x: cx + 1, y: cy - 1 },
+      { x: cx - 1, y: cy + 1 },
+      { x: cx + 1, y: cy + 1 },
+    ];
 
-  //   for (const check of checks) {
-  //     if (this.grid[check.y]?.[check.x] !== GameScene.emptyGridValue) corners++;
-  //   }
+    for (const check of checks) {
+      if (this.grid[check.y]?.[check.x] !== GameScene.emptyGridValue) corners++;
+    }
 
-  //   return corners >= 3;
-  // }
+    return corners >= 3;
+  }
 
   /**
    * Updates the scene logic.
@@ -650,11 +1177,41 @@ export class GameScene extends BaseScene {
    * @param delta - Time in ms since last update call.
    */
   public update(time: number, delta: number) {
-    if (time > this.lastFallTime + this.fallInterval) {
-      for (let x = 0; x < this._gravity; x++) {
-        this.softDrop();
+    if (!this.isPaused && !this.gameOver) {
+      let effectiveFallSpeed = this.fallSpeed;
+
+      if (this.softDropActive) {
+        effectiveFallSpeed += this.softDropMultiplier;
       }
-      this.lastFallTime = time;
+
+      this.fallProgress += effectiveFallSpeed * (delta / 1000); // delta in ms → s
+
+      while (this.fallProgress >= 1) {
+        if (!this.checkCollision(0, 1, this.currentShape)) {
+          this.currentPosition.y += 1;
+          this.fallProgress -= 1.0;
+        } else {
+          this.lockTetrimino();
+          this.fallProgress = 0;
+          break;
+        }
+      }
+
+      if (this.leftHeld && time > this.dasTimer) {
+        if (time > this.arrTimer) {
+          this.moveTetrimino(-1);
+          this.arrTimer = time + this.ARR;
+        }
+      }
+
+      if (this.rightHeld && time > this.dasTimer) {
+        if (time > this.arrTimer) {
+          this.moveTetrimino(1);
+          this.arrTimer = time + this.ARR;
+        }
+      }
+
+      this.updateTetriminoPosition(); // aktualisiert die visuelle Position
     }
   }
 }
