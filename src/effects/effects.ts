@@ -19,7 +19,9 @@ export function addAnimatedGridBackground(
   scene: Phaser.Scene,
   cols: number = 20,
   rows: number = 20,
-  color: string = MAX_ARGENTINO_COLOR
+  color: Phaser.Display.Color = Phaser.Display.Color.HexStringToColor(
+    MAX_ARGENTINO_COLOR
+  )
 ) {
   const blockSize = 32;
   const offsetX = (scene.scale.width - cols * blockSize) / 2;
@@ -27,7 +29,7 @@ export function addAnimatedGridBackground(
   const startAlpha = 0.2;
   const endAlpha = 1;
   //const color = Phaser.Display.Color.GetColor(150, 5, 143);
-  const convertedColor = Phaser.Display.Color.HexStringToColor(color);
+  const convertedColor = color;
 
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {

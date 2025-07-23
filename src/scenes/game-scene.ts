@@ -1,6 +1,5 @@
 import { Soundtrack } from "../audio";
 import {
-  COLORS,
   PAUSE_OVERLAY_BACKGROUND_COLOR,
   PAUSE_OVERLAY_OPACITY,
 } from "../colors";
@@ -18,8 +17,14 @@ import { Rotation, GetKickData } from "../rotation";
 import { ENGLISH } from "../translation/english";
 import {
   DEFAULT_MENU_FONT,
+  GUI_COMBO_STYLE,
   GUI_LABEL_HOLDBOX_STYLE,
+  GUI_LEVEL_STYLE,
+  GUI_LINES_STYLE,
+  GUI_SCORE_STYLE,
+  MENU_TITLE_FONT_COLOR,
   PAUSE_OVERLAY_FONT_STYLE,
+  PAUSE_OVERLAY_FONT_STYLE_ACTIVE_ENTRY,
   PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
 } from "../fonts";
 
@@ -32,18 +37,6 @@ export enum GameMode {
 export interface GameSceneConfiguration {
   spawnSystem: SpawnSystem;
   blockSkin: BlockSkin;
-  gameMode: GameMode;
-  DAS?: number;
-  ARR?: number;
-  softDropDAS?: number;
-  softDropARR?: number;
-  musicVolume?: number;
-  sfxVolume?: number;
-}
-
-export interface GameSceneConfiguration {
-  spawnSystem: SpawnSystem;
-  //blockSkin: BlockSkin;
   gameMode: GameMode;
   DAS?: number;
   ARR?: number;
@@ -228,12 +221,14 @@ export class GameScene extends Phaser.Scene {
     );
 
     const title = this.add
-      .text(
-        width / 2,
-        height / 2 - 80,
-        ENGLISH.PAUSE_OVERLAY.title,
-        PAUSE_OVERLAY_FONT_STYLE
-      )
+      .text(width / 2, height / 2 - 80, ENGLISH.PAUSE_OVERLAY.title, {
+        fontFamily: DEFAULT_MENU_FONT,
+        fontSize: "32px",
+        color: MENU_TITLE_FONT_COLOR,
+        align: "center",
+        stroke: "#000000",
+        strokeThickness: 4,
+      })
       .setOrigin(0.5);
 
     const options = [
@@ -416,35 +411,19 @@ export class GameScene extends Phaser.Scene {
       this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
       this.gridOffsetY + GameScene.blockSize * 11,
       "LINES: 0",
-      {
-        fontSize: "24px",
-        color: "#ffffff",
-        fontFamily: DEFAULT_MENU_FONT,
-      }
+      GUI_LINES_STYLE
     );
 
-    this.scoreText = this.add.text(20, 20, "Score: 0", {
-      fontFamily: DEFAULT_MENU_FONT,
-      fontSize: "20px",
-      color: "#ffffff",
-    });
+    this.scoreText = this.add.text(20, 20, "Score: 0", GUI_SCORE_STYLE);
 
     this.levelText = this.add.text(
       20,
       50,
       `Level: 1 (Gravity ${this.fallSpeed.toFixed(2)})`,
-      {
-        fontFamily: DEFAULT_MENU_FONT,
-        fontSize: "20px",
-        color: "#ffffff",
-      }
+      GUI_LEVEL_STYLE
     );
 
-    this.comboText = this.add.text(20, 80, "", {
-      fontFamily: DEFAULT_MENU_FONT,
-      fontSize: "20px",
-      color: "#ffcc00",
-    });
+    this.comboText = this.add.text(20, 80, "", GUI_COMBO_STYLE);
 
     this.initializeGrid();
     this.createGridGraphics();
@@ -458,23 +437,28 @@ export class GameScene extends Phaser.Scene {
   private setUpKeyboardControls() {
     if (!this.input?.keyboard) return;
 
+    // THIS IS BULLSHIT HERE: don't use events
     this.input.keyboard.on("keydown-LEFT", () => {
+      if (this.isPaused) return;
       this.leftHeld = true;
       this.moveTetrimino(-1);
       this.dasTimer = this.time.now + this.DAS;
     });
 
     this.input.keyboard.on("keyup-LEFT", () => {
+      if (this.isPaused) return;
       this.leftHeld = false;
     });
 
     this.input.keyboard.on("keydown-RIGHT", () => {
+      if (this.isPaused) return;
       this.rightHeld = true;
       this.moveTetrimino(1);
       this.dasTimer = this.time.now + this.DAS;
     });
 
     this.input.keyboard.on("keyup-RIGHT", () => {
+      if (this.isPaused) return;
       this.rightHeld = false;
     });
 
@@ -488,7 +472,7 @@ export class GameScene extends Phaser.Scene {
 
     this.input.keyboard.on("keydown-UP", () => {
       if (this.isPaused) {
-        this.pauseIndex = (this.pauseIndex + 1) % 2;
+        this.pauseIndex = Math.abs(this.pauseIndex - 1) % 2;
         this.updatePauseHighlight();
       } else {
         this.hardDrop();
@@ -514,10 +498,16 @@ export class GameScene extends Phaser.Scene {
 
     this.input.keyboard.on("keydown-ENTER", () => {
       if (!this.isPaused) return;
-      if (this.pauseIndex === 0) {
+      if (this.pauseIndex === 2) {
         this.resumeGame();
       } else {
-        this.scene.start("MainMenuScene");
+        // Set data for the start call
+        const data: GameSceneConfiguration = {
+          spawnSystem: this.currentSpawnSystem,
+          blockSkin: this.blockSkin,
+          gameMode: this.gameMode,
+        };
+        this.scene.start("MainMenuScene", data);
       }
     });
 
@@ -567,13 +557,17 @@ export class GameScene extends Phaser.Scene {
 
   private updatePauseHighlight(): void {
     this.pauseContainer.iterate((obj: Phaser.GameObjects.Text) => {
-      if (
-        obj instanceof Phaser.GameObjects.Text &&
-        obj.text !== "Game Paused"
-      ) {
-        obj.setColor("#aaaaaa");
+      if (obj instanceof Phaser.GameObjects.Text) {
+        const textIndex = this.pauseContainer.getIndex(obj);
+        if (textIndex === 1) return; // Skip the title text
+        obj.setStyle(PAUSE_OVERLAY_FONT_STYLE_ENTRIES);
       }
     });
+
+    const active = this.pauseContainer.getAt(
+      2 + this.pauseIndex
+    ) as Phaser.GameObjects.Text;
+    active.setStyle(PAUSE_OVERLAY_FONT_STYLE_ACTIVE_ENTRY);
   }
 
   private initializeGrid(): void {

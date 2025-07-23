@@ -59,6 +59,7 @@ Erweiterte Funktionen:
   ✔ Ghost-Piece für einfachere Platzierung @done(25-04-19 15:28)
 Benutzererfahrung verbessern:
   ☐ Einstellungsmenü (Sound, Steuerung)
+  ☐ Create proper keyboard bindings and handlers
   ☐ Bestenliste implementieren
   ☐ Tutorial/Hilfebildschirm
 Responsive Design:

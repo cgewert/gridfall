@@ -40,6 +40,17 @@ export class MainMenuScene extends Phaser.Scene {
     this.selectedEntry = (data?.gameMode as number) ?? MenuEntry.ENDLESS;
     this.currentSpawn = data?.spawnSystem ?? SpawnSystem.SEVEN_BAG;
     this.gameMode = data?.gameMode ?? GameMode.ENDLESS;
+    switch (data?.gameMode) {
+      case GameMode.MARATHON:
+        this.selectedEntry = MenuEntry.MARATHON;
+        break;
+      case GameMode.SPRINT:
+        this.selectedEntry = MenuEntry.SPRINT;
+        break;
+      case GameMode.ENDLESS:
+        this.selectedEntry = MenuEntry.ENDLESS;
+        break;
+    }
     this.blockSkin = data?.blockSkin ?? BlockSkin.MINOS2;
   }
 
@@ -77,7 +88,7 @@ export class MainMenuScene extends Phaser.Scene {
   /*
    * @param data - Custom data provided to the scene.
    */
-  public create(data: unknown) {
+  public create(data: GameSceneConfiguration) {
     this._main = this.cameras.main;
     addSceneBackground(this);
 

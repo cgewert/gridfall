@@ -5,6 +5,7 @@ import {
 } from "../effects/effects";
 import * as Phaser from "phaser";
 import { DEFAULT_FONT_STYLE } from "../fonts";
+import { DEFAULT_COLORS } from "../colors";
 
 export class TitleScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -47,7 +48,10 @@ export class TitleScene extends Phaser.Scene {
     // if (!this.music.isPlaying) this.music.play();
 
     addSceneBackground(this);
-    addAnimatedGridBackground(this, 40, 20);
+    const bgColor = Phaser.Display.Color.ValueToColor(
+      DEFAULT_COLORS[Phaser.Math.Between(0, 6)]
+    );
+    addAnimatedGridBackground(this, 40, 20, bgColor);
     this.addTitle();
     this.addPressKeyPrompt();
     this.addStartInputListener();
