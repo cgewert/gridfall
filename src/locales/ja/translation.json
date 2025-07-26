@@ -1,0 +1,17 @@
+{
+  "pressAnyKey": "任意のキーを押してください",
+  "gravity": "重力",
+  "pause": {
+    "title": "ゲーム一時停止",
+    "resume": "再開",
+    "backToMenu": "メニューに戻る"
+  },
+  "labels": {
+    "holdBox": "ホールド",
+    "previewBox": "プレビュー",
+    "nextBox": "次",
+    "lines": "ライン",
+    "level": "レベル",
+    "score": "スコア"
+  }
+}

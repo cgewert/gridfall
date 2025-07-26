@@ -3,6 +3,12 @@ import { TitleScene } from "./scenes/title-scene";
 import { MainMenuScene } from "./scenes/main-menu-scene";
 import { GameScene } from "./scenes/game-scene";
 import { GameOverScene } from "./scenes/game-over-scene";
+import en from "./locales/en/translation.json";
+import de from "./locales/de/translation.json";
+import ja from "./locales/ja/translation.json";
+import fr from "./locales/fr/translation.json";
+import i18next from "i18next";
+import LanguageDetector from "i18next-browser-languagedetector";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -36,4 +42,27 @@ export class Game extends PHASER.Game {
   }
 }
 
+i18next.use(LanguageDetector).init({
+  supportedLngs: ["de", "en", "fr", "ja"],
+  debug: true,
+  resources: {
+    en: {
+      translation: en,
+    },
+    fr: {
+      translation: fr,
+    },
+    de: {
+      translation: de,
+    },
+    ja: {
+      translation: ja,
+    },
+  },
+  lng: "en",
+  fallbackLng: "de",
+  interpolation: {
+    escapeValue: false,
+  },
+});
 const game = new Game();

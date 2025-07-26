@@ -14,7 +14,6 @@ import { ShapesSpawner, SpawnSystem } from "../spawn";
 import { gravityLevels } from "../speedCurves";
 import Phaser from "phaser";
 import { Rotation, GetKickData } from "../rotation";
-import { ENGLISH } from "../translation/english";
 import {
   DEFAULT_MENU_FONT,
   GUI_COMBO_STYLE,
@@ -23,10 +22,10 @@ import {
   GUI_LINES_STYLE,
   GUI_SCORE_STYLE,
   MENU_TITLE_FONT_COLOR,
-  PAUSE_OVERLAY_FONT_STYLE,
   PAUSE_OVERLAY_FONT_STYLE_ACTIVE_ENTRY,
   PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
 } from "../fonts";
+import { t } from "i18next";
 
 export enum GameMode {
   MARATHON = 1,
@@ -221,7 +220,7 @@ export class GameScene extends Phaser.Scene {
     );
 
     const title = this.add
-      .text(width / 2, height / 2 - 80, ENGLISH.PAUSE_OVERLAY.title, {
+      .text(width / 2, height / 2 - 80, t("pause.title"), {
         fontFamily: DEFAULT_MENU_FONT,
         fontSize: "32px",
         color: MENU_TITLE_FONT_COLOR,
@@ -231,10 +230,7 @@ export class GameScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const options = [
-      ENGLISH.PAUSE_OVERLAY.resume,
-      ENGLISH.PAUSE_OVERLAY.backToMenu,
-    ];
+    const options = [t("pause.resume"), t("pause.backToMenu")];
     const optionTexts = options.map((text, i) =>
       this.add
         .text(
@@ -253,7 +249,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createHoldBox(): void {
-    const boxX = this.gridOffsetX - GameScene.blockSize * 4;
+    const boxX = this.gridOffsetX - 160;
     const boxY = this.gridOffsetY;
     const boxWidth = GameScene.blockSize * 3;
     const boxHeight = GameScene.blockSize * 3;
@@ -261,14 +257,9 @@ export class GameScene extends Phaser.Scene {
     this.holdBox = this.add
       .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
       .setOrigin(0)
-      .setStrokeStyle(2, 0xffffff, 0.5);
+      .setStrokeStyle(2, 0xffffff, 1.0);
     this.add
-      .text(
-        boxX,
-        boxY - 24,
-        ENGLISH.GUI_LABELS.holdBox,
-        GUI_LABEL_HOLDBOX_STYLE
-      )
+      .text(boxX, boxY - 24, t("labels.holdBox"), GUI_LABEL_HOLDBOX_STYLE)
       .setOrigin(0, 0);
   }
 
@@ -279,18 +270,13 @@ export class GameScene extends Phaser.Scene {
     const boxWidth = GameScene.blockSize * 4;
     const boxHeight = GameScene.blockSize * 10;
     this.add
-      .text(
-        boxX,
-        boxY - 24,
-        ENGLISH.GUI_LABELS.nextBox,
-        GUI_LABEL_HOLDBOX_STYLE
-      )
+      .text(boxX, boxY - 24, t("labels.nextBox"), GUI_LABEL_HOLDBOX_STYLE)
       .setOrigin(0, 0);
 
     this.previewBox = this.add
       .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
       .setOrigin(0)
-      .setStrokeStyle(2, 0xffffff, 0.5);
+      .setStrokeStyle(2, 0xffffff, 1.0);
   }
 
   /*
@@ -414,12 +400,17 @@ export class GameScene extends Phaser.Scene {
       GUI_LINES_STYLE
     );
 
-    this.scoreText = this.add.text(20, 20, "Score: 0", GUI_SCORE_STYLE);
+    this.scoreText = this.add.text(
+      20,
+      20,
+      `${t("labels.score")}: 0`,
+      GUI_SCORE_STYLE
+    );
 
     this.levelText = this.add.text(
       20,
       50,
-      `Level: 1 (Gravity ${this.fallSpeed.toFixed(2)})`,
+      `${t("labels.level")}: 1 (${t("gravity")} ${this.fallSpeed.toFixed(2)})`,
       GUI_LEVEL_STYLE
     );
 
@@ -498,7 +489,7 @@ export class GameScene extends Phaser.Scene {
 
     this.input.keyboard.on("keydown-ENTER", () => {
       if (!this.isPaused) return;
-      if (this.pauseIndex === 2) {
+      if (this.pauseIndex === 0) {
         this.resumeGame();
       } else {
         // Set data for the start call
@@ -970,7 +961,7 @@ export class GameScene extends Phaser.Scene {
               x * GameScene.blockSize + this.gridOffsetX,
               y * GameScene.blockSize + this.gridOffsetY,
               this.blockSkin,
-              7
+              this.getOriginalSkinFrame(cell)
             )
             .setOrigin(0)
             .setDisplaySize(GameScene.blockSize, GameScene.blockSize);
@@ -979,6 +970,10 @@ export class GameScene extends Phaser.Scene {
         }
       });
     });
+  }
+  getOriginalSkinFrame(cell: string): number {
+    const frame = SHAPE_TO_BLOCKSKIN_FRAME[cell];
+    return frame !== undefined ? frame : 7; // Fallback to 7 if not found
   }
 
   private checkAndClearLines(): void {

@@ -1,0 +1,17 @@
+{
+  "pressAnyKey": "Press any key",
+  "gravity": "Gravity",
+  "pause": {
+    "title": "Game Paused",
+    "resume": "Resume",
+    "backToMenu": "Back to Menu"
+  },
+  "labels": {
+    "holdBox": "HOLD",
+    "previewBox": "PREVIEW",
+    "nextBox": "NEXT",
+    "lines": "LINES",
+    "level": "LEVEL",
+    "score": "SCORE"
+  }
+}

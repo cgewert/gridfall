@@ -6,6 +6,7 @@ import {
 import * as Phaser from "phaser";
 import { DEFAULT_FONT_STYLE } from "../fonts";
 import { DEFAULT_COLORS } from "../colors";
+import { t } from "i18next";
 
 export class TitleScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -109,7 +110,7 @@ export class TitleScene extends Phaser.Scene {
     this.pressKeyText = this.add.text(
       this.scale.width / 2,
       this.scale.height / 2 + 120,
-      "Press any key to start",
+      t("pressAnyKey"),
       DEFAULT_FONT_STYLE
     );
     this.pressKeyText.setOrigin(0.5);
