@@ -428,7 +428,7 @@ export class GameScene extends Phaser.Scene {
   private setUpKeyboardControls() {
     if (!this.input?.keyboard) return;
 
-    // THIS IS BULLSHIT HERE: don't use events
+    // TODO: Refactor to use polling instead of events for better control
     this.input.keyboard.on("keydown-LEFT", () => {
       if (this.isPaused) return;
       this.leftHeld = true;
