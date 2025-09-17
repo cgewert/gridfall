@@ -170,7 +170,6 @@ export class GameScene extends Phaser.Scene {
     this.leftHeld = false;
     this.rightHeld = false;
     this.softDropActive = false;
-    this.useSpeedCurve = false;
     this.dasTimer = 0;
     this.arrTimer = 0;
     this.initializeGrid();
