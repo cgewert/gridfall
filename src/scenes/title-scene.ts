@@ -1,12 +1,19 @@
 import { Soundtrack } from "../audio";
-import { BaseScene } from "./base-scene";
+import {
+  addAnimatedGridBackground,
+  addSceneBackground,
+} from "../effects/effects";
 import * as Phaser from "phaser";
+import { DEFAULT_FONT_STYLE } from "../fonts";
+import { DEFAULT_COLORS } from "../colors";
+import { t } from "i18next";
 
-export class TitleScene extends BaseScene {
+export class TitleScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
     key: "TitleScene",
   };
 
+  private _main: Phaser.Cameras.Scene2D.Camera | null = null;
   private titleText!: Phaser.GameObjects.Text;
   private pressKeyText!: Phaser.GameObjects.Text;
   private music!: Phaser.Sound.BaseSound;
@@ -19,8 +26,10 @@ export class TitleScene extends BaseScene {
   public init(data: unknown) {}
 
   public preload() {
-    this.load.audio("title_music", Soundtrack.track1);
-    this.load.image("title_logo", "assets/gfx/Gridfall.png");
+    // TODO: Load the music assets only after the game settings are implemented.
+    //this.load.audio("title_music", Soundtrack.track1);
+    this.load.image("title_logo", "assets/gfx/logos/Gridfall.png");
+    this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
   }
 
   /*
@@ -28,18 +37,22 @@ export class TitleScene extends BaseScene {
    */
   public create(data: unknown) {
     this._main = this.cameras.main;
-    this._viewPortHalfHeight = this._main.height / 2;
-    this._viewPortHalfWidth = this._main.width / 2;
-    this._viewPortHeight = this._main.height;
-    this._viewPortWidth = this._main.width;
+    this._main.setBackgroundColor("#000000");
 
-    this.music = this.sound.add("title_music", {
-      loop: true,
-      volume: 0.01,
-    });
+    // this.music = this.sound.add("title_music", {
+    //   loop: true,
+    //   volume: 0.01,
+    // });
 
-    this.music.play(); // Play the music
+    // TODO: Until we implemented the settings menu, disable music.
+    // this.music = this.sound.add("title_music", { loop: true, volume: 0.05 });
+    // if (!this.music.isPlaying) this.music.play();
 
+    addSceneBackground(this);
+    const bgColor = Phaser.Display.Color.ValueToColor(
+      DEFAULT_COLORS[Phaser.Math.Between(0, 6)]
+    );
+    addAnimatedGridBackground(this, 40, 20, bgColor);
     this.addTitle();
     this.addPressKeyPrompt();
     this.addStartInputListener();
@@ -56,28 +69,52 @@ export class TitleScene extends BaseScene {
 
   private addTitle(): void {
     const logo = this.add.image(
-      this._viewPortHalfWidth,
-      this._viewPortHalfHeight - 100,
+      this.scale.width / 2,
+      this.scale.height / 2 - 100,
       "title_logo"
     );
-    logo.setOrigin(0.5);
-    logo.setScale(0.5); // falls nötig – kannst du anpassen
+    logo.setScale(0.5).setAlpha(0.9);
+
+    this.tweens.add({
+      targets: logo,
+      scale: { from: 0.5, to: 0.4 },
+      duration: 3100,
+      ease: "Sine.easeInOut",
+      yoyo: true,
+      repeat: -1,
+      delay: 700,
+    });
+
+    const ellipse = new Phaser.Curves.Ellipse(
+      0,
+      0,
+      logo.displayWidth * 0.8,
+      logo.displayHeight * 0.9
+    );
+
+    this.add.particles(logo.x, logo.y, "sparkle", {
+      lifespan: 3000,
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 1, end: 0 },
+      frequency: 100,
+      emitZone: {
+        type: "edge",
+        source: ellipse,
+        quantity: 50,
+        yoyo: false,
+      },
+    });
   }
 
   private addPressKeyPrompt(): void {
     this.pressKeyText = this.add.text(
-      this._viewPortHalfWidth,
-      this._viewPortHalfHeight + 20,
-      "Press any key to start",
-      {
-        fontFamily: "Arial",
-        fontSize: "24px",
-        color: "#aaaaaa",
-      }
+      this.scale.width / 2,
+      this.scale.height / 2 + 120,
+      t("pressAnyKey"),
+      DEFAULT_FONT_STYLE
     );
     this.pressKeyText.setOrigin(0.5);
 
-    // Animation: sanftes Blinken per Tween
     this.tweens.add({
       targets: this.pressKeyText,
       alpha: 0,
@@ -91,7 +128,8 @@ export class TitleScene extends BaseScene {
   private addStartInputListener(): void {
     if (this.input?.keyboard) {
       this.input.keyboard.once("keydown", () => {
-        this.music.stop(); // Musik beenden
+        // this.music.stop();
+        this.sound.stopAll();
         this.scene.start("MainMenuScene");
       });
     } else {

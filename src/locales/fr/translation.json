@@ -1,0 +1,17 @@
+{
+  "pressAnyKey": "Appuyez sur n'importe quelle touche",
+  "gravity": "Gravité",
+  "pause": {
+    "title": "Jeu en pause",
+    "resume": "Reprendre",
+    "backToMenu": "Retour au menu"
+  },
+  "labels": {
+    "holdBox": "TENIR",
+    "previewBox": "PRÉVISUALISATION",
+    "nextBox": "SUIVANT",
+    "lines": "LIGNES",
+    "level": "NIVEAU",
+    "score": "POINTS"
+  }
+}

@@ -30,24 +30,26 @@ Spiellogik:
   ✔ Zeilen vervollständigen und entfernen @started(25-04-15 22:57) @done(25-04-19 15:27) @lasted(3d16h30m40s)
   ✔ Spieler-Input verarbeiten (Tastatur) @started(25-04-15 21:26) @done(25-04-19 15:27) @lasted(3d18h1m44s)
 Spielregeln:
-  ☐ Punktesystem implementieren
-  ☐ Level- und Geschwindigkeitssteigerung
+  ✔ Punktesystem implementieren @done(25-07-22 20:48)
+  ✔ Level- und Geschwindigkeitssteigerung @done(25-07-22 20:48)
   ✔ Game Over-Bedingungen festlegen @done(25-04-19 15:27)
 
 ### Phase 3: Grafik und Sound (Woche 5-6)
 
 Grafisches Design:
-  ☐ Sprites für Tetrominos erstellen/integrieren @started(25-04-19 15:28)
+  ✔ Sprites für Tetrominos erstellen/integrieren @started(25-04-19 15:28) @done(25-07-22 20:47) @lasted(13w3d5h19m15s)
   ☐ Spielfeldhintergrund gestalten @started(25-04-19 15:28)
   ☐ UI-Elemente entwerfen (Punkteanzeige, Next-Tetromino, etc.) @started(25-04-19 15:28)
+  ☐ Dont change color of placed pieces @started(25-07-22 20:49)
+  ☐ texture the current falling piece @started(25-07-22 20:49)
 Animation und Effekte:
   ☐ Zeilen-Entfernungs-Animation
   ☐ Level-Up-Effekte
   ☐ Game Over-Animation
 Sound:
-  ☐ Hintergrundmusik einbinden @started(25-04-19 15:28)
-  ☐ Soundeffekte für Bewegung, Rotation, Platzierung
-  ☐ Spezielle Sounds für Tetris (4 Zeilen auf einmal)
+  ✔ Hintergrundmusik einbinden @started(25-04-19 15:28) @done(25-07-22 20:47) @lasted(13w3d5h19m42s)
+  ✔ Soundeffekte für Bewegung, Rotation, Platzierung @done(25-07-22 20:47)
+  ✔ Spezielle Sounds für Tetris (4 Zeilen auf einmal) @done(25-07-22 20:47)
 
 ### Phase 4: Erweiterungen und Verfeinerung (Woche 7-8)
 
@@ -57,6 +59,7 @@ Erweiterte Funktionen:
   ✔ Ghost-Piece für einfachere Platzierung @done(25-04-19 15:28)
 Benutzererfahrung verbessern:
   ☐ Einstellungsmenü (Sound, Steuerung)
+  ☐ Create proper keyboard bindings and handlers
   ☐ Bestenliste implementieren
   ☐ Tutorial/Hilfebildschirm
 Responsive Design:

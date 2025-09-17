@@ -184,4 +184,22 @@ export const SHAPES: Record<string, TetriminoShape[]> = {
   ],
 };
 
+export const SHAPE_TO_BLOCKSKIN_FRAME: Record<string, number> = {
+  Z: 3,
+  L: 5,
+  O: 0,
+  S: 2,
+  I: 6,
+  J: 4,
+  T: 1,
+};
+
 export const SHAPE_TYPES = Object.freeze(Object.keys(SHAPES));
+
+export enum BlockSkin {
+  MINOS1 = "minos1",
+  MINOS2 = "minos2",
+  MINOS3 = "minos3",
+  MINOS4 = "minos4",
+  MINOS_PASTEL = "minosPastel",
+}

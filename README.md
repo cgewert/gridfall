@@ -4,6 +4,10 @@
 
 A game about blocks falling into a grid.
 
+## Developer
+
+ Christian Gewert <cgewert@gmail.com>
+
 ## Setup
 
 ```sh

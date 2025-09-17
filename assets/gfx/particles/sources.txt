@@ -1,0 +1,6 @@
+If not listed here assets are self owned or self made
+
+sakura.particle.png :    AI generated
+sakura.particle2.png :   AI generated
+sparkle.png :            AI generated
+
