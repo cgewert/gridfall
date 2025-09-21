@@ -26,12 +26,13 @@ import {
   PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
 } from "../fonts";
 import { t } from "i18next";
-
-export enum GameMode {
-  MARATHON = 1,
-  SPRINT = 2,
-  ENDLESS = 3,
-}
+import { addSceneBackground } from "../effects/effects";
+import {
+  GameActions,
+  GameMode,
+  GameModeToString,
+  LogGameAction,
+} from "../game";
 
 export interface GameSceneConfiguration {
   spawnSystem: SpawnSystem;
@@ -83,7 +84,7 @@ export class GameScene extends Phaser.Scene {
   private holdType: string | null = null;
   private holdUsedThisTurn: boolean = false;
   private holdGroup!: Phaser.GameObjects.Group;
-  private holdBox!: Phaser.GameObjects.Rectangle;
+  private holdBox!: Phaser.GameObjects.Graphics;
   private previewBox!: Phaser.GameObjects.Rectangle;
   private linesCleared: number = 0;
   private linesText!: Phaser.GameObjects.Text;
@@ -174,6 +175,10 @@ export class GameScene extends Phaser.Scene {
     this.arrTimer = 0;
     this.initializeGrid();
     this.spawner = new ShapesSpawner(this.currentSpawnSystem);
+    console.log(
+      "GameScene initialized with Game Mode:",
+      GameModeToString(this.gameMode)
+    );
   }
 
   public preload() {
@@ -248,18 +253,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createHoldBox(): void {
-    const boxX = this.gridOffsetX - 160;
+    const boxX = this.gridOffsetX - 120;
     const boxY = this.gridOffsetY;
-    const boxWidth = GameScene.blockSize * 3;
-    const boxHeight = GameScene.blockSize * 3;
+    const boxWidth = 120;
+    const boxHeight = 120;
 
     this.holdBox = this.add
-      .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
-      .setOrigin(0)
-      .setStrokeStyle(2, 0xffffff, 1.0);
+      .graphics()
+      .fillStyle(0xffffff, 1.0)
+      .fillRoundedRect(boxX, boxY, boxWidth, boxHeight)
+      .fillStyle(0x000000, 0.8)
+      .fillRoundedRect(boxX + 5, boxY + 5, boxWidth - 10, boxHeight - 10);
     this.add
       .text(boxX, boxY - 24, t("labels.holdBox"), GUI_LABEL_HOLDBOX_STYLE)
-      .setOrigin(0, 0);
+      .setOrigin(1, 0);
   }
 
   private createPreviewBox(): void {
@@ -299,6 +306,7 @@ export class GameScene extends Phaser.Scene {
     this.gridOffsetX = this._viewPortHalfWidth - GameScene.totalGridWidth / 2;
     this.gridOffsetY = this._viewPortHalfHeight - GameScene.totalGridHeight / 2;
 
+    addSceneBackground(this);
     this.spawner.generateNextQueue(5);
     this.previewGroup = this.add.group();
     this.currentTetrimino = this.add.group();
@@ -416,7 +424,7 @@ export class GameScene extends Phaser.Scene {
     this.comboText = this.add.text(20, 80, "", GUI_COMBO_STYLE);
 
     this.initializeGrid();
-    this.createGridGraphics();
+    this.createGridGraphics(0xffffff, 0.9);
     this.spawnTetrimino();
     this.createHoldBox();
     this.createPreviewBox();
@@ -566,7 +574,10 @@ export class GameScene extends Phaser.Scene {
     );
   }
 
-  private createGridGraphics(): void {
+  private createGridGraphics(
+    color: number = 0xffffff,
+    opacity: number = 1.0
+  ): void {
     this.blocksGroup = this.add.group();
 
     for (let y = 0; y < GameScene.gridHeight; y++) {
@@ -579,12 +590,12 @@ export class GameScene extends Phaser.Scene {
           posY,
           GameScene.blockSize,
           GameScene.blockSize,
-          0xffffff,
-          0.05
+          color,
+          opacity
         );
 
         block.setOrigin(0);
-        block.setStrokeStyle(1, 0xffffff, 0.1);
+        block.setStrokeStyle(1, 0x000000, 0.85);
         this.blocksGroup.add(block);
       }
     }
@@ -646,7 +657,7 @@ export class GameScene extends Phaser.Scene {
     this.updateGhost();
 
     if (this.checkCollision(0, 0)) {
-      this.handleGameOver(); // ⛔️ Spiel beenden
+      this.handleGameOver();
       return;
     }
   }
@@ -662,7 +673,6 @@ export class GameScene extends Phaser.Scene {
     const cols = shape[0].length;
     const rows = shape.length;
 
-    // Anzahl belegter Zellen berechnen
     const offsetX =
       (GameScene.blockSize * 3 - cols * (GameScene.blockSize / 2)) / 2;
     const offsetY =
@@ -831,10 +841,9 @@ export class GameScene extends Phaser.Scene {
         return;
       }
     }
-
-    // Kein gültiger Kick → keine Rotation
-    console.log(`Rotation ${direction} nicht möglich`);
     this.lastMoveWasRotation = false;
+
+    console.warn(`${t("debug.rotationNotPossible")}: ${direction}`);
   }
 
   private getNextRotation(
@@ -842,34 +851,18 @@ export class GameScene extends Phaser.Scene {
     direction: "left" | "right"
   ): Rotation {
     if (direction === "right") return (from + 1) % 4;
-    if (direction === "left") return (from + 3) % 4; // -1 + 4 = +3
+    if (direction === "left") return (from + 3) % 4;
+
     return from;
   }
 
-  private softDrop(): void {
-    if (this.checkCollision(0, 1, this.currentShape)) {
-      this.lockTetrimino();
-    } else {
-      this.currentPosition.y += 1;
-      this.updateTetriminoPosition();
-    }
-  }
-
   private hardDrop(): void {
+    LogGameAction(GameActions.HARD_DROP);
     while (!this.checkCollision(0, 1, this.currentShape)) {
       this.currentPosition.y += 1;
     }
     this.updateTetriminoPosition();
     this.lockTetrimino();
-  }
-
-  private canPlaceAt(x: number, y: number, rotation: Rotation): boolean {
-    const shape = this.getRotatedShape(this.currentTetriminoType, rotation);
-    return !this.checkCollision(x, y, shape);
-  }
-
-  private getRotatedShape(type: string, rotation: Rotation): number[][] {
-    return SHAPES[type][rotation];
   }
 
   private checkCollision(
@@ -886,7 +879,6 @@ export class GameScene extends Phaser.Scene {
           const gridX = posX + x;
           const gridY = posY + y;
 
-          // Prüfe Grid-Grenzen
           if (
             gridX < 0 ||
             gridX >= GameScene.gridWidth ||
@@ -931,6 +923,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private lockTetrimino(): void {
+    LogGameAction(GameActions.LOCK_PIECE);
     this.currentShape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
@@ -970,12 +963,14 @@ export class GameScene extends Phaser.Scene {
       });
     });
   }
-  getOriginalSkinFrame(cell: string): number {
+
+  private getOriginalSkinFrame(cell: string): number {
     const frame = SHAPE_TO_BLOCKSKIN_FRAME[cell];
     return frame !== undefined ? frame : 7; // Fallback to 7 if not found
   }
 
   private checkAndClearLines(): void {
+    LogGameAction(GameActions.CHECK_FOR_LINE_CLEAR);
     let clearedLinesCount = 0;
     for (let y = GameScene.gridHeight - 1; y >= 0; y--) {
       if (this.grid[y].every((cell) => cell !== GameScene.emptyGridValue)) {
@@ -983,22 +978,10 @@ export class GameScene extends Phaser.Scene {
         for (let x = 0; x < GameScene.gridWidth; x++) {
           const posX = this.gridOffsetX + x * GameScene.blockSize + offset;
           const posY = (y + 1) * GameScene.blockSize + offset;
-
           this.particleManager.emitParticleAt(posX, posY);
         }
         this.clearLine(y);
         clearedLinesCount++;
-        if (this.gameMode === GameMode.MARATHON) {
-          if (this.linesCleared >= 5) {
-            //this.triggerVictory();
-            return;
-          }
-
-          if (this.linesCleared % 10 === 0) {
-            this.level++;
-            this.updateFallSpeed();
-          }
-        }
         y++;
       }
     }
@@ -1007,7 +990,7 @@ export class GameScene extends Phaser.Scene {
       this.linesCleared += clearedLinesCount;
       if (this.comboActive) {
         this.combo++;
-        this.comboText.setText(`Combo x${this.combo}`);
+        this.comboText.setText(`${t("labels.combo")} x${this.combo}`);
         const maxPitch = 2.0;
         const pitch = 1.0 + ((this.combo - 2) / 13) * (maxPitch - 1.0);
         const clampedPitch = Phaser.Math.Clamp(pitch, 1.0, maxPitch);
@@ -1027,18 +1010,82 @@ export class GameScene extends Phaser.Scene {
       this.level = Math.floor(this.linesCleared / 10) + 1;
 
       if (this.level > levelBefore) {
-        this.levelText.setText(
-          `Level: ${this.level} (Gravity ${this.fallSpeed.toFixed(2)})`
-        );
         // Change fall speed based on level
         this.fallSpeed = 1.0 + (this.level - 1) * 0.15; // e.g. slightly increasing
+        console.log(
+          `Level up! New level: ${this.level} - Fall Speed: ${this.fallSpeed}`
+        );
+        this.levelText.setText(
+          `${t("labels.level")}: ${this.level} (${t(
+            "gravity"
+          )} ${this.fallSpeed.toFixed(2)})`
+        );
       }
-      this.linesText.setText(`LINES: ${this.linesCleared}`);
+      this.linesText.setText(`${t("labels.lines")}: ${this.linesCleared}`);
     } else {
       this.combo = 0;
       this.comboActive = false;
       this.comboText.setText("");
     }
+  }
+
+  private doGameModeLogic() {
+    switch (this.gameMode) {
+      case GameMode.SPRINT:
+        // No additional logic needed for Sprint mode on line clear
+        break;
+      case GameMode.MARATHON:
+        if (this.linesCleared % 10 === 0) {
+          this.level++;
+          this.updateFallSpeed();
+        }
+        break;
+      case GameMode.ENDLESS:
+        break;
+      default:
+        break;
+    }
+  }
+
+  private checkWinCondition() {
+    LogGameAction(GameActions.CHECK_FOR_WIN_CONDITION);
+    console.debug(`Current Game Mode: ${GameModeToString(this.gameMode)}`);
+    switch (this.gameMode) {
+      case GameMode.SPRINT:
+        this.checkSprintWin();
+        break;
+      case GameMode.MARATHON:
+        this.checkMarathonWin();
+        break;
+      case GameMode.ENDLESS:
+        break;
+      default:
+        break;
+    }
+  }
+
+  private checkMarathonWin() {
+    console.debug("Checking Marathon Win Condition");
+    console.debug(`Lines Cleared: ${this.linesCleared} / 150`);
+    console.debug(`Marathon Victory Condition: ${this.linesCleared >= 150}`);
+    if (this.linesCleared >= 150) {
+      LogGameAction(GameActions.MARATHON_VICTORY);
+      this.triggerVictory();
+    }
+  }
+
+  private checkSprintWin() {
+    if (this.linesCleared >= 40) {
+      LogGameAction(GameActions.SPRINT_VICTORY);
+      this.triggerVictory();
+    }
+  }
+
+  private triggerVictory(): void {
+    this.gameOver = true;
+    this.scene.start("VictoryScene", {
+      score: this.score,
+    });
   }
 
   private updateFallSpeed(): void {
@@ -1051,6 +1098,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private clearLine(lineIndex: number): void {
+    LogGameAction(GameActions.LINE_CLEAR);
     this.grid.splice(lineIndex, 1);
     this.grid.unshift(
       new Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
@@ -1107,7 +1155,7 @@ export class GameScene extends Phaser.Scene {
     this.lineClearSound.play();
 
     if (this.lastWasTSpin) {
-      // TODO: Zwischen T-Spin Arten unterscheiden und verschiedene Sounds abspielen
+      // TODO: Detect different T-Spin types
       this.tSpinSound.play();
       return;
     }
@@ -1134,6 +1182,7 @@ export class GameScene extends Phaser.Scene {
     this.scene.start("GameOverScene", {
       spawnSystem: this.currentSpawnSystem,
       blockSkin: this.blockSkin,
+      gameMode: this.gameMode,
     });
   }
 
@@ -1165,6 +1214,8 @@ export class GameScene extends Phaser.Scene {
    * @param delta - Time in ms since last update call.
    */
   public update(time: number, delta: number) {
+    this.checkWinCondition();
+    this.doGameModeLogic();
     if (!this.isPaused && !this.gameOver) {
       let effectiveFallSpeed = this.fallSpeed;
 
@@ -1199,7 +1250,7 @@ export class GameScene extends Phaser.Scene {
         }
       }
 
-      this.updateTetriminoPosition(); // aktualisiert die visuelle Position
+      this.updateTetriminoPosition();
     }
   }
 }

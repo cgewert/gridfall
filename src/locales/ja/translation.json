@@ -12,6 +12,10 @@
     "nextBox": "次",
     "lines": "ライン",
     "level": "レベル",
-    "score": "スコア"
+    "score": "スコア",
+    "combo": "コンボ"
+  },
+  "debug": {
+    "rotationNotPossible": "回転不可"
   }
 }

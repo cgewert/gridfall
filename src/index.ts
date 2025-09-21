@@ -3,6 +3,7 @@ import { TitleScene } from "./scenes/title-scene";
 import { MainMenuScene } from "./scenes/main-menu-scene";
 import { GameScene } from "./scenes/game-scene";
 import { GameOverScene } from "./scenes/game-over-scene";
+import { VictoryScene } from "./scenes/victory-scene";
 import en from "./locales/en/translation.json";
 import de from "./locales/de/translation.json";
 import ja from "./locales/ja/translation.json";
@@ -31,7 +32,7 @@ export class Game extends PHASER.Game {
       },
     },
     backgroundColor: "#000000",
-    scene: [TitleScene, MainMenuScene, GameScene, GameOverScene],
+    scene: [TitleScene, MainMenuScene, GameScene, GameOverScene, VictoryScene],
     audio: {
       disableWebAudio: false,
     },
