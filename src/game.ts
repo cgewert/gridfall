@@ -54,3 +54,33 @@ export const GameActionsToString = (action: GameActions): string => {
       return "Unknown";
   }
 };
+
+/***
+ * Creates an audio analyser node for the given scene's audio context.
+ * Returns an object containing the analyser node and a disconnect function.
+ * If the audio context is not available, returns an empty object.
+ */
+export const CreateAudioAnalysis = (scene: Phaser.Scene) => {
+  const webAudio = scene.sound as Phaser.Sound.WebAudioSoundManager;
+  if (!webAudio) return {};
+  const audioCtx = webAudio.context;
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 512;
+  // analyser.minDecibels = -90;  See https://docs.phaser.io/phaser/concepts/audio
+  // analyser.maxDecibels = -10;
+  const source = webAudio.locked ? null : webAudio.masterVolumeNode;
+  if (source) {
+    source.connect(analyser);
+  } else {
+    return {};
+  }
+
+  return {
+    analyser,
+    disconnect: () => {
+      try {
+        source && (source as any).disconnect(analyser);
+      } catch {}
+    },
+  };
+};

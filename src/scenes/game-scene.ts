@@ -163,6 +163,7 @@ export class GameScene extends Phaser.Scene {
     this.gameOver = false;
     this.isPaused = false;
     this.holdUsedThisTurn = false;
+    this.holdType = null;
     this.linesCleared = 0;
     this.score = 0;
     this.combo = 0;
@@ -707,11 +708,13 @@ export class GameScene extends Phaser.Scene {
     this.currentTetrimino?.clear(true, true);
 
     if (this.holdType) {
+      console.debug("Swapping current piece with hold piece");
       const temp = this.currentTetriminoType;
       this.currentTetriminoType = this.holdType;
       this.holdType = temp;
       this.spawnHeldTetrimino();
     } else {
+      console.debug("Holding current piece and spawn new piece");
       this.holdType = this.currentTetriminoType;
       this.spawnTetrimino();
     }
@@ -1048,8 +1051,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private checkWinCondition() {
-    LogGameAction(GameActions.CHECK_FOR_WIN_CONDITION);
-    console.debug(`Current Game Mode: ${GameModeToString(this.gameMode)}`);
+    //LogGameAction(GameActions.CHECK_FOR_WIN_CONDITION);
     switch (this.gameMode) {
       case GameMode.SPRINT:
         this.checkSprintWin();
@@ -1065,9 +1067,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private checkMarathonWin() {
-    console.debug("Checking Marathon Win Condition");
-    console.debug(`Lines Cleared: ${this.linesCleared} / 150`);
-    console.debug(`Marathon Victory Condition: ${this.linesCleared >= 150}`);
+    // console.debug("Checking Marathon Win Condition");
+    // console.debug(`Lines Cleared: ${this.linesCleared} / 150`);
+    // console.debug(`Marathon Victory Condition: ${this.linesCleared >= 150}`);
     if (this.linesCleared >= 150) {
       LogGameAction(GameActions.MARATHON_VICTORY);
       this.triggerVictory();
