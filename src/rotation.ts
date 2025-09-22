@@ -8,7 +8,7 @@ export enum Rotation {
 export type KickOffset = { x: number; y: number };
 export type KickData = Record<Rotation, Record<Rotation, KickOffset[]>>;
 
-// Kickdaten nach SRS Standard
+// SRS Standard Kicktables
 
 export const T_KICK_DATA: KickData = {
   [Rotation.SPAWN]: {
@@ -77,7 +77,6 @@ export const T_KICK_DATA: KickData = {
   },
 } as Record<Rotation, Record<Rotation, KickOffset[]>>;
 
-// I-Kickdaten sind speziell:
 export const I_KICK_DATA: KickData = {
   [Rotation.SPAWN]: {
     [Rotation.RIGHT]: [
@@ -145,7 +144,6 @@ export const I_KICK_DATA: KickData = {
   },
 } as Record<Rotation, Record<Rotation, KickOffset[]>>;
 
-// O-Tetrimino: keine Rotation nötig (nur Mittelpunktwechsel), daher keine Kicks nötig
 export const O_KICK_DATA: KickData = {
   [Rotation.SPAWN]: {
     [Rotation.RIGHT]: [{ x: 0, y: 0 }],
@@ -165,7 +163,6 @@ export const O_KICK_DATA: KickData = {
   },
 } as Record<Rotation, Record<Rotation, KickOffset[]>>;
 
-// Alle anderen (J, L, S, Z) verwenden dieselben Kickdaten wie T
 export const JLZS_KICK_DATA: KickData = {
   [Rotation.SPAWN]: {
     [Rotation.RIGHT]: [

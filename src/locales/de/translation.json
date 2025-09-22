@@ -12,6 +12,10 @@
     "nextBox": "NÄCHSTER",
     "lines": "LINIEN",
     "level": "LEVEL",
-    "score": "PUNKTE"
+    "score": "PUNKTE",
+    "combo": "KOMBO"
+  },
+  "debug": {
+    "rotationNotPossible": "Rotation nicht möglich"
   }
 }

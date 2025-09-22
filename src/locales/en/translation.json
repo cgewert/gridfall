@@ -12,6 +12,10 @@
     "nextBox": "NEXT",
     "lines": "LINES",
     "level": "LEVEL",
-    "score": "SCORE"
+    "score": "SCORE",
+    "combo": "COMBO"
+  },
+  "debug": {
+    "rotationNotPossible": "Rotation not possible"
   }
 }

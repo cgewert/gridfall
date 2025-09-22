@@ -1,9 +1,10 @@
 import * as Phaser from "phaser";
-import { GameMode, GameSceneConfiguration } from "./game-scene";
+import { GameSceneConfiguration } from "./game-scene";
 import { BlockSkin } from "../shapes";
 import { SpawnSystem } from "../spawn";
 import { addSceneBackground } from "../effects/effects";
 import { DEFAULT_FONT_STYLE } from "../fonts";
+import { GameMode } from "../game";
 
 enum MenuEntry {
   MARATHON,
