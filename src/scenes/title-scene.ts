@@ -7,6 +7,7 @@ import * as Phaser from "phaser";
 import { DEFAULT_FONT_STYLE } from "../fonts";
 import { DEFAULT_COLORS } from "../colors";
 import { t } from "i18next";
+import { CreateAudioAnalysis } from "../game";
 
 export class TitleScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -17,6 +18,9 @@ export class TitleScene extends Phaser.Scene {
   private titleText!: Phaser.GameObjects.Text;
   private pressKeyText!: Phaser.GameObjects.Text;
   private music!: Phaser.Sound.BaseSound;
+  private audioAnalyser?: AnalyserNode;
+  private lastTime: number = 0;
+  private logo: Phaser.GameObjects.Image = null!;
 
   constructor() {
     super(TitleScene.CONFIG);
@@ -27,7 +31,7 @@ export class TitleScene extends Phaser.Scene {
 
   public preload() {
     // TODO: Load the music assets only after the game settings are implemented.
-    //this.load.audio("title_music", Soundtrack.track1);
+    this.load.audio("title_music", Soundtrack.track1);
     this.load.image("title_logo", "assets/gfx/logos/Gridfall.png");
     this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
   }
@@ -38,15 +42,18 @@ export class TitleScene extends Phaser.Scene {
   public create(data: unknown) {
     this._main = this.cameras.main;
     this._main.setBackgroundColor("#000000");
+    this.sound.pauseOnBlur = false;
+    if (this.sound.locked) {
+      this.sound.once("unlocked", () => this.startAudioVis());
+    } else {
+      this.startAudioVis();
+    }
 
-    // this.music = this.sound.add("title_music", {
-    //   loop: true,
-    //   volume: 0.01,
-    // });
-
-    // TODO: Until we implemented the settings menu, disable music.
-    // this.music = this.sound.add("title_music", { loop: true, volume: 0.05 });
-    // if (!this.music.isPlaying) this.music.play();
+    this.music = this.sound.add("title_music", {
+      loop: true,
+      volume: 0.5,
+    });
+    if (!this.music.isPlaying) this.music.play();
 
     addSceneBackground(this);
     const bgColor = Phaser.Display.Color.ValueToColor(
@@ -58,13 +65,31 @@ export class TitleScene extends Phaser.Scene {
     this.addStartInputListener();
   }
 
+  private startAudioVis() {
+    const { analyser, disconnect } = CreateAudioAnalysis(this);
+    console.log("Analyser:", analyser);
+    if (analyser) this.audioAnalyser = analyser;
+    this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
+      disconnect && disconnect();
+    });
+  }
+
   /**
    * Updates the scene logic.
    * @param time - Overall time in ms since game started.
    * @param delta - Time in ms since last update call.
    */
   public update(time: number, delta: number) {
-    // Update the game logic here.
+    if (time - this.lastTime >= 50) {
+      this.lastTime = time;
+      if (this.audioAnalyser) {
+        const data = this.getAudioData(this.audioAnalyser);
+        const bass = data.slice(0, 24).reduce((a, b) => a + b, 0) / (24 * 255);
+        const scale = 1 + bass * 0.16;
+        this.logo.setScale(scale);
+        //this.cameras.main.setZoom(1 + bass * 0.02);
+      }
+    }
   }
 
   private addTitle(): void {
@@ -74,16 +99,17 @@ export class TitleScene extends Phaser.Scene {
       "title_logo"
     );
     logo.setScale(0.5).setAlpha(0.9);
+    this.logo = logo;
 
-    this.tweens.add({
-      targets: logo,
-      scale: { from: 0.5, to: 0.4 },
-      duration: 3100,
-      ease: "Sine.easeInOut",
-      yoyo: true,
-      repeat: -1,
-      delay: 700,
-    });
+    // this.tweens.add({
+    //   targets: logo,
+    //   scale: { from: 0.5, to: 0.4 },
+    //   duration: 3100,
+    //   ease: "Sine.easeInOut",
+    //   yoyo: true,
+    //   repeat: -1,
+    //   delay: 700,
+    // });
 
     const ellipse = new Phaser.Curves.Ellipse(
       0,
@@ -92,18 +118,18 @@ export class TitleScene extends Phaser.Scene {
       logo.displayHeight * 0.9
     );
 
-    this.add.particles(logo.x, logo.y, "sparkle", {
-      lifespan: 3000,
-      scale: { start: 0.5, end: 0 },
-      alpha: { start: 1, end: 0 },
-      frequency: 100,
-      emitZone: {
-        type: "edge",
-        source: ellipse,
-        quantity: 50,
-        yoyo: false,
-      },
-    });
+    // this.add.particles(logo.x, logo.y, "sparkle", {
+    //   lifespan: 3000,
+    //   scale: { start: 0.5, end: 0 },
+    //   alpha: { start: 1, end: 0 },
+    //   frequency: 100,
+    //   emitZone: {
+    //     type: "edge",
+    //     source: ellipse,
+    //     quantity: 50,
+    //     yoyo: false,
+    //   },
+    // });
   }
 
   private addPressKeyPrompt(): void {
@@ -128,12 +154,18 @@ export class TitleScene extends Phaser.Scene {
   private addStartInputListener(): void {
     if (this.input?.keyboard) {
       this.input.keyboard.once("keydown", () => {
-        // this.music.stop();
+        this.music.stop();
         this.sound.stopAll();
         this.scene.start("MainMenuScene");
       });
     } else {
       throw new Error("Keyboard input not available.");
     }
+  }
+
+  private getAudioData(analyser: AnalyserNode): Uint8Array {
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+    return data;
   }
 }
