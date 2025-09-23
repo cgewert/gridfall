@@ -33,6 +33,7 @@ import {
   GameModeToString,
   LogGameAction,
 } from "../game";
+import { TimerDisplay } from "../ui/TimerDisplay";
 
 export interface GameSceneConfiguration {
   spawnSystem: SpawnSystem;
@@ -60,6 +61,7 @@ export class GameScene extends Phaser.Scene {
   private currentRotationIndex: Rotation = Rotation.SPAWN; // Starting rotation
   private currentTetriminoType = "T"; // Starting with T-Tetrimino
   private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private timer!: TimerDisplay;
 
   private DAS = 166; // Delay Auto-Shift (DAS) in milliseconds
   private ARR = 33; // Auto-Repeat Rate (ARR) in milliseconds
@@ -293,6 +295,21 @@ export class GameScene extends Phaser.Scene {
     this._main = this.cameras.main;
     this._viewPortHalfHeight = this.scale.height / 2;
     this._viewPortHalfWidth = this.scale.width / 2;
+    this.timer = new TimerDisplay(this, {
+      x: 16,
+      y: 92,
+      prefix: "TIME ",
+      fontFamily: "Orbitron, monospace",
+      fontSize: 28,
+      color: "#FFFFFF",
+      stroke: "#00FFFF",
+      strokeThickness: 2,
+      shadow: true,
+      autostart: true,
+    });
+    this.timer.setDepth(10000);
+    this.add.existing(this.timer);
+    this.input.keyboard!.on("keydown-T", () => this.timer.start());
 
     this.currentSpawnSystem = data.spawnSystem;
     this.blockSkin = data.blockSkin;

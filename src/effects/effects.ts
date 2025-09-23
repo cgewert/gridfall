@@ -56,3 +56,83 @@ export function addAnimatedGridBackground(
     }
   }
 }
+
+export type ScanlinesOptions = {
+  key?: string;
+  alpha?: number;
+  blendMode?: number;
+  speedY?: number;
+  depth?: number;
+};
+
+export type ScanlinesHandle = {
+  sprite: Phaser.GameObjects.TileSprite;
+  setSpeedY: (v: number) => void;
+  setVisible: (v: boolean) => void;
+  setAlpha: (v: number) => void;
+  destroy: () => void;
+};
+
+/**
+ * Adds a scanline overlay to the scene.
+ * Requires a small pattern texture (e.g. 1×2 PNG) under the key 'scanlines'.
+ */
+export const addScanlines = (
+  scene: Phaser.Scene,
+  opts: ScanlinesOptions = {}
+): ScanlinesHandle => {
+  const key = opts.key ?? "scanlines";
+
+  if (!scene.textures.exists(key)) {
+    console.warn(
+      `[addScanlines] Texture "${key}" not found. Did you this.load.image('${key}', 'assets/gfx/scanlines.png') in preload()?`
+    );
+  }
+
+  const width = scene.scale.width;
+  const height = scene.scale.height;
+
+  const sprite = scene.add
+    .tileSprite(0, 0, width, height, key)
+    .setOrigin(0)
+    .setScrollFactor(0)
+    .setAlpha(opts.alpha ?? 0.15)
+    .setBlendMode(opts.blendMode ?? Phaser.BlendModes.NORMAL)
+    .setDepth(opts.depth ?? 10_000)
+    .setScale(2);
+
+  let speedY = opts.speedY ?? 0;
+
+  const onUpdate = (_time: number, delta: number) => {
+    if (speedY !== 0) {
+      sprite.tilePositionY += (speedY * delta) / 1000; // px/s
+    }
+  };
+
+  const onResize = () => {
+    sprite.setSize(scene.scale.width, scene.scale.height);
+  };
+
+  scene.events.on(Phaser.Scenes.Events.UPDATE, onUpdate);
+  scene.scale.on(Phaser.Scale.Events.RESIZE, onResize);
+
+  const destroy = () => {
+    scene.events.off(Phaser.Scenes.Events.UPDATE, onUpdate);
+    scene.scale.off(Phaser.Scale.Events.RESIZE, onResize);
+    sprite.destroy();
+  };
+
+  return {
+    sprite,
+    setSpeedY: (v: number) => {
+      speedY = v;
+    },
+    setVisible: (v: boolean) => {
+      sprite.setVisible(v);
+    },
+    setAlpha: (v: number) => {
+      sprite.setAlpha(v);
+    },
+    destroy,
+  };
+};

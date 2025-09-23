@@ -1,6 +1,7 @@
 import { Soundtrack } from "../audio";
 import {
   addAnimatedGridBackground,
+  addScanlines,
   addSceneBackground,
 } from "../effects/effects";
 import * as Phaser from "phaser";
@@ -21,6 +22,7 @@ export class TitleScene extends Phaser.Scene {
   private audioAnalyser?: AnalyserNode;
   private lastTime: number = 0;
   private logo: Phaser.GameObjects.Image = null!;
+  private scan?: ReturnType<typeof addScanlines>;
 
   constructor() {
     super(TitleScene.CONFIG);
@@ -33,7 +35,7 @@ export class TitleScene extends Phaser.Scene {
     // TODO: Load the music assets only after the game settings are implemented.
     this.load.audio("title_music", Soundtrack.track1);
     this.load.image("title_logo", "assets/gfx/logos/Gridfall.png");
-    this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
+    this.load.image("scanlines", "assets/gfx/sprites/scanlines.png");
   }
 
   /*
@@ -63,6 +65,11 @@ export class TitleScene extends Phaser.Scene {
     this.addTitle();
     this.addPressKeyPrompt();
     this.addStartInputListener();
+    this.scan = addScanlines(this, {
+      alpha: 0.15,
+      blendMode: Phaser.BlendModes.MULTIPLY,
+      speedY: 0.55,
+    });
   }
 
   private startAudioVis() {
@@ -71,6 +78,7 @@ export class TitleScene extends Phaser.Scene {
     if (analyser) this.audioAnalyser = analyser;
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
       disconnect && disconnect();
+      this.scan?.destroy();
     });
   }
 
