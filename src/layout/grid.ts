@@ -7,16 +7,26 @@ export const DEFAULT_GRID_HEIGHT = 20;
 
 export const BLOCKSIZE = 40;
 
-export const AddGrid = (
-  scene: Phaser.Scene,
-  width = DEFAULT_GRID_WIDTH,
-  height = DEFAULT_GRID_HEIGHT,
-  bgColor = DEFAULT_GRID_BG_COLOR,
-  strokeColor = DEFAULT_GRID_STROKE_COLOR,
-  bgOpacity = DEFAULT_GRID_BG_OPACITY,
-  strokeOpacity = DEFAULT_GRID_STROKE_OPACITY
-) => {
+export type GridConfig = {
+  width?: number;
+  height?: number;
+  bgColor?: number;
+  strokeColor?: number;
+  bgOpacity?: number;
+  strokeOpacity?: number;
+};
+
+export const AddGrid = (scene: Phaser.Scene, config: GridConfig = {}) => {
   const blocksGroup = scene.add.group();
+
+  const {
+    width = DEFAULT_GRID_WIDTH,
+    height = DEFAULT_GRID_HEIGHT,
+    bgColor = DEFAULT_GRID_BG_COLOR,
+    strokeColor = DEFAULT_GRID_STROKE_COLOR,
+    bgOpacity = DEFAULT_GRID_BG_OPACITY,
+    strokeOpacity = DEFAULT_GRID_STROKE_OPACITY,
+  } = config;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {

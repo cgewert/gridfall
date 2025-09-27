@@ -1,4 +1,4 @@
 export const Soundtrack = {
-  track1: "assets/audio/music/stack-to-win.mp3",
-  track2: "assets/audio/music/ethereal-echoes.mp3",
+  menu: "assets/audio/music/menu.wav",
+  title: "assets/audio/music/title.wav",
 };

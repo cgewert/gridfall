@@ -186,7 +186,7 @@ export class GameScene extends Phaser.Scene {
 
   public preload() {
     // Loading music
-    this.load.audio("track2", Soundtrack.track2);
+    this.load.audio("track2", Soundtrack.menu);
     // Loading sfx
     this.load.audio("comboSound", "assets/audio/sfx/combo.mp3");
     this.load.audio("lineClearSound", "assets/audio/sfx/clear.wav");
