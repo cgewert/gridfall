@@ -55,12 +55,18 @@ export const GameActionsToString = (action: GameActions): string => {
   }
 };
 
+export type AudioAnalysis = {
+  analyser?: AnalyserNode; // Web Audio API Analyser Node
+  disconnect?: () => void; // Function to disconnect the analyser
+  data?: Uint8Array; // Optional data array for audio data
+};
+
 /***
  * Creates an audio analyser node for the given scene's audio context.
  * Returns an object containing the analyser node and a disconnect function.
  * If the audio context is not available, returns an empty object.
  */
-export const CreateAudioAnalysis = (scene: Phaser.Scene) => {
+export const CreateAudioAnalysis = (scene: Phaser.Scene): AudioAnalysis => {
   const webAudio = scene.sound as Phaser.Sound.WebAudioSoundManager;
   if (!webAudio) return {};
   const audioCtx = webAudio.context;
@@ -82,5 +88,6 @@ export const CreateAudioAnalysis = (scene: Phaser.Scene) => {
         source && (source as any).disconnect(analyser);
       } catch {}
     },
+    data: new Uint8Array(analyser.frequencyBinCount),
   };
 };
