@@ -99,7 +99,7 @@ export const addScanlines = (
     .setAlpha(opts.alpha ?? 0.15)
     .setBlendMode(opts.blendMode ?? Phaser.BlendModes.NORMAL)
     .setDepth(opts.depth ?? 10_000)
-    .setScale(2);
+    .setScale(4);
 
   let speedY = opts.speedY ?? 0;
 

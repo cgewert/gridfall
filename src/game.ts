@@ -1,17 +1,26 @@
+import { BlockSkin } from "./shapes";
+import { SpawnSystem } from "./spawn";
+
+export type GameConfig = {
+  spawnSystem: SpawnSystem;
+  blockSkin: BlockSkin;
+  gameMode: GameMode;
+};
+
 export enum GameMode {
-  MARATHON = 1,
-  SPRINT = 2,
-  ENDLESS = 3,
+  ASCENT = 1,
+  RUSH = 2,
+  INFINITY = 3,
 }
 
 export const GameModeToString = (mode: GameMode): string => {
   switch (mode) {
-    case GameMode.MARATHON:
-      return "Marathon";
-    case GameMode.SPRINT:
-      return "Sprint";
-    case GameMode.ENDLESS:
-      return "Endless";
+    case GameMode.ASCENT:
+      return "Ascent";
+    case GameMode.RUSH:
+      return "Rush";
+    case GameMode.INFINITY:
+      return "Infinity";
     default:
       return "Unknown";
   }
@@ -24,8 +33,8 @@ export enum GameActions {
   LINE_CLEAR,
   LOCK_PIECE,
   VICTORY,
-  MARATHON_VICTORY,
-  SPRINT_VICTORY,
+  ASCENT_VICTORY,
+  RUSH_VICTORY,
 }
 
 export const LogGameAction = (action: GameActions) => {
@@ -44,10 +53,10 @@ export const GameActionsToString = (action: GameActions): string => {
       return "Lock Piece";
     case GameActions.CHECK_FOR_LINE_CLEAR:
       return "Check for Line Clear";
-    case GameActions.MARATHON_VICTORY:
-      return "Marathon Victory detected";
-    case GameActions.SPRINT_VICTORY:
-      return "Sprint Victory detected";
+    case GameActions.ASCENT_VICTORY:
+      return "Ascent Victory detected";
+    case GameActions.RUSH_VICTORY:
+      return "Rush Victory detected";
     case GameActions.CHECK_FOR_WIN_CONDITION:
       return "Check for Win Condition";
     default:

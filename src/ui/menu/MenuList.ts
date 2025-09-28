@@ -52,6 +52,17 @@ export class MenuList extends Phaser.GameObjects.Container {
     k.on("keydown-SPACE", () => this.choose());
   }
 
+  /***
+   * Selects a menu item by its label text.
+   */
+  public selectItem(label: string) {
+    const index = this.items.findIndex((item) => item.labelText.text === label);
+    if (index !== -1) {
+      this.index = index;
+      this.applyFocus();
+    }
+  }
+
   private enableGamepad(scene: Phaser.Scene) {
     scene.input.gamepad?.on("down", (_pad: any, button: any, value: any) => {
       if (value === 0) return;
@@ -72,7 +83,7 @@ export class MenuList extends Phaser.GameObjects.Container {
 
   private choose() {
     const cur = this.items[this.index];
-    const cfg = cur as any as { labelText: Phaser.GameObjects.Text };
+
     this.scene.tweens.add({
       targets: cur,
       scale: 1.15,
@@ -80,9 +91,9 @@ export class MenuList extends Phaser.GameObjects.Container {
       yoyo: true,
       ease: "Quad.easeOut",
     });
+
     this.sfxChoose?.play();
-    const action = (cur as any).__action as Function | undefined;
-    if (action) action();
+    cur.Action();
   }
 
   private applyFocus() {
@@ -118,10 +129,5 @@ export class MenuList extends Phaser.GameObjects.Container {
   public beat(intensity: number) {
     const cur = this.items[this.index];
     cur?.beatPulse(intensity);
-  }
-
-  public setAction(index: number, action: Function) {
-    const it = this.items[index];
-    (it as any).__action = action;
   }
 }

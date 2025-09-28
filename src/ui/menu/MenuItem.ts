@@ -4,7 +4,7 @@ export type MenuAction = () => void;
 
 export interface MenuItemConfig {
   label: string;
-  action?: MenuAction;
+  action: MenuAction;
   disabled?: boolean;
   meta?: Record<string, any>;
 }
@@ -13,13 +13,26 @@ export class MenuItem extends Phaser.GameObjects.Container {
   public readonly labelText: Phaser.GameObjects.Text;
   public readonly glow: Phaser.GameObjects.Rectangle;
   public disabled: boolean;
+
   private readonly baseScale = 1;
   private hoverScale = 1.03;
   private focusScale = 1.08;
+  private action: MenuAction = () => {};
+
+  public get Action(): MenuAction {
+    return this.action;
+  }
+
+  public set Action(a: MenuAction) {
+    this.action = a;
+  }
 
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: MenuItemConfig) {
     super(scene, x, y);
     this.disabled = !!cfg.disabled;
+    const { action, label } = cfg;
+
+    this.action = action;
 
     this.glow = scene.add
       .rectangle(0, 0, 480, 44, 0x00ffff, 0.12)
@@ -29,7 +42,7 @@ export class MenuItem extends Phaser.GameObjects.Container {
     this.add(this.glow);
 
     this.labelText = scene.add
-      .text(0, 0, cfg.label, {
+      .text(0, 0, label, {
         fontFamily: "Orbitron, sans-serif",
         fontSize: "28px",
         fontStyle: this.disabled ? "italic" : "normal",

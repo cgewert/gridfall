@@ -155,8 +155,8 @@ export class GameScene extends Phaser.Scene {
   public init(data: GameSceneConfiguration) {
     this.currentSpawnSystem = data?.spawnSystem ?? SpawnSystem.SEVEN_BAG;
     this.blockSkin = data?.blockSkin ?? BlockSkin.MINOS4;
-    this.gameMode = data?.gameMode ?? GameMode.MARATHON;
-    if (this.gameMode === GameMode.MARATHON) {
+    this.gameMode = data?.gameMode ?? GameMode.ASCENT;
+    if (this.gameMode === GameMode.ASCENT) {
       this.useSpeedCurve = true;
     } else {
       this.useSpeedCurve = false;
@@ -316,9 +316,9 @@ export class GameScene extends Phaser.Scene {
     this.gameMode = data.gameMode;
 
     // TODO: Game mode specific creation logic
-    if (this.gameMode === GameMode.ENDLESS) {
-    } else if (this.gameMode === GameMode.SPRINT) {
-    } else if (this.gameMode === GameMode.MARATHON) {
+    if (this.gameMode === GameMode.INFINITY) {
+    } else if (this.gameMode === GameMode.RUSH) {
+    } else if (this.gameMode === GameMode.ASCENT) {
     }
 
     this.gridOffsetX = this._viewPortHalfWidth - GameScene.totalGridWidth / 2;
@@ -1051,16 +1051,16 @@ export class GameScene extends Phaser.Scene {
 
   private doGameModeLogic() {
     switch (this.gameMode) {
-      case GameMode.SPRINT:
+      case GameMode.RUSH:
         // No additional logic needed for Sprint mode on line clear
         break;
-      case GameMode.MARATHON:
+      case GameMode.ASCENT:
         if (this.linesCleared % 10 === 0) {
           this.level++;
           this.updateFallSpeed();
         }
         break;
-      case GameMode.ENDLESS:
+      case GameMode.INFINITY:
         break;
       default:
         break;
@@ -1070,32 +1070,29 @@ export class GameScene extends Phaser.Scene {
   private checkWinCondition() {
     //LogGameAction(GameActions.CHECK_FOR_WIN_CONDITION);
     switch (this.gameMode) {
-      case GameMode.SPRINT:
+      case GameMode.RUSH:
         this.checkSprintWin();
         break;
-      case GameMode.MARATHON:
-        this.checkMarathonWin();
+      case GameMode.ASCENT:
+        this.checkAscentWin();
         break;
-      case GameMode.ENDLESS:
+      case GameMode.INFINITY:
         break;
       default:
         break;
     }
   }
 
-  private checkMarathonWin() {
-    // console.debug("Checking Marathon Win Condition");
-    // console.debug(`Lines Cleared: ${this.linesCleared} / 150`);
-    // console.debug(`Marathon Victory Condition: ${this.linesCleared >= 150}`);
+  private checkAscentWin() {
     if (this.linesCleared >= 150) {
-      LogGameAction(GameActions.MARATHON_VICTORY);
+      LogGameAction(GameActions.ASCENT_VICTORY);
       this.triggerVictory();
     }
   }
 
   private checkSprintWin() {
     if (this.linesCleared >= 40) {
-      LogGameAction(GameActions.SPRINT_VICTORY);
+      LogGameAction(GameActions.RUSH_VICTORY);
       this.triggerVictory();
     }
   }
