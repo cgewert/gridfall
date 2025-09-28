@@ -3,17 +3,14 @@ import { GameSceneConfiguration } from "./game-scene";
 import { BlockSkin } from "../shapes";
 import { SpawnSystem } from "../spawn";
 import { addScanlines, addSceneBackground } from "../effects/effects";
-import { AudioAnalysis, CreateAudioAnalysis, GameMode } from "../game";
+import {
+  AudioAnalysis,
+  CreateAudioAnalysis,
+  GameConfig,
+  GameMode,
+} from "../game";
 import { MenuList } from "../ui/menu/MenuList";
 import { Soundtrack } from "../audio";
-
-enum MenuEntry {
-  MARATHON,
-  SPRINT,
-  ENDLESS,
-  SPAWN_SYSTEM,
-  BLOCK_SKIN,
-}
 
 export class MainMenuScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -23,10 +20,9 @@ export class MainMenuScene extends Phaser.Scene {
   private menu!: MenuList;
   private audioAnalyser: AudioAnalysis = {} as AudioAnalysis;
   private music?: Phaser.Sound.WebAudioSound;
-  private selectedEntry = MenuEntry.ENDLESS;
   private currentSpawn = SpawnSystem.SEVEN_BAG;
   private blockSkin: BlockSkin = BlockSkin.MINOS2;
-  private gameMode: GameMode = GameMode.ENDLESS;
+  private gameMode: GameMode = GameMode.INFINITY;
   private blockpreview!: Phaser.GameObjects.Sprite;
 
   constructor() {
@@ -35,20 +31,8 @@ export class MainMenuScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
-    this.selectedEntry = (data?.gameMode as number) ?? MenuEntry.ENDLESS;
     this.currentSpawn = data?.spawnSystem ?? SpawnSystem.SEVEN_BAG;
-    this.gameMode = data?.gameMode ?? GameMode.ENDLESS;
-    switch (data?.gameMode) {
-      case GameMode.MARATHON:
-        this.selectedEntry = MenuEntry.MARATHON;
-        break;
-      case GameMode.SPRINT:
-        this.selectedEntry = MenuEntry.SPRINT;
-        break;
-      case GameMode.ENDLESS:
-        this.selectedEntry = MenuEntry.ENDLESS;
-        break;
-    }
+    this.gameMode = data?.gameMode ?? GameMode.ASCENT;
     this.blockSkin = data?.blockSkin ?? BlockSkin.MINOS2;
   }
 
@@ -92,7 +76,7 @@ export class MainMenuScene extends Phaser.Scene {
    */
   public create(data: GameSceneConfiguration) {
     addSceneBackground(this);
-    addScanlines(this, { alpha: 0.08, speedY: 2.2 });
+    addScanlines(this, { alpha: 0.12, speedY: 1.2 });
 
     this.menu = new MenuList(this, {
       x: this.scale.width * 0.5,
@@ -101,41 +85,72 @@ export class MainMenuScene extends Phaser.Scene {
       onMoveSoundKey: "ui-move",
       onChooseSoundKey: "ui-choose",
       items: [
-        { label: "Sprint", disabled: false },
-        { label: "Marathon", disabled: false },
-        { label: "Options", disabled: false },
-        { label: "Credits", disabled: false },
-        { label: "Quit", disabled: true },
+        {
+          label: "Ascent",
+          disabled: false,
+          action: () => {
+            console.log("Starting Ascent mode");
+
+            return this.startGame({
+              gameMode: GameMode.ASCENT,
+              blockSkin: this.blockSkin,
+              spawnSystem: this.currentSpawn,
+            });
+          },
+        },
+        {
+          label: "Infinity",
+          disabled: false,
+          action: () =>
+            this.startGame({
+              gameMode: GameMode.INFINITY,
+              blockSkin: this.blockSkin,
+              spawnSystem: this.currentSpawn,
+            }),
+        },
+        {
+          label: "Rush",
+          disabled: false,
+          action: () =>
+            this.startGame({
+              gameMode: GameMode.RUSH,
+              blockSkin: this.blockSkin,
+              spawnSystem: this.currentSpawn,
+            }),
+        },
+        {
+          label: "Credits",
+          disabled: false,
+          action: () => this.scene.start("CreditsScene"),
+        },
+        {
+          label: "Options",
+          disabled: false,
+          action: () => this.scene.start("OptionsScene"),
+        },
       ],
     });
-
-    this.menu.setAction(0, () => {
-      const config = {
-        spawnSystem: this.currentSpawn,
-        blockSkin: this.blockSkin,
-        gameMode: GameMode.SPRINT,
-      };
-      this.scene.start("GameScene", config);
-    });
-    this.menu.setAction(1, () => {
-      const config = {
-        spawnSystem: this.currentSpawn,
-        blockSkin: this.blockSkin,
-        gameMode: GameMode.MARATHON,
-      };
-      this.scene.start("GameScene", config);
-    });
-    this.menu.setAction(2, () => this.scene.start("OptionsScene"));
-    this.menu.setAction(3, () => this.scene.start("CreditsScene"));
+    switch (this.gameMode) {
+      case GameMode.ASCENT:
+        this.menu.selectItem("Ascent");
+        break;
+      case GameMode.RUSH:
+        this.menu.selectItem("Rush");
+        break;
+      case GameMode.INFINITY:
+        this.menu.selectItem("Infinity");
+        break;
+    }
 
     this.tweens.addCounter({
       from: 0,
       to: Math.PI * 2,
-      duration: 6000,
+      duration: 12000,
       repeat: -1,
       onUpdate: (tw) => {
         const t = tw.getValue();
-        this.cameras.main.setScroll(Math.sin(t!) * 6, Math.cos(t!) * 6);
+        this.menu.y = this.menu.y + Math.cos(t!) * 0.05;
+        this.menu.x = this.menu.x + Math.sin(t!) * 0.05;
       },
     });
 
@@ -151,17 +166,6 @@ export class MainMenuScene extends Phaser.Scene {
       this.audioAnalyser?.disconnect && this.audioAnalyser.disconnect();
       this.tweens.killAll();
     });
-
-    // const menu_entries = [
-    //   () => `Marathon`,
-    //   () => `Sprint`,
-    //   () => `Endless`,
-    //   () =>
-    //     `Spawn System: ${
-    //       this.currentSpawn === SpawnSystem.SEVEN_BAG ? "7-Bag" : "Random"
-    //     }`,
-    //   () => `Blocks: ${this.blockSkin}`,
-    // ];
 
     // menu_entries.forEach((_entryFn, i) => {
     //   const text = this.add
@@ -179,6 +183,10 @@ export class MainMenuScene extends Phaser.Scene {
     // });
   }
 
+  private startGame(config: GameConfig) {
+    this.scene.start("GameScene", config);
+  }
+
   /**
    * Updates the scene logic.
    * @param time - Overall time in ms since game started.
@@ -188,63 +196,63 @@ export class MainMenuScene extends Phaser.Scene {
     // Update the game logic here.
   }
 
-  private setupInput(menuEntries: (() => string)[]): void {
-    if (this.input?.keyboard) {
-      this.input.keyboard.on("keydown-ENTER", () => {
-        if (this.selectedEntry === MenuEntry.MARATHON) {
-          const config = {
-            spawnSystem: this.currentSpawn,
-            blockSkin: this.blockSkin,
-            gameMode: GameMode.MARATHON,
-          };
-          this.scene.start("GameScene", config);
-        } else if (this.selectedEntry === MenuEntry.SPRINT) {
-          const config = {
-            spawnSystem: this.currentSpawn,
-            blockSkin: this.blockSkin,
-            gameMode: GameMode.SPRINT,
-          };
-          this.scene.start("GameScene", config);
-        } else if (this.selectedEntry === MenuEntry.ENDLESS) {
-          const config = {
-            spawnSystem: this.currentSpawn,
-            blockSkin: this.blockSkin,
-            gameMode: GameMode.ENDLESS,
-          };
-          this.scene.start("GameScene", config);
-        } else if (this.selectedEntry === MenuEntry.SPAWN_SYSTEM) {
-          const isNowRandom = this.currentSpawn === SpawnSystem.SEVEN_BAG;
-          this.currentSpawn = isNowRandom
-            ? SpawnSystem.RANDOM
-            : SpawnSystem.SEVEN_BAG;
-        } else if (this.selectedEntry === MenuEntry.BLOCK_SKIN) {
-          const skins = Object.values(BlockSkin);
-          this.blockSkin =
-            skins[(skins.indexOf(this.blockSkin) + 1) % skins.length];
-          this.tweens.add({
-            targets: this.blockpreview,
-            scale: 0.0,
-            duration: 175,
-            ease: "Circular.Out",
-            onComplete: () => {
-              this.blockpreview.setTexture(
-                this.blockSkin,
-                Phaser.Math.Between(0, 6)
-              );
-              this.tweens.add({
-                targets: this.blockpreview,
-                scale: 0.5,
-                duration: 175,
-                ease: "Circular.In",
-              });
-            },
-          });
-        }
-      });
-    } else {
-      throw new Error("Keyboard input not available.");
-    }
-  }
+  // private setupInput(menuEntries: (() => string)[]): void {
+  //   if (this.input?.keyboard) {
+  //     this.input.keyboard.on("keydown-ENTER", () => {
+  //       if (this.selectedEntry === MenuEntry.MARATHON) {
+  //         const config = {
+  //           spawnSystem: this.currentSpawn,
+  //           blockSkin: this.blockSkin,
+  //           gameMode: GameMode.ASCENT,
+  //         };
+  //         this.scene.start("GameScene", config);
+  //       } else if (this.selectedEntry === MenuEntry.SPRINT) {
+  //         const config = {
+  //           spawnSystem: this.currentSpawn,
+  //           blockSkin: this.blockSkin,
+  //           gameMode: GameMode.RUSH,
+  //         };
+  //         this.scene.start("GameScene", config);
+  //       } else if (this.selectedEntry === MenuEntry.ENDLESS) {
+  //         const config = {
+  //           spawnSystem: this.currentSpawn,
+  //           blockSkin: this.blockSkin,
+  //           gameMode: GameMode.INFINITY,
+  //         };
+  //         this.scene.start("GameScene", config);
+  //       } else if (this.selectedEntry === MenuEntry.SPAWN_SYSTEM) {
+  //         const isNowRandom = this.currentSpawn === SpawnSystem.SEVEN_BAG;
+  //         this.currentSpawn = isNowRandom
+  //           ? SpawnSystem.RANDOM
+  //           : SpawnSystem.SEVEN_BAG;
+  //       } else if (this.selectedEntry === MenuEntry.BLOCK_SKIN) {
+  //         const skins = Object.values(BlockSkin);
+  //         this.blockSkin =
+  //           skins[(skins.indexOf(this.blockSkin) + 1) % skins.length];
+  //         this.tweens.add({
+  //           targets: this.blockpreview,
+  //           scale: 0.0,
+  //           duration: 175,
+  //           ease: "Circular.Out",
+  //           onComplete: () => {
+  //             this.blockpreview.setTexture(
+  //               this.blockSkin,
+  //               Phaser.Math.Between(0, 6)
+  //             );
+  //             this.tweens.add({
+  //               targets: this.blockpreview,
+  //               scale: 0.5,
+  //               duration: 175,
+  //               ease: "Circular.In",
+  //             });
+  //           },
+  //         });
+  //       }
+  //     });
+  //   } else {
+  //     throw new Error("Keyboard input not available.");
+  //   }
+  // }
 
   private startAudio() {
     if (this.music && this.music.isPlaying) return; // already started
