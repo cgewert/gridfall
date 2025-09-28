@@ -1,6 +1,6 @@
-![alt text](assets/gfx/Gridfall.png)
-
 # Gridfall
+
+![alt text](assets/gfx/logos/Gridfall.png)
 
 A game about blocks falling into a grid.
 
