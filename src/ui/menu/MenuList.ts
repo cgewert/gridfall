@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { MenuItem, MenuItemConfig } from "./MenuItem";
+import { AudioBus } from "../../services/AudioBus";
 
 export interface MenuListConfig {
   x: number;
@@ -22,9 +23,9 @@ export class MenuList extends Phaser.GameObjects.Container {
     this.gap = cfg.gap ?? 56;
 
     if (cfg.onChooseSoundKey)
-      this.sfxChoose = scene.sound.add(cfg.onChooseSoundKey, { volume: 0.7 });
+      this.sfxChoose = AudioBus.AddSceneAudio(scene, cfg.onChooseSoundKey);
     if (cfg.onMoveSoundKey)
-      this.sfxMove = scene.sound.add(cfg.onMoveSoundKey, { volume: 0.5 });
+      this.sfxMove = AudioBus.AddSceneAudio(scene, cfg.onMoveSoundKey);
 
     cfg.items.forEach((it, i) => {
       const item = new MenuItem(scene, 0, i * this.gap, it);
@@ -78,7 +79,7 @@ export class MenuList extends Phaser.GameObjects.Container {
     if (next == null) return;
     this.index = next;
     this.applyFocus();
-    this.sfxMove?.play();
+    AudioBus.PlaySfx(this.scene, "ui-move");
   }
 
   private choose() {
@@ -92,7 +93,7 @@ export class MenuList extends Phaser.GameObjects.Container {
       ease: "Quad.easeOut",
     });
 
-    this.sfxChoose?.play();
+    AudioBus.PlaySfx(this.scene, "ui-choose");
     cur.Action();
   }
 
