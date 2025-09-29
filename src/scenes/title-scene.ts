@@ -9,6 +9,8 @@ import { DEFAULT_FONT_STYLE } from "../fonts";
 import { DEFAULT_COLORS } from "../colors";
 import { t } from "i18next";
 import { AudioAnalysis, CreateAudioAnalysis } from "../game";
+import { AudioSettings } from "../services/AudioSettings";
+import { AudioBus } from "../services/AudioBus";
 
 export class TitleScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -40,6 +42,16 @@ export class TitleScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: unknown) {
+    // If the audio settings were not saved previously, create a local storage entry.
+    if (!AudioSettings.HasSettings) AudioSettings.save();
+    // Load local storage settings as early as possible.
+    AudioSettings.load();
+    console.info(
+      "Loaded audio settings:",
+      `Music Volume: ${AudioSettings.MusicVolume}`,
+      `SFX Volume: ${AudioSettings.SfxVolume}`
+    );
+
     this._main = this.cameras.main;
     this._main.setBackgroundColor("#000000");
     this.sound.pauseOnBlur = false;
@@ -49,11 +61,8 @@ export class TitleScene extends Phaser.Scene {
       this.startAudioVis();
     }
 
-    this.music = this.sound.add("title_music", {
-      loop: true,
-      volume: 0.2,
-    });
-    if (!this.music.isPlaying) this.music.play();
+    this.music = AudioBus.AddSceneAudio(this, "title_music", { loop: true });
+    AudioBus.PlayMusic(this, "title_music");
 
     addSceneBackground(this);
     const bgColor = Phaser.Display.Color.ValueToColor(

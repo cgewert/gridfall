@@ -11,6 +11,7 @@ import {
 } from "../game";
 import { MenuList } from "../ui/menu/MenuList";
 import { Soundtrack } from "../audio";
+import { AudioBus } from "../services/AudioBus";
 
 export class MainMenuScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -75,6 +76,10 @@ export class MainMenuScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
+    AudioBus.AddSceneAudio(this, "ui-move");
+    AudioBus.AddSceneAudio(this, "ui-choose");
+    AudioBus.AddSceneAudio(this, "menuLoop", { loop: true });
+
     addSceneBackground(this);
     addScanlines(this, { alpha: 0.12, speedY: 1.2 });
 
@@ -166,21 +171,6 @@ export class MainMenuScene extends Phaser.Scene {
       this.audioAnalyser?.disconnect && this.audioAnalyser.disconnect();
       this.tweens.killAll();
     });
-
-    // menu_entries.forEach((_entryFn, i) => {
-    //   const text = this.add
-    //     .text(this.scale.width / 2, baseY + i * 50, "", DEFAULT_FONT_STYLE)
-    //     .setOrigin(0.5);
-    //   this.menuTexts.push(text);
-    //   // Draw block skin
-    //   if (i === MenuEntry.BLOCK_SKIN) {
-    //     const skin = this.blockSkin;
-    //     this.blockpreview = this.add
-    //       .sprite(this.scale.width / 2 + 225, baseY + i * 50, skin, 1)
-    //       .setOrigin(0.5)
-    //       .setScale(0.5);
-    //   }
-    // });
   }
 
   private startGame(config: GameConfig) {
@@ -196,30 +186,6 @@ export class MainMenuScene extends Phaser.Scene {
     // Update the game logic here.
   }
 
-  // private setupInput(menuEntries: (() => string)[]): void {
-  //   if (this.input?.keyboard) {
-  //     this.input.keyboard.on("keydown-ENTER", () => {
-  //       if (this.selectedEntry === MenuEntry.MARATHON) {
-  //         const config = {
-  //           spawnSystem: this.currentSpawn,
-  //           blockSkin: this.blockSkin,
-  //           gameMode: GameMode.ASCENT,
-  //         };
-  //         this.scene.start("GameScene", config);
-  //       } else if (this.selectedEntry === MenuEntry.SPRINT) {
-  //         const config = {
-  //           spawnSystem: this.currentSpawn,
-  //           blockSkin: this.blockSkin,
-  //           gameMode: GameMode.RUSH,
-  //         };
-  //         this.scene.start("GameScene", config);
-  //       } else if (this.selectedEntry === MenuEntry.ENDLESS) {
-  //         const config = {
-  //           spawnSystem: this.currentSpawn,
-  //           blockSkin: this.blockSkin,
-  //           gameMode: GameMode.INFINITY,
-  //         };
-  //         this.scene.start("GameScene", config);
   //       } else if (this.selectedEntry === MenuEntry.SPAWN_SYSTEM) {
   //         const isNowRandom = this.currentSpawn === SpawnSystem.SEVEN_BAG;
   //         this.currentSpawn = isNowRandom
@@ -247,21 +213,13 @@ export class MainMenuScene extends Phaser.Scene {
   //             });
   //           },
   //         });
-  //       }
-  //     });
-  //   } else {
-  //     throw new Error("Keyboard input not available.");
-  //   }
-  // }
 
   private startAudio() {
     if (this.music && this.music.isPlaying) return; // already started
-    this.music = this.sound.add("menuLoop", {
-      loop: true,
-      volume: 0.2, // TODO: Load music volume from settings
-    }) as Phaser.Sound.WebAudioSound;
-
-    this.music.play();
+    this.music = AudioBus.PlayMusic(
+      this,
+      "menuLoop"
+    ) as Phaser.Sound.WebAudioSound;
     this.audioAnalyser = CreateAudioAnalysis(this);
 
     this.startBeatLoop();

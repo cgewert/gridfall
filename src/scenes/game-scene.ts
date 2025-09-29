@@ -34,6 +34,7 @@ import {
   LogGameAction,
 } from "../game";
 import { TimerDisplay } from "../ui/TimerDisplay";
+import { AudioBus } from "../services/AudioBus";
 
 export interface GameSceneConfiguration {
   spawnSystem: SpawnSystem;
@@ -333,30 +334,26 @@ export class GameScene extends Phaser.Scene {
     this.renderNextQueue();
     this.lockedBlocksGroup = this.add.group();
 
-    this.music = this.sound.add("track2", {
-      loop: true,
-      volume: 0.5,
-    });
-    //this.music.play();
+    this.music = AudioBus.AddSceneAudio(this, "track2");
 
-    this.comboSound = this.sound.add("comboSound");
-    this.lineClearSound = this.sound.add("lineClearSound");
-    this.rotateSound = this.sound.add("rotateSound");
-    this.lockSound = this.sound.add("lockSound");
-    this.rotateKickSound = this.sound.add("rotatekick");
-    this.doubleClearSound = this.sound.add("double");
-    this.tripleClearSound = this.sound.add("triple");
-    this.tetrisClearSound = this.sound.add("tetra");
-    this.tSpinSound = this.sound.add("tSpin");
-    this.allClearSound = this.sound.add("allClear");
-    this.holdSound = this.sound.add("hold");
-    this.moveSound = this.sound.add("move");
-    this.softDropSound = this.sound
-      .add("softDrop")
-      .setVolume(0.5)
-      .on("finish", () => {
-        this.softDropSound.play();
-      });
+    this.comboSound = AudioBus.AddSceneAudio(this, "comboSound");
+    this.lineClearSound = AudioBus.AddSceneAudio(this, "lineClearSound");
+    this.rotateSound = AudioBus.AddSceneAudio(this, "rotateSound");
+    this.lockSound = AudioBus.AddSceneAudio(this, "lockSound");
+    this.rotateKickSound = AudioBus.AddSceneAudio(this, "rotatekick");
+    this.doubleClearSound = AudioBus.AddSceneAudio(this, "double");
+    this.tripleClearSound = AudioBus.AddSceneAudio(this, "triple");
+    this.tetrisClearSound = AudioBus.AddSceneAudio(this, "tetra");
+    this.tSpinSound = AudioBus.AddSceneAudio(this, "tSpin");
+    this.allClearSound = AudioBus.AddSceneAudio(this, "allClear");
+    this.holdSound = AudioBus.AddSceneAudio(this, "hold");
+    this.moveSound = AudioBus.AddSceneAudio(this, "move");
+    this.softDropSound = AudioBus.AddSceneAudio(this, "softDrop").on(
+      "finish",
+      () => {
+        AudioBus.PlaySfx(this, "softDrop");
+      }
+    );
 
     this.particleManager = this.add
       .particles(0, 0, "sparkle", {
@@ -736,7 +733,7 @@ export class GameScene extends Phaser.Scene {
       this.spawnTetrimino();
     }
 
-    this.holdSound.play();
+    AudioBus.PlaySfx(this, "hold");
     this.renderHold();
   }
 
@@ -799,7 +796,7 @@ export class GameScene extends Phaser.Scene {
     this.currentPosition.x += direction;
     this.updateTetriminoPosition();
     this.updateGhost();
-    this.moveSound.play();
+    AudioBus.PlaySfx(this, "move");
   }
 
   private updateGhost(): void {
@@ -851,10 +848,10 @@ export class GameScene extends Phaser.Scene {
         this.createTetriminoBlocks();
         this.moveTetrimino(0);
         if (this.isTSpin()) {
-          this.rotateKickSound.play();
+          AudioBus.PlaySfx(this, "rotateKick");
           this.lastWasTSpin = true;
         } else {
-          this.rotateSound.play();
+          AudioBus.PlaySfx(this, "rotate");
           this.lastWasTSpin = false;
         }
 
