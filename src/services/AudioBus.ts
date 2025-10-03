@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import { AudioSettings } from "./AudioSettings";
 
 /** Central Hub for playing audio within scenes by paying attention to the saved audio settings. */
@@ -19,6 +20,7 @@ export class AudioBus {
     // Hack a tag onto the sound to differentiate music and sfx, as Phaser does not provide this.
     (snd as any).__tag = "music";
     (snd as Phaser.Sound.WebAudioSound).setVolume(AudioSettings.MusicVolume);
+    //(snd as Phaser.Sound.WebAudioSound).setVolume(1.0);
     if (!snd.isPlaying) snd.play();
 
     return snd;

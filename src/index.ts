@@ -10,6 +10,9 @@ import ja from "./locales/ja/translation.json";
 import fr from "./locales/fr/translation.json";
 import i18next from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { AudioMenuScene } from "./scenes/menus/AudioMenuScene";
+import { CreditsScene } from "./scenes/menus/CreditsScene";
+import { OptionsScene } from "./scenes/menus/OptionsScene";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -32,7 +35,16 @@ export class Game extends PHASER.Game {
       },
     },
     backgroundColor: "#000000",
-    scene: [TitleScene, MainMenuScene, GameScene, GameOverScene, VictoryScene],
+    scene: [
+      TitleScene,
+      MainMenuScene,
+      GameScene,
+      GameOverScene,
+      VictoryScene,
+      AudioMenuScene,
+      CreditsScene,
+      OptionsScene,
+    ],
     audio: {
       disableWebAudio: false,
     },
