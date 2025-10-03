@@ -18,6 +18,7 @@ export class MainMenuScene extends Phaser.Scene {
     key: "MainMenuScene",
   };
 
+  private menuStack: string[] = [];
   private menu!: MenuList;
   private audioAnalyser: AudioAnalysis = {} as AudioAnalysis;
   private music?: Phaser.Sound.WebAudioSound;
@@ -126,12 +127,12 @@ export class MainMenuScene extends Phaser.Scene {
         {
           label: "Credits",
           disabled: false,
-          action: () => this.scene.start("CreditsScene"),
+          action: () => this.openSubmenu("CreditsScene"),
         },
         {
           label: "Options",
           disabled: false,
-          action: () => this.scene.start("OptionsScene"),
+          action: () => this.openSubmenu("OptionsScene"),
         },
       ],
     });
@@ -236,8 +237,52 @@ export class MainMenuScene extends Phaser.Scene {
         analyser.getByteFrequencyData(data);
         const bass = data.slice(16, 32).reduce((a, b) => a + b, 0) / (16 * 255);
         this.menu.beat(bass);
-        //this.cameras.main.setZoom(1 + bass * 0.5);
+        if (bass > 0.4) {
+          this.cameras.main.shake(16, 0.002 * bass);
+        }
       },
+    });
+  }
+
+  private openSubmenu(key: string, data?: any) {
+    if (this.menuStack[this.menuStack.length - 1] === key) return;
+    const prevTop = this.menuStack.length
+      ? this.menuStack[this.menuStack.length - 1]
+      : this.scene.key;
+
+    this.scene.launch(key, { ...data, parentKey: this.scene.key });
+    this.menuStack.push(key);
+    const subMenu = this.scene.get(key) as Phaser.Scene;
+
+    subMenu.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      const idx = this.menuStack.lastIndexOf(key);
+      if (idx >= 0) this.menuStack.splice(idx, 1);
+      const newTop = this.menuStack.length
+        ? this.menuStack[this.menuStack.length - 1]
+        : this.scene.key;
+      this.scene.bringToTop(newTop);
+      this.updateMenuInputFocus();
+    });
+    subMenu.events.once(Phaser.Scenes.Events.CREATE, () => {
+      this.scene.bringToTop(key);
+      this.updateMenuInputFocus();
+    });
+  }
+
+  private updateMenuInputFocus() {
+    const top = this.menuStack.length
+      ? this.menuStack[this.menuStack.length - 1]
+      : this.scene.key;
+
+    const sceneKeys = [this.scene.key, ...this.menuStack];
+    sceneKeys.forEach((k) => {
+      const sc = this.scene.get(k) as Phaser.Scene;
+      sc.input.keyboard!.enabled = k === top;
+      if (k !== top) {
+        sc.input.keyboard!.resetKeys();
+      } else {
+        console.log(`Input focus on scene ${k}`);
+      }
     });
   }
 }
