@@ -8,22 +8,30 @@ export class CreditsScene extends BaseMenuScene {
     super(CreditsScene.KEY, "Credits");
   }
 
-  // TODO: Use phaser container alignment instead of manual positioning, delay text creation until after modal is created
   create(data: { parentKey?: string } = {}) {
     super.create(data);
-    this.add.text(this.modal.x - 150, 400, "GRIDFALL v1.0.0", {
-      fontSize: "32px",
+    this.add.text(this.modal.x - 150, 350, "GRIDFALL v1.0.0", {
+      fontSize: "26px",
       color: "#fff",
+      fontFamily: "Orbitron, sans-serif",
     });
 
-    this.add.text(this.modal.x - 150, 500, "Developed by dexter_coding", {
-      fontSize: "24px",
+    this.add.text(this.modal.x - 150, 400, "Developed by dexter_coding", {
+      fontSize: "18px",
       color: "#fff",
+      fontFamily: "Orbitron, sans-serif",
     });
 
-    this.add.text(this.modal.x - 150, 560, "Pastel Tetriminos by Aqua", {
-      fontSize: "24px",
+    this.add.text(this.modal.x - 150, 450, "Pastel/Neon Tetriminos by Aqua", {
+      fontSize: "18px",
       color: "#fff",
+      fontFamily: "Orbitron, sans-serif",
+    });
+
+    this.add.text(this.modal.x - 150, 490, "Testers: Overcast", {
+      fontSize: "18px",
+      color: "#fff",
+      fontFamily: "Orbitron, sans-serif",
     });
   }
 

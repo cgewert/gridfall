@@ -4,6 +4,7 @@ import { addScanlines } from "../../effects/effects";
 export abstract class BaseMenuScene extends Phaser.Scene {
   protected parentKey?: string;
   protected modal!: Phaser.GameObjects.Container;
+  protected contentBox!: Phaser.GameObjects.Rectangle;
   protected title!: string;
 
   constructor(key: string, title?: string) {
@@ -15,7 +16,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     const { width, height } = this.scale;
     this.parentKey = data.parentKey;
 
-    this.add
+    this.contentBox = this.add
       .rectangle(0, 0, width, height, 0x000000, 1.0)
       .setOrigin(0)
       .setInteractive();

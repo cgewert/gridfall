@@ -12,6 +12,7 @@ import {
 import { MenuList } from "../ui/menu/MenuList";
 import { Soundtrack } from "../audio";
 import { AudioBus } from "../services/AudioBus";
+import { t } from "i18next";
 
 export class MainMenuScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -39,6 +40,11 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   public preload() {
+    this.load.spritesheet("neon", "assets/gfx/spritesheets/neon.png", {
+      frameWidth: 30,
+      frameHeight: 30,
+    });
+
     this.load.spritesheet("minos1", "assets/gfx/spritesheets/minos-1.png", {
       frameWidth: 64,
       frameHeight: 64,
@@ -77,6 +83,8 @@ export class MainMenuScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
+    const { width, height } = this.scale;
+
     AudioBus.AddSceneAudio(this, "ui-move");
     AudioBus.AddSceneAudio(this, "ui-choose");
     AudioBus.AddSceneAudio(this, "menuLoop", { loop: true });
@@ -85,8 +93,8 @@ export class MainMenuScene extends Phaser.Scene {
     addScanlines(this, { alpha: 0.12, speedY: 1.2 });
 
     this.menu = new MenuList(this, {
-      x: this.scale.width * 0.5,
-      y: this.scale.height * 0.62,
+      x: width / 2,
+      y: height / 2,
       gap: 64,
       onMoveSoundKey: "ui-move",
       onChooseSoundKey: "ui-choose",
@@ -94,9 +102,8 @@ export class MainMenuScene extends Phaser.Scene {
         {
           label: "Ascent",
           disabled: false,
+          description: t("descriptions.ascent"),
           action: () => {
-            console.log("Starting Ascent mode");
-
             return this.startGame({
               gameMode: GameMode.ASCENT,
               blockSkin: this.blockSkin,
@@ -107,6 +114,7 @@ export class MainMenuScene extends Phaser.Scene {
         {
           label: "Infinity",
           disabled: false,
+          description: t("descriptions.infinity"),
           action: () =>
             this.startGame({
               gameMode: GameMode.INFINITY,
@@ -117,6 +125,7 @@ export class MainMenuScene extends Phaser.Scene {
         {
           label: "Rush",
           disabled: false,
+          description: t("descriptions.rush"),
           action: () =>
             this.startGame({
               gameMode: GameMode.RUSH,
@@ -136,6 +145,7 @@ export class MainMenuScene extends Phaser.Scene {
         },
       ],
     });
+
     switch (this.gameMode) {
       case GameMode.ASCENT:
         this.menu.selectItem("Ascent");
@@ -167,6 +177,10 @@ export class MainMenuScene extends Phaser.Scene {
       this.startAudio();
     }
 
+    this.events.on(Phaser.Scenes.Events.CREATE, () => {
+      this.menu.setPosition(width / 2, 200);
+    });
+
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.music?.stop();
       this.audioAnalyser?.disconnect && this.audioAnalyser.disconnect();
@@ -186,34 +200,6 @@ export class MainMenuScene extends Phaser.Scene {
   public update(time: number, delta: number) {
     // Update the game logic here.
   }
-
-  //       } else if (this.selectedEntry === MenuEntry.SPAWN_SYSTEM) {
-  //         const isNowRandom = this.currentSpawn === SpawnSystem.SEVEN_BAG;
-  //         this.currentSpawn = isNowRandom
-  //           ? SpawnSystem.RANDOM
-  //           : SpawnSystem.SEVEN_BAG;
-  //       } else if (this.selectedEntry === MenuEntry.BLOCK_SKIN) {
-  //         const skins = Object.values(BlockSkin);
-  //         this.blockSkin =
-  //           skins[(skins.indexOf(this.blockSkin) + 1) % skins.length];
-  //         this.tweens.add({
-  //           targets: this.blockpreview,
-  //           scale: 0.0,
-  //           duration: 175,
-  //           ease: "Circular.Out",
-  //           onComplete: () => {
-  //             this.blockpreview.setTexture(
-  //               this.blockSkin,
-  //               Phaser.Math.Between(0, 6)
-  //             );
-  //             this.tweens.add({
-  //               targets: this.blockpreview,
-  //               scale: 0.5,
-  //               duration: 175,
-  //               ease: "Circular.In",
-  //             });
-  //           },
-  //         });
 
   private startAudio() {
     if (this.music && this.music.isPlaying) return; // already started
@@ -281,7 +267,7 @@ export class MainMenuScene extends Phaser.Scene {
       if (k !== top) {
         sc.input.keyboard!.resetKeys();
       } else {
-        console.log(`Input focus on scene ${k}`);
+        console.debug(`Input focus on scene ${k}`);
       }
     });
   }

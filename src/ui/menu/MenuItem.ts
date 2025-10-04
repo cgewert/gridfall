@@ -7,10 +7,12 @@ export interface MenuItemConfig {
   action: MenuAction;
   disabled?: boolean;
   meta?: Record<string, any>;
+  description?: string;
 }
 
 export class MenuItem extends Phaser.GameObjects.Container {
   public readonly labelText: Phaser.GameObjects.Text;
+  public readonly descriptionText?: string;
   public readonly glow: Phaser.GameObjects.Rectangle;
   public disabled: boolean;
 
@@ -30,9 +32,10 @@ export class MenuItem extends Phaser.GameObjects.Container {
   constructor(scene: Phaser.Scene, x: number, y: number, cfg: MenuItemConfig) {
     super(scene, x, y);
     this.disabled = !!cfg.disabled;
-    const { action, label } = cfg;
+    const { action, label, description } = cfg;
 
     this.action = action;
+    this.descriptionText = description;
 
     this.glow = scene.add
       .rectangle(0, 0, 480, 44, 0x00ffff, 0.12)
@@ -78,6 +81,7 @@ export class MenuItem extends Phaser.GameObjects.Container {
     });
 
     this.alpha = 0;
+
     scene.tweens.add({
       targets: this,
       alpha: 1,

@@ -1,3 +1,5 @@
+import Phaser from "phaser";
+
 export class BaseScene extends Phaser.Scene {
   protected _main: Phaser.Cameras.Scene2D.Camera | null = null;
   protected _viewPortWidth: number = 0;
