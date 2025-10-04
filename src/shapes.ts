@@ -202,4 +202,5 @@ export enum BlockSkin {
   MINOS3 = "minos3",
   MINOS4 = "minos4",
   MINOS_PASTEL = "minosPastel",
+  MINOS_NEON = "neon",
 }
