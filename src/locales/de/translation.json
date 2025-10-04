@@ -13,7 +13,9 @@
     "lines": "LINIEN",
     "level": "LEVEL",
     "score": "PUNKTE",
-    "combo": "KOMBO"
+    "combo": "KOMBO",
+    "sliderMusicVolume": "Musiklautstärke",
+    "sliderSfxVolume": "SFX-Lautstärke"
   },
   "debug": {
     "rotationNotPossible": "Rotation nicht möglich"

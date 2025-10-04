@@ -13,7 +13,9 @@
     "lines": "LIGNES",
     "level": "NIVEAU",
     "score": "POINTS",
-    "combo": "COMBO"
+    "combo": "COMBO",
+    "sliderMusicVolume": "Volume de la musique",
+    "sliderSfxVolume": "Volume des effets sonores"
   },
   "debug": {
     "rotationNotPossible": "Rotation non possible"
