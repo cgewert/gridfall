@@ -17,5 +17,10 @@
   },
   "debug": {
     "rotationNotPossible": "Rotation non possible"
+  },
+  "descriptions": {
+    "infinity": "Mode infini, se termine uniquement lorsque vous atteignez le sommet. Combien de temps pouvez-vous survivre ?",
+    "rush": "Effacez 40 lignes aussi vite que possible !",
+    "ascent": "Effacez 150 lignes ! La gravité augmente toutes les 10 lignes."
   }
 }

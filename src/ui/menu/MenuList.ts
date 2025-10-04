@@ -17,6 +17,9 @@ export class MenuList extends Phaser.GameObjects.Container {
   private gap: number;
   private sfxChoose?: Phaser.Sound.BaseSound;
   private sfxMove?: Phaser.Sound.BaseSound;
+  private descContainer!: Phaser.GameObjects.Container;
+  private descBox!: Phaser.GameObjects.Rectangle;
+  private descText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene, cfg: MenuListConfig) {
     super(scene, cfg.x, cfg.y);
@@ -34,13 +37,32 @@ export class MenuList extends Phaser.GameObjects.Container {
       this.items.push(item);
     });
 
+    this.setScrollFactor(0);
     this.setDepth(5);
-    scene.add.existing(this);
 
     this.index = this.findNextEnabled(0, +1) ?? 0;
     this.applyFocus();
     this.enableKeyboard(scene);
     this.enableGamepad(scene);
+
+    this.descContainer = scene.add.container(260, 0);
+    this.descBox = scene.add
+      .rectangle(0, 0, 380, 110, 0x070a0f, 0.88)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(1, 0x00ffff, 0.65);
+    this.descText = scene.add
+      .text(12, 0, "", {
+        fontFamily: "Orbitron, sans-serif",
+        fontSize: "16px",
+        color: "#cfefff",
+        wordWrap: { width: 380 - 24 },
+      })
+      .setOrigin(0, 0.5);
+    this.descContainer.add([this.descBox, this.descText]);
+    this.descContainer.setAlpha(0);
+    this.add(this.descContainer);
+
+    scene.add.existing(this);
   }
 
   private enableKeyboard(scene: Phaser.Scene) {
@@ -68,9 +90,9 @@ export class MenuList extends Phaser.GameObjects.Container {
     scene.input.gamepad?.on("down", (_pad: any, button: any, value: any) => {
       if (value === 0) return;
       const idx = typeof button === "number" ? button : button.index;
-      if (idx === 0) this.choose(); // A / Cross
-      if (idx === 12) this.move(-1); // Dpad Up
-      if (idx === 13) this.move(+1); // Dpad Down
+      if (idx === 0) this.choose();
+      if (idx === 12) this.move(-1);
+      if (idx === 13) this.move(+1);
     });
   }
 
@@ -99,13 +121,31 @@ export class MenuList extends Phaser.GameObjects.Container {
 
   private applyFocus() {
     this.items.forEach((it, i) => it.setFocused(i === this.index));
-    const targetY = 150 - this.index * this.gap;
-    this.scene.tweens.add({
-      targets: this.listContainer,
-      y: targetY,
-      duration: 180,
-      ease: "Quad.easeOut",
-    });
+
+    const focusedItem = this.items[this.index];
+    const text = focusedItem.descriptionText ?? "";
+    if (text) {
+      this.descText?.setText(text);
+      if (this.descBox && this.descText)
+        Phaser.Display.Align.In.Center(this.descText, this.descBox);
+      if (this.descContainer?.alpha < 1) {
+        this.scene.tweens.add({
+          targets: this.descContainer,
+          alpha: 1,
+          duration: 120,
+          ease: "Quad.easeOut",
+        });
+      }
+    } else {
+      if (this.descContainer?.alpha > 0) {
+        this.scene.tweens.add({
+          targets: this.descContainer,
+          alpha: 0,
+          duration: 100,
+          ease: "Quad.easeOut",
+        });
+      }
+    }
   }
 
   private get listContainer(): Phaser.GameObjects.Container {

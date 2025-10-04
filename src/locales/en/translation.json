@@ -17,5 +17,10 @@
   },
   "debug": {
     "rotationNotPossible": "Rotation not possible"
+  },
+  "descriptions": {
+    "infinity": "Endless mode, only ends when you top out. How long can you survive?",
+    "rush": "Clear 40 lines as fast as you can!",
+    "ascent": "Clear 150 lines! Gravity increases every 10 lines."
   }
 }

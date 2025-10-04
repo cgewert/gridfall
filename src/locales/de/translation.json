@@ -17,5 +17,10 @@
   },
   "debug": {
     "rotationNotPossible": "Rotation nicht möglich"
+  },
+  "descriptions": {
+    "infinity": "Endlosmodus, endet nur, wenn du oben ankommst. Wie lange kannst du überleben?",
+    "rush": "Löse so schnell wie möglich 40 Linien auf.",
+    "ascent": "Löse 150 Linien auf! Die Schwerkraft erhöht sich alle 10 Linien."
   }
 }
