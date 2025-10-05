@@ -3,9 +3,24 @@ import { AudioBus } from "../../services/AudioBus";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { t } from "i18next";
 
+type SliderRef = {
+  name: "Music" | "SFX";
+  cx: number;
+  cy: number;
+  width: number;
+  height: number;
+  bg: Phaser.GameObjects.Rectangle;
+  fill: Phaser.GameObjects.Rectangle;
+  label: Phaser.GameObjects.Text;
+  getter: () => number;
+  setter: (v: number) => void;
+};
+
 export class AudioMenuScene extends BaseMenuScene {
   private musicFill!: Phaser.GameObjects.Rectangle;
   private sfxFill!: Phaser.GameObjects.Rectangle;
+  private sliders: SliderRef[] = [];
+  private activeIndex = 0;
   private labelStyle: Phaser.Types.GameObjects.Text.TextStyle = {
     fontFamily: "Orbitron, sans-serif",
     fontSize: "22px",
@@ -22,7 +37,7 @@ export class AudioMenuScene extends BaseMenuScene {
     this.createSlider(
       0,
       0,
-      t("labels.sliderMusicVolume"),
+      "Music",
       () => AudioSettings.MusicVolume,
       (v) => this.setMusic(v)
     );
@@ -30,10 +45,22 @@ export class AudioMenuScene extends BaseMenuScene {
     this.createSlider(
       0,
       100,
-      t("labels.sliderSfxVolume"),
+      "SFX",
       () => AudioSettings.SfxVolume,
       (v) => this.setSfx(v)
     );
+
+    this.input.keyboard?.on("keydown-UP", () =>
+      this.setActiveSlider(this.activeIndex - 1)
+    );
+    this.input.keyboard?.on("keydown-DOWN", () =>
+      this.setActiveSlider(this.activeIndex + 1)
+    );
+    this.input.keyboard?.on("keydown-LEFT", () => this.nudgeActive(-0.05));
+    this.input.keyboard?.on("keydown-RIGHT", () => this.nudgeActive(+0.05));
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
+    this.setActiveSlider(0);
   }
 
   /***
@@ -47,18 +74,12 @@ export class AudioMenuScene extends BaseMenuScene {
   private createSlider(
     cx: number,
     cy: number,
-    label: string,
+    name: "Music" | "SFX",
     getter: () => number,
     setter: (v: number) => void
   ) {
     const sliderWidth = 420;
     const sliderHeight = 16;
-
-    const sliderLabel = this.add
-      .text(cx - sliderWidth / 2, cy, label, this.labelStyle)
-      .setOrigin(0, 1);
-    sliderLabel.setY(sliderLabel.y - sliderLabel.height);
-    this.modal.add(sliderLabel);
 
     const bg = this.add
       .rectangle(cx, cy, sliderWidth, sliderHeight, 0xffffff, 0.08)
@@ -76,27 +97,43 @@ export class AudioMenuScene extends BaseMenuScene {
       .setBlendMode(Phaser.BlendModes.ADD);
     this.modal.add([bg, fill]);
 
-    if (label === "Music") this.musicFill = fill;
-    else this.sfxFill = fill;
-
-    // TODO: Don't support pointer input for now
-
-    // bg.setInteractive({ useHandCursor: true });
-    // const onPointer = (pointer: Phaser.Input.Pointer) => {
-    //   const rel = Phaser.Math.Clamp((pointer.x - (cx - w / 2)) / w, 0, 1);
-    //   setter(rel);
-    // };
-    // bg.on("pointerdown", onPointer);
-    // bg.on("pointermove", (p: Phaser.Input.Pointer) => {
-    //   if (p.isDown) onPointer(p);
-    // });
-
-    this.input.keyboard?.on("keydown-LEFT", () =>
-      setter(Phaser.Math.Clamp(getter() - 0.05, 0, 1))
-    );
-    this.input.keyboard?.on("keydown-RIGHT", () =>
-      setter(Phaser.Math.Clamp(getter() + 0.05, 0, 1))
-    );
+    let sliderLabel;
+    if (name === "Music") {
+      sliderLabel = this.add
+        .text(
+          cx - sliderWidth / 2,
+          cy,
+          t("labels.sliderMusicVolume"),
+          this.labelStyle
+        )
+        .setOrigin(0, 1);
+      sliderLabel.setY(sliderLabel.y - sliderLabel.height);
+      this.musicFill = fill;
+    } else {
+      this.sfxFill = fill;
+      sliderLabel = this.add
+        .text(
+          cx - sliderWidth / 2,
+          cy,
+          t("labels.sliderSfxVolume"),
+          this.labelStyle
+        )
+        .setOrigin(0, 1);
+      sliderLabel.setY(sliderLabel.y - sliderLabel.height);
+    }
+    this.modal.add(sliderLabel);
+    this.sliders.push({
+      name,
+      cx,
+      cy,
+      width: sliderWidth,
+      height: sliderHeight,
+      bg,
+      fill,
+      label: sliderLabel,
+      getter,
+      setter,
+    });
   }
 
   private setMusic(v: number) {
@@ -105,11 +142,15 @@ export class AudioMenuScene extends BaseMenuScene {
     if (this.musicFill) this.musicFill.width = Math.max(6, v * 420);
     this.applyToParent();
   }
+
   private setSfx(v: number) {
+    const oldValue = AudioSettings.SfxVolume;
+    if (v === oldValue) return;
     AudioSettings.SfxVolume = v;
     console.debug("Set SFX volume to", v);
     if (this.sfxFill) this.sfxFill.width = Math.max(6, v * 420);
     this.applyToParent();
+    if (v > 0 && v <= 1) AudioBus.PlaySfx(this, "ui-move");
   }
 
   /**
@@ -121,5 +162,46 @@ export class AudioMenuScene extends BaseMenuScene {
       const parent = this.scene.get(this.parentKey) as Phaser.Scene | undefined;
       parent && AudioBus.ApplySettings(parent);
     }
+  }
+
+  private setActiveSlider(i: number) {
+    if (!this.sliders.length) return;
+    this.activeIndex = (i + this.sliders.length) % this.sliders.length;
+
+    this.sliders.forEach((s, idx) => {
+      const focused = idx === this.activeIndex;
+      s.bg.setStrokeStyle(focused ? 2 : 1, 0x00ffff, focused ? 1.0 : 0.6);
+      s.bg.setScale(focused ? 1.0 : 1.0);
+      s.label.setStyle({ color: focused ? "#cfefff" : "#9ad" });
+      if (focused) {
+        this.tweens.add({
+          targets: s.bg,
+          scaleX: 1.03,
+          duration: 140,
+          yoyo: true,
+          ease: "Sine.easeInOut",
+        });
+      }
+    });
+  }
+
+  private nudgeActive(delta: number) {
+    const s = this.sliders[this.activeIndex];
+    if (!s) return;
+    const next = Phaser.Math.Clamp(s.getter() + delta, 0, 1);
+    s.setter(next);
+    s.fill.width = Math.max(6, next * s.width);
+    this.tweens.add({
+      targets: s.fill,
+      alpha: 1,
+      duration: 60,
+      yoyo: true,
+      ease: "Quad.easeOut",
+    });
+  }
+
+  private onShutdown() {
+    this.tweens.killAll();
+    this.sliders = [];
   }
 }

@@ -95,9 +95,14 @@ export abstract class BaseMenuScene extends Phaser.Scene {
       .setOrigin(0.5);
     this.modal.add(this.textTitle);
 
-    // Add back hint
+    // Add controls hint
     const hint = this.add
-      .text(0, panelHeight / 2 - 36, "ESC / B: Back", this.textStyleHint)
+      .text(
+        0,
+        panelHeight / 2 - 36,
+        "UP/DOWN: Select | ESC: Back",
+        this.textStyleHint
+      )
       .setOrigin(0.5);
     this.modal.add(hint);
 
