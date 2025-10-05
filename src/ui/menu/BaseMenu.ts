@@ -3,35 +3,80 @@ import { addScanlines } from "../../effects/effects";
 
 export abstract class BaseMenuScene extends Phaser.Scene {
   protected parentKey?: string;
+  /*** Content container for the menu */
   protected modal!: Phaser.GameObjects.Container;
   protected contentBox!: Phaser.GameObjects.Rectangle;
   protected title!: string;
+  protected textStyleTitle: Phaser.Types.GameObjects.Text.TextStyle = {
+    fontFamily: "Orbitron, sans-serif",
+    fontSize: "42px",
+    stroke: "#00ffff",
+    strokeThickness: 1,
+  };
+  protected textStyleHint: Phaser.Types.GameObjects.Text.TextStyle = {
+    fontFamily: "sans-serif",
+    fontSize: "16px",
+    color: "#9ad",
+  };
+  protected textTitle!: Phaser.GameObjects.Text;
 
   constructor(key: string, title?: string) {
     super(key);
     this.title = title || "Menu";
   }
 
+  public get TextStyleTitle(): Phaser.Types.GameObjects.Text.TextStyle {
+    return this.textStyleTitle;
+  }
+
+  public set TextStyleTitle(value: Phaser.Types.GameObjects.Text.TextStyle) {
+    this.textStyleTitle = value;
+  }
+
+  public get TextStyleHint(): Phaser.Types.GameObjects.Text.TextStyle {
+    return this.textStyleHint;
+  }
+
+  public set TextStyleHint(value: Phaser.Types.GameObjects.Text.TextStyle) {
+    this.textStyleHint = value;
+  }
+
   public create(data: { parentKey?: string } = {}): void {
     const { width, height } = this.scale;
     this.parentKey = data.parentKey;
 
+    // Create non transparent, dark Background
     this.contentBox = this.add
       .rectangle(0, 0, width, height, 0x000000, 1.0)
       .setOrigin(0)
       .setInteractive();
 
+    // Add scanline effect
     addScanlines(this, { alpha: 0.12, speedY: 1.2 });
-    this.modal = this.add.container(width * 0.5, height * 0.52);
 
-    const panelW = 720,
-      panelH = 440,
-      r = 16;
+    // Create content panel
+    this.modal = this.add.container(width * 0.5, height * 0.52);
+    const panelWidth = 720;
+    const panelHeight = 440;
+    const radius = 16;
     const g = this.add.graphics();
+
     g.fillStyle(0x070a0f, 0.92);
-    g.fillRoundedRect(-panelW / 2, -panelH / 2, panelW, panelH, r);
+    g.fillRoundedRect(
+      -panelWidth / 2,
+      -panelHeight / 2,
+      panelWidth,
+      panelHeight,
+      radius
+    );
     g.lineStyle(2, 0x00ffff, 0.85);
-    g.strokeRoundedRect(-panelW / 2, -panelH / 2, panelW, panelH, r);
+    g.strokeRoundedRect(
+      -panelWidth / 2,
+      -panelHeight / 2,
+      panelWidth,
+      panelHeight,
+      radius
+    );
     this.modal.add(g);
 
     // Entrance animation
@@ -45,23 +90,14 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     });
 
     // Add menu title
-    const title = this.add
-      .text(0, -panelH / 2 + 60, this.title, {
-        fontFamily: "Orbitron, sans-serif",
-        fontSize: "42px",
-        stroke: "#00ffff",
-        strokeThickness: 1,
-      })
+    this.textTitle = this.add
+      .text(0, -panelHeight / 2 + 60, this.title, this.textStyleTitle)
       .setOrigin(0.5);
-    this.modal.add(title);
+    this.modal.add(this.textTitle);
 
     // Add back hint
     const hint = this.add
-      .text(0, panelH / 2 - 36, "ESC / B: Back", {
-        fontFamily: "sans-serif",
-        fontSize: "16px",
-        color: "#9ad",
-      })
+      .text(0, panelHeight / 2 - 36, "ESC / B: Back", this.textStyleHint)
       .setOrigin(0.5);
     this.modal.add(hint);
 

@@ -13,7 +13,9 @@
     "lines": "ライン",
     "level": "レベル",
     "score": "スコア",
-    "combo": "コンボ"
+    "combo": "コンボ",
+    "sliderMusicVolume": "音楽の音量",
+    "sliderSfxVolume": "SFXの音量"
   },
   "debug": {
     "rotationNotPossible": "回転不可"

@@ -72,8 +72,8 @@ i18next.use(LanguageDetector).init({
       translation: ja,
     },
   },
-  lng: "en",
-  fallbackLng: "de",
+  lng: "de",
+  fallbackLng: "en",
   interpolation: {
     escapeValue: false,
   },
