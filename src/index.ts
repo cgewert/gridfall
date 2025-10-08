@@ -13,6 +13,8 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import { AudioMenuScene } from "./scenes/menus/AudioMenuScene";
 import { CreditsScene } from "./scenes/menus/CreditsScene";
 import { OptionsScene } from "./scenes/menus/OptionsScene";
+import { GeneralMenuScene } from "./scenes/menus/GeneralMenuScene";
+import { LanguageSettings } from "./services/LanguageSettings";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -42,6 +44,7 @@ export class Game extends PHASER.Game {
       GameOverScene,
       VictoryScene,
       AudioMenuScene,
+      GeneralMenuScene,
       CreditsScene,
       OptionsScene,
     ],
@@ -78,4 +81,6 @@ i18next.use(LanguageDetector).init({
     escapeValue: false,
   },
 });
+LanguageSettings.load();
+LanguageSettings.set(LanguageSettings.get());
 const game = new Game();
