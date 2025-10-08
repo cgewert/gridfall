@@ -507,7 +507,7 @@ export class GameScene extends Phaser.Scene {
       } else {
         if (this.softDropActive) return;
         this.softDropActive = true;
-        // this.softDropSound.play();
+        //AudioBus.PlaySfx(this, "softDrop");
       }
     });
 
@@ -850,10 +850,10 @@ export class GameScene extends Phaser.Scene {
         this.createTetriminoBlocks();
         this.moveTetrimino(0);
         if (this.isTSpin()) {
-          AudioBus.PlaySfx(this, "rotateKick");
+          AudioBus.PlaySfx(this, "rotatekick");
           this.lastWasTSpin = true;
         } else {
-          AudioBus.PlaySfx(this, "rotate");
+          AudioBus.PlaySfx(this, "rotateSound");
           this.lastWasTSpin = false;
         }
 
@@ -958,7 +958,7 @@ export class GameScene extends Phaser.Scene {
     this.spawnTetrimino();
     this.holdUsedThisTurn = false;
     this._main?.shake(50, 0.005);
-    this.lockSound.play();
+    AudioBus.PlaySfx(this, "lockSound");
   }
 
   private drawLockedBlocks(): void {
@@ -1013,9 +1013,7 @@ export class GameScene extends Phaser.Scene {
         const maxPitch = 2.0;
         const pitch = 1.0 + ((this.combo - 2) / 13) * (maxPitch - 1.0);
         const clampedPitch = Phaser.Math.Clamp(pitch, 1.0, maxPitch);
-        this.comboSound.play({
-          rate: clampedPitch,
-        });
+        AudioBus.PlaySfx(this, "comboSound", { rate: clampedPitch });
       } else {
         this.comboActive = true;
         this.combo = 0;
@@ -1160,30 +1158,30 @@ export class GameScene extends Phaser.Scene {
         row.every((cell) => cell === GameScene.emptyGridValue)
       )
     ) {
-      this.allClearSound.play();
+      AudioBus.PlaySfx(this, "allClear");
     }
   }
 
   playLineClearActionSfx(clearedLinesCount: number) {
     if (clearedLinesCount < 1) return;
 
-    this.lineClearSound.play();
+    AudioBus.PlaySfx(this, "lineClearSound");
 
     if (this.lastWasTSpin) {
       // TODO: Detect different T-Spin types
-      this.tSpinSound.play();
+      AudioBus.PlaySfx(this, "tSpin");
       return;
     }
 
     switch (clearedLinesCount) {
       case 2:
-        this.doubleClearSound.play();
+        AudioBus.PlaySfx(this, "double");
         break;
       case 3:
-        this.tripleClearSound.play();
+        AudioBus.PlaySfx(this, "triple");
         break;
       case 4:
-        this.tetrisClearSound.play();
+        AudioBus.PlaySfx(this, "tetra");
         break;
       default:
         break;
