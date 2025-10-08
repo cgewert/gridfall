@@ -107,11 +107,12 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     this.modal.add(hint);
 
     this.input.keyboard?.on("keydown-ESC", () => this.close());
-    this.input.gamepad?.on("down", (_pad: any, btn: any, val: number) => {
-      if (val === 0) return;
-      const idx = typeof btn === "number" ? btn : btn.index;
-      if (idx === 1) this.close();
-    });
+    // TODO: Gamepad input will be supported later
+    // this.input.gamepad?.on("down", (_pad: any, btn: any, val: number) => {
+    //   if (val === 0) return;
+    //   const idx = typeof btn === "number" ? btn : btn.index;
+    //   if (idx === 1) this.close();
+    // });
   }
 
   protected close(): void {

@@ -18,9 +18,9 @@ export class OptionsScene extends BaseMenuScene {
       onMoveSoundKey: "ui-move",
       onChooseSoundKey: "ui-choose",
       items: [
-        { label: "Controls", disabled: false, action: () => {} },
+        { label: "Controls", disabled: true, action: () => {} },
         { label: "Audio", disabled: false, action: () => this.openAudio() },
-        { label: "General", disabled: true, action: () => {} },
+        { label: "General", disabled: false, action: () => this.openGeneral() },
       ],
     });
     this.modal.add(list);
@@ -29,5 +29,10 @@ export class OptionsScene extends BaseMenuScene {
   private openAudio() {
     const main = this.scene.get("MainMenuScene") as any;
     main.openSubmenu?.("AudioMenuScene", { parentKey: "OptionsScene" });
+  }
+
+  private openGeneral() {
+    const main = this.scene.get("MainMenuScene") as any;
+    main.openSubmenu?.("GeneralMenuScene", { parentKey: "OptionsScene" });
   }
 }

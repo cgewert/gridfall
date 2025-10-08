@@ -188,7 +188,7 @@ export class GameScene extends Phaser.Scene {
 
   public preload() {
     // Loading music
-    this.load.audio("track2", Soundtrack.menu);
+    this.load.audio("track1", Soundtrack.track1);
     // Loading sfx
     this.load.audio("comboSound", "assets/audio/sfx/combo.mp3");
     this.load.audio("lineClearSound", "assets/audio/sfx/clear.wav");
@@ -336,7 +336,7 @@ export class GameScene extends Phaser.Scene {
     this.renderNextQueue();
     this.lockedBlocksGroup = this.add.group();
 
-    this.music = AudioBus.AddSceneAudio(this, "track2");
+    this.music = AudioBus.AddSceneAudio(this, "track1");
 
     this.comboSound = AudioBus.AddSceneAudio(this, "comboSound");
     this.lineClearSound = AudioBus.AddSceneAudio(this, "lineClearSound");
@@ -447,6 +447,8 @@ export class GameScene extends Phaser.Scene {
     this.createPreviewBox();
     this.createPauseOverlay();
     this.setUpKeyboardControls();
+
+    AudioBus.PlayMusic(this, "track1", { loop: true });
   }
 
   private setUpKeyboardControls() {
@@ -1095,7 +1097,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private triggerVictory(): void {
+    // TODO: Determine game mode inside Victory Scene
     this.gameOver = true;
+    this.music.stop();
     this.scene.start("VictoryScene", {
       score: this.score,
     });
