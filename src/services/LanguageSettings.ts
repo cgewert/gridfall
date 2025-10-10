@@ -1,4 +1,5 @@
 import i18next from "i18next";
+import { SettingsEvents } from "./SettingsEvents";
 
 export type Locale = "de" | "en" | "fr" | "ja";
 
@@ -16,8 +17,13 @@ const KEY = "gridfall.lang.v1";
 
 class LanguageSettingsStore {
   private current: Locale = "en";
+  private _game?: Phaser.Game;
 
-  load() {
+  public init(game: Phaser.Game) {
+    this._game = game;
+  }
+
+  public load() {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) {
@@ -43,8 +49,7 @@ class LanguageSettingsStore {
       console.error("Failed to change language to ", lang);
     });
     i18next.emit?.("languageChanged", lang as any);
-    // oder via Phaser GameEvent:
-    // this._game?.events.emit('i18n:language-changed', lang);
+    this._game?.events.emit(SettingsEvents.LanguageChanged, { lang });
   }
 
   next() {

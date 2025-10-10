@@ -13,6 +13,8 @@ import { MenuList } from "../ui/menu/MenuList";
 import { Soundtrack } from "../audio";
 import { AudioBus } from "../services/AudioBus";
 import { t } from "i18next";
+import { SettingsEvents } from "../services/SettingsEvents";
+import { Locale } from "../services/LanguageSettings";
 
 export class MainMenuScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -100,9 +102,11 @@ export class MainMenuScene extends Phaser.Scene {
       onChooseSoundKey: "ui-choose",
       items: [
         {
+          identifier: "mnu-ascent",
           label: "Ascent",
+          translatable: false,
           disabled: false,
-          description: t("descriptions.ascent"),
+          description: t("descriptions.mnu-ascent"),
           action: () => {
             return this.startGame({
               gameMode: GameMode.ASCENT,
@@ -112,9 +116,11 @@ export class MainMenuScene extends Phaser.Scene {
           },
         },
         {
+          identifier: "mnu-infinity",
           label: "Infinity",
+          translatable: false,
           disabled: false,
-          description: t("descriptions.infinity"),
+          description: t("descriptions.mnu-infinity"),
           action: () =>
             this.startGame({
               gameMode: GameMode.INFINITY,
@@ -123,9 +129,11 @@ export class MainMenuScene extends Phaser.Scene {
             }),
         },
         {
+          identifier: "mnu-rush",
           label: "Rush",
+          translatable: false,
           disabled: false,
-          description: t("descriptions.rush"),
+          description: t("descriptions.mnu-rush"),
           action: () =>
             this.startGame({
               gameMode: GameMode.RUSH,
@@ -134,12 +142,16 @@ export class MainMenuScene extends Phaser.Scene {
             }),
         },
         {
-          label: "Credits",
+          identifier: "mnu-credits",
+          label: t("labels.mnu-credits"),
+          translatable: true,
           disabled: false,
           action: () => this.openSubmenu("CreditsScene"),
         },
         {
-          label: "Options",
+          identifier: "mnu-options",
+          label: t("labels.mnu-options"),
+          translatable: true,
           disabled: false,
           action: () => this.openSubmenu("OptionsScene"),
         },
@@ -148,13 +160,13 @@ export class MainMenuScene extends Phaser.Scene {
 
     switch (this.gameMode) {
       case GameMode.ASCENT:
-        this.menu.selectItem("Ascent");
+        this.menu.selectItem("mnu-ascent");
         break;
       case GameMode.RUSH:
-        this.menu.selectItem("Rush");
+        this.menu.selectItem("mnu-rush");
         break;
       case GameMode.INFINITY:
-        this.menu.selectItem("Infinity");
+        this.menu.selectItem("mnu-infinity");
         break;
     }
 
@@ -177,6 +189,7 @@ export class MainMenuScene extends Phaser.Scene {
       this.startAudio();
     }
 
+    // Register event handlers
     this.events.on(Phaser.Scenes.Events.CREATE, () => {
       this.menu.setPosition(width / 2, 200);
     });
@@ -186,6 +199,20 @@ export class MainMenuScene extends Phaser.Scene {
       this.audioAnalyser?.disconnect && this.audioAnalyser.disconnect();
       this.tweens.killAll();
     });
+
+    // Handle language change events
+    this.game.events.on(
+      SettingsEvents.LanguageChanged,
+      (e: { lang: Locale }) => {
+        console.log("Language changed to ", e.lang);
+
+        this.menu.updateText(e.lang);
+      }
+    );
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      this.game.events.off(SettingsEvents.LanguageChanged)
+    );
   }
 
   private startGame(config: GameConfig) {

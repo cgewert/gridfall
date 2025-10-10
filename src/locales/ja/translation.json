@@ -14,6 +14,11 @@
     "level": "レベル",
     "score": "スコア",
     "combo": "コンボ",
+    "mnu-options": "オプション",
+    "mnu-credits": "クレジット",
+    "mnu-controls": "コントロール",
+    "mnu-audio": "オーディオ",
+    "mnu-general": "一般",
     "sliderMusicVolume": "音楽の音量",
     "sliderSfxVolume": "SFXの音量"
   },
@@ -21,8 +26,8 @@
     "rotationNotPossible": "回転不可"
   },
   "descriptions": {
-    "infinity": "エンドレスモード、上に達するまで終了しません。どれだけ生き残れますか？",
-    "rush": "40ラインをできるだけ早くクリアしよう！",
-    "ascent": "150ラインをクリアしよう！10ラインごとに重力が増加します。"
+    "mnu-infinity": "エンドレスモード、上に達するまで終了しません。どれだけ生き残れますか？",
+    "mnu-rush": "40ラインをできるだけ早くクリアしよう！",
+    "mnu-ascent": "150ラインをクリアしよう！10ラインごとに重力が増加します。"
   }
 }

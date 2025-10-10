@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { MenuItem, MenuItemConfig } from "./MenuItem";
 import { AudioBus } from "../../services/AudioBus";
+import { Locale } from "../../services/LanguageSettings";
 
 export interface MenuListConfig {
   x: number;
@@ -12,6 +13,7 @@ export interface MenuListConfig {
 }
 
 export class MenuList extends Phaser.GameObjects.Container {
+  private readonly descMargin = 16; // Margin of description box
   private items: MenuItem[] = [];
   private index = 0;
   private gap: number;
@@ -76,10 +78,12 @@ export class MenuList extends Phaser.GameObjects.Container {
   }
 
   /***
-   * Selects a menu item by its label text.
+   * Selects a menu item by its identifier.
    */
-  public selectItem(label: string) {
-    const index = this.items.findIndex((item) => item.labelText.text === label);
+  public selectItem(identifier: string) {
+    const index = this.items.findIndex(
+      (item) => item.Identifier === identifier
+    );
     if (index !== -1) {
       this.index = index;
       this.applyFocus();
@@ -126,6 +130,14 @@ export class MenuList extends Phaser.GameObjects.Container {
     const text = focusedItem.descriptionText ?? "";
     if (text) {
       this.descText?.setText(text);
+      if (this.descContainer) {
+        this.descBox.setSize(
+          this.descText ? this.descText.width + 50 : 260,
+          this.descText.height + 50
+        );
+        this.repositionDescBox();
+        this.descText.setWordWrapWidth(this.descBox.width - 24, true);
+      }
       if (this.descBox && this.descText)
         Phaser.Display.Align.In.Center(this.descText, this.descBox);
       if (this.descContainer?.alpha < 1) {
@@ -148,6 +160,29 @@ export class MenuList extends Phaser.GameObjects.Container {
     }
   }
 
+  private repositionDescBox() {
+    const cam = this.scene.cameras.main;
+    const view = cam.worldView;
+    const bounds = this.descBox.getBounds();
+
+    let dx = 0;
+
+    const rightLimit = view.right - this.descMargin;
+    if (bounds.right > rightLimit) {
+      dx += rightLimit - bounds.right;
+    }
+
+    const leftLimit = view.left + this.descMargin;
+    if (bounds.left + dx < leftLimit) {
+      dx += leftLimit - (bounds.left + dx);
+    }
+
+    if (dx !== 0) {
+      this.descContainer.x += dx;
+    }
+  }
+
+  // TODO: Consider removing unused method
   private get listContainer(): Phaser.GameObjects.Container {
     return this;
   }
@@ -170,5 +205,9 @@ export class MenuList extends Phaser.GameObjects.Container {
   public beat(intensity: number) {
     const cur = this.items[this.index];
     cur?.beatPulse(intensity);
+  }
+
+  public updateText(lang: Locale) {
+    this.items.forEach((item) => item.updateText(lang));
   }
 }
