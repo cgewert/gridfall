@@ -14,6 +14,11 @@
     "level": "LEVEL",
     "score": "PUNKTE",
     "combo": "KOMBO",
+    "mnu-options": "Optionen",
+    "mnu-credits": "Credits",
+    "mnu-controls": "Steuerung",
+    "mnu-audio": "Audio",
+    "mnu-general": "Allgemein",
     "sliderMusicVolume": "Musiklautstärke",
     "sliderSfxVolume": "SFX-Lautstärke"
   },
@@ -21,8 +26,8 @@
     "rotationNotPossible": "Rotation nicht möglich"
   },
   "descriptions": {
-    "infinity": "Endlosmodus, endet nur, wenn du oben ankommst. Wie lange kannst du überleben?",
-    "rush": "Löse so schnell wie möglich 40 Linien auf.",
-    "ascent": "Löse 150 Linien auf! Die Schwerkraft erhöht sich alle 10 Linien."
+    "mnu-infinity": "Endlosmodus, endet nur, wenn du oben ankommst. Wie lange kannst du überleben?",
+    "mnu-rush": "Löse so schnell wie möglich 40 Linien auf.",
+    "mnu-ascent": "Löse 150 Linien auf! Die Schwerkraft erhöht sich alle 10 Linien."
   }
 }

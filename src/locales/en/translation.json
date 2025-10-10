@@ -14,6 +14,11 @@
     "level": "LEVEL",
     "score": "SCORE",
     "combo": "COMBO",
+    "mnu-options": "Options",
+    "mnu-credits": "Credits",
+    "mnu-controls": "Controls",
+    "mnu-audio": "Audio",
+    "mnu-general": "General",
     "sliderMusicVolume": "Music Volume",
     "sliderSfxVolume": "SFX Volume"
   },
@@ -21,8 +26,8 @@
     "rotationNotPossible": "Rotation not possible"
   },
   "descriptions": {
-    "infinity": "Endless mode, only ends when you top out. How long can you survive?",
-    "rush": "Clear 40 lines as fast as you can!",
-    "ascent": "Clear 150 lines! Gravity increases every 10 lines."
+    "mnu-infinity": "Endless mode, only ends when you top out. How long can you survive?",
+    "mnu-rush": "Clear 40 lines as fast as you can!",
+    "mnu-ascent": "Clear 150 lines! Gravity increases every 10 lines."
   }
 }

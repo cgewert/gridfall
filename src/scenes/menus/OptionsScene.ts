@@ -1,3 +1,4 @@
+import { t } from "i18next";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { MenuList } from "../../ui/menu/MenuList";
 
@@ -5,7 +6,7 @@ export class OptionsScene extends BaseMenuScene {
   public static readonly KEY = "OptionsScene";
 
   constructor() {
-    super(OptionsScene.KEY, "Options");
+    super(OptionsScene.KEY, "labels.mnu-options");
   }
 
   public create(data: { parentKey?: string } = {}): void {
@@ -18,9 +19,27 @@ export class OptionsScene extends BaseMenuScene {
       onMoveSoundKey: "ui-move",
       onChooseSoundKey: "ui-choose",
       items: [
-        { label: "Controls", disabled: true, action: () => {} },
-        { label: "Audio", disabled: false, action: () => this.openAudio() },
-        { label: "General", disabled: false, action: () => this.openGeneral() },
+        {
+          label: "Controls",
+          disabled: false,
+          action: () => this.openControls(),
+          identifier: "mnu-controls",
+          translatable: true,
+        },
+        {
+          label: "Audio",
+          disabled: false,
+          action: () => this.openAudio(),
+          identifier: "mnu-audio",
+          translatable: true,
+        },
+        {
+          label: "General",
+          disabled: false,
+          action: () => this.openGeneral(),
+          identifier: "mnu-general",
+          translatable: true,
+        },
       ],
     });
     this.modal.add(list);
@@ -29,6 +48,11 @@ export class OptionsScene extends BaseMenuScene {
   private openAudio() {
     const main = this.scene.get("MainMenuScene") as any;
     main.openSubmenu?.("AudioMenuScene", { parentKey: "OptionsScene" });
+  }
+
+  private openControls() {
+    const main = this.scene.get("MainMenuScene") as any;
+    main.openSubmenu?.("ControlsMenuScene", { parentKey: "OptionsScene" });
   }
 
   private openGeneral() {

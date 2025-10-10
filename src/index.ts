@@ -15,6 +15,8 @@ import { CreditsScene } from "./scenes/menus/CreditsScene";
 import { OptionsScene } from "./scenes/menus/OptionsScene";
 import { GeneralMenuScene } from "./scenes/menus/GeneralMenuScene";
 import { LanguageSettings } from "./services/LanguageSettings";
+import { InputSettings } from "./services/InputSettings";
+import { ControlsMenuScene } from "./scenes/menus/ControlsMenuScene";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -47,6 +49,7 @@ export class Game extends PHASER.Game {
       GeneralMenuScene,
       CreditsScene,
       OptionsScene,
+      ControlsMenuScene,
     ],
     audio: {
       disableWebAudio: false,
@@ -82,5 +85,8 @@ i18next.use(LanguageDetector).init({
   },
 });
 LanguageSettings.load();
-LanguageSettings.set(LanguageSettings.get());
 const game = new Game();
+LanguageSettings.init(game);
+LanguageSettings.set(LanguageSettings.get());
+InputSettings.init(game);
+InputSettings.load();

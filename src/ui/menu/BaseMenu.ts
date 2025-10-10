@@ -1,12 +1,15 @@
 import Phaser from "phaser";
 import { addScanlines } from "../../effects/effects";
+import { Locale } from "../../services/LanguageSettings";
+import { t } from "i18next";
+import { SettingsEvents } from "../../services/SettingsEvents";
 
 export abstract class BaseMenuScene extends Phaser.Scene {
   protected parentKey?: string;
   /*** Content container for the menu */
   protected modal!: Phaser.GameObjects.Container;
   protected contentBox!: Phaser.GameObjects.Rectangle;
-  protected title!: string;
+  protected title!: string; // Set the translation identifier for the title here
   protected textStyleTitle: Phaser.Types.GameObjects.Text.TextStyle = {
     fontFamily: "Orbitron, sans-serif",
     fontSize: "42px",
@@ -44,6 +47,9 @@ export abstract class BaseMenuScene extends Phaser.Scene {
   public create(data: { parentKey?: string } = {}): void {
     const { width, height } = this.scale;
     this.parentKey = data.parentKey;
+
+    // Subscribe to language changes
+    this.events.on(SettingsEvents.LanguageChanged, this.onLanguageChange, this);
 
     // Create non transparent, dark Background
     this.contentBox = this.add
@@ -91,7 +97,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
 
     // Add menu title
     this.textTitle = this.add
-      .text(0, -panelHeight / 2 + 60, this.title, this.textStyleTitle)
+      .text(0, -panelHeight / 2 + 60, t(this.title), this.textStyleTitle)
       .setOrigin(0.5);
     this.modal.add(this.textTitle);
 
@@ -115,6 +121,14 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     // });
   }
 
+  /**
+   * Updates the menus text when the language changes.
+   * @param lang - New language code
+   */
+  private onLanguageChange(_lang: Locale) {
+    this.textTitle.setText(t(this.title));
+  }
+
   protected close(): void {
     this.tweens.add({
       targets: this.modal,
@@ -124,5 +138,12 @@ export abstract class BaseMenuScene extends Phaser.Scene {
       ease: "Quad.easeIn",
       onComplete: () => this.scene.stop(),
     });
+
+    // Desubscribe from language changes
+    this.events.off(
+      SettingsEvents.LanguageChanged,
+      this.onLanguageChange,
+      this
+    );
   }
 }

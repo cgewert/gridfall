@@ -27,7 +27,7 @@ export class AudioMenuScene extends BaseMenuScene {
   };
 
   constructor() {
-    super("AudioMenuScene", "Audio");
+    super("AudioMenuScene", "labels.mnu-audio");
   }
 
   create(data: { parentKey?: string } = {}) {

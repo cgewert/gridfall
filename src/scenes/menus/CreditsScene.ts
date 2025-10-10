@@ -1,11 +1,12 @@
 import Phaser from "phaser";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
+import { t } from "i18next";
 
 export class CreditsScene extends BaseMenuScene {
   public static readonly KEY = "CreditsScene";
 
   constructor() {
-    super(CreditsScene.KEY, "Credits");
+    super(CreditsScene.KEY, "labels.mnu-credits");
   }
 
   create(data: { parentKey?: string } = {}) {

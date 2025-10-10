@@ -1,6 +1,7 @@
 // src/scenes/menus/GeneralMenuScene.ts
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { LanguageSettings, LOCALE_NAME } from "../../services/LanguageSettings";
+import { t } from "i18next";
 
 export class GeneralMenuScene extends BaseMenuScene {
   public static readonly KEY = "GeneralMenuScene";
@@ -26,7 +27,7 @@ export class GeneralMenuScene extends BaseMenuScene {
   private onEsc!: () => void;
 
   public constructor() {
-    super(GeneralMenuScene.KEY, "General Settings");
+    super(GeneralMenuScene.KEY, "labels.mnu-general");
   }
 
   public create(data: { parentKey?: string } = {}): void {
