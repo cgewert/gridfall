@@ -4,9 +4,10 @@ import { MenuList } from "../../ui/menu/MenuList";
 
 export class OptionsScene extends BaseMenuScene {
   public static readonly KEY = "OptionsScene";
+  public static readonly HINT = "hints.mnu-options";
 
   constructor() {
-    super(OptionsScene.KEY, "labels.mnu-options");
+    super(OptionsScene.KEY, "labels.mnu-options", OptionsScene.HINT);
   }
 
   public create(data: { parentKey?: string } = {}): void {
@@ -59,4 +60,7 @@ export class OptionsScene extends BaseMenuScene {
     const main = this.scene.get("MainMenuScene") as any;
     main.openSubmenu?.("GeneralMenuScene", { parentKey: "OptionsScene" });
   }
+
+  protected onEntranceCompleted(): void {}
+  protected beforeClose(): void {}
 }

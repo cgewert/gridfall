@@ -15,9 +15,9 @@ const KEY = "gridfall.input.v1";
 class InputSettingsStore {
   private game?: Phaser.Game;
   private data: InputData = {
-    dasMs: 150, // e.g. 100–200ms
-    arrMs: 33, // e.g. 0–50ms; 0 = „instant“
-    sdfTps: 6, // e.g. 1–40 tiles/s
+    dasMs: 167, // 17–333ms
+    arrMs: 33, // 0–83ms; 0 = „instant“
+    sdfTps: 6, // 5–40 + infinity
   };
 
   public init(game: Phaser.Game) {
@@ -38,7 +38,6 @@ class InputSettingsStore {
     this.game?.events.emit(SettingsEvents.InputChanged, { ...this.data });
   }
 
-  // Getter
   get DAS() {
     return this.data.dasMs;
   }
@@ -49,7 +48,6 @@ class InputSettingsStore {
     return this.data.sdfTps;
   }
 
-  // Setter
   setDAS(v: number) {
     this.data.dasMs = Phaser.Math.Clamp(Math.round(v), 0, 250);
     this.save();
@@ -59,7 +57,7 @@ class InputSettingsStore {
     this.save();
   }
   setSDF(v: number) {
-    this.data.sdfTps = Phaser.Math.Clamp(Math.round(v), 1, 40);
+    this.data.sdfTps = Phaser.Math.Clamp(Math.round(v), 1, 80);
     this.save();
   }
 }

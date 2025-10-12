@@ -204,9 +204,13 @@ export class MainMenuScene extends Phaser.Scene {
     this.game.events.on(
       SettingsEvents.LanguageChanged,
       (e: { lang: Locale }) => {
-        console.log("Language changed to ", e.lang);
-
         this.menu.updateText(e.lang);
+        this.menuStack.forEach((k) => {
+          const sc = this.scene.get(k) as Phaser.Scene;
+          if (sc && typeof (sc as any).onLanguageChange === "function") {
+            (sc as any).onLanguageChange(e.lang);
+          }
+        });
       }
     );
 

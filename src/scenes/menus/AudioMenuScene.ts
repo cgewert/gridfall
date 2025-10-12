@@ -17,6 +17,8 @@ type SliderRef = {
 };
 
 export class AudioMenuScene extends BaseMenuScene {
+  public static readonly HINT = "hints.mnu-audio";
+
   private musicFill!: Phaser.GameObjects.Rectangle;
   private sfxFill!: Phaser.GameObjects.Rectangle;
   private sliders: SliderRef[] = [];
@@ -27,7 +29,7 @@ export class AudioMenuScene extends BaseMenuScene {
   };
 
   constructor() {
-    super("AudioMenuScene", "labels.mnu-audio");
+    super("AudioMenuScene", "labels.mnu-audio", AudioMenuScene.HINT);
   }
 
   create(data: { parentKey?: string } = {}) {
@@ -199,6 +201,9 @@ export class AudioMenuScene extends BaseMenuScene {
       ease: "Quad.easeOut",
     });
   }
+
+  protected onEntranceCompleted(): void {}
+  protected beforeClose(): void {}
 
   private onShutdown() {
     this.tweens.killAll();
