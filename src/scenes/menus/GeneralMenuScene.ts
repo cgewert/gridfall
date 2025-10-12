@@ -5,7 +5,9 @@ import { t } from "i18next";
 
 export class GeneralMenuScene extends BaseMenuScene {
   public static readonly KEY = "GeneralMenuScene";
-  public static readonly HINT = "↑/↓ Auswahl · ←/→ ändern · ESC/B zurück";
+  public static readonly HINT = "hints.mnu-general";
+
+  private textLanguage!: Phaser.GameObjects.Text;
 
   private entries: {
     label: Phaser.GameObjects.Text;
@@ -65,8 +67,8 @@ export class GeneralMenuScene extends BaseMenuScene {
       .rectangle(cx, y, w, h, 0xffffff, 0.06)
       .setOrigin(0.5)
       .setStrokeStyle(1, 0x00ffff, 0.6);
-    const label = this.add
-      .text(cx - w / 2 + 14, y, "Language", {
+    this.textLanguage = this.add
+      .text(cx - w / 2 + 14, y, t("labels.settings.language"), {
         fontFamily: "Orbitron, sans-serif",
         fontSize: "22px",
         color: "#9ad",
@@ -89,8 +91,8 @@ export class GeneralMenuScene extends BaseMenuScene {
       else this.changeLanguage(+1);
     });
 
-    this.modal.add([bg, label, value]);
-    this.entries.push({ label, value, bg, cx, cy: y, w, h });
+    this.modal.add([bg, this.textLanguage, value]);
+    this.entries.push({ label: this.textLanguage, value, bg, cx, cy: y, w, h });
   }
 
   private setActiveIndex(i: number) {
@@ -121,6 +123,7 @@ export class GeneralMenuScene extends BaseMenuScene {
       yoyo: true,
       ease: "Quad.easeOut",
     });
+    this.textLanguage.setText(t("labels.settings.language"));
   }
 
   //   private onPadDown(_pad: any, btn: any, val: number) {
@@ -152,4 +155,7 @@ export class GeneralMenuScene extends BaseMenuScene {
     this.time.clearPendingEvents();
     this.input.removeAllListeners();
   }
+
+  protected onEntranceCompleted(): void {}
+  protected beforeClose(): void {}
 }

@@ -10,6 +10,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
   protected modal!: Phaser.GameObjects.Container;
   protected contentBox!: Phaser.GameObjects.Rectangle;
   protected title!: string; // Set the translation identifier for the title here
+  protected hint!: string; // Set the translation identifier for the hint here
   protected textStyleTitle: Phaser.Types.GameObjects.Text.TextStyle = {
     fontFamily: "Orbitron, sans-serif",
     fontSize: "42px",
@@ -22,10 +23,12 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     color: "#9ad",
   };
   protected textTitle!: Phaser.GameObjects.Text;
+  protected textHint!: Phaser.GameObjects.Text;
 
-  constructor(key: string, title?: string) {
+  constructor(key: string, title?: string, hint?: string) {
     super(key);
     this.title = title || "Menu";
+    this.hint = hint || "hints.mnu-default";
   }
 
   public get TextStyleTitle(): Phaser.Types.GameObjects.Text.TextStyle {
@@ -47,9 +50,6 @@ export abstract class BaseMenuScene extends Phaser.Scene {
   public create(data: { parentKey?: string } = {}): void {
     const { width, height } = this.scale;
     this.parentKey = data.parentKey;
-
-    // Subscribe to language changes
-    this.events.on(SettingsEvents.LanguageChanged, this.onLanguageChange, this);
 
     // Create non transparent, dark Background
     this.contentBox = this.add
@@ -93,6 +93,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
       scale: 1,
       duration: 180,
       ease: "Quad.easeOut",
+      onComplete: () => this.onEntranceCompleted(),
     });
 
     // Add menu title
@@ -102,15 +103,10 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     this.modal.add(this.textTitle);
 
     // Add controls hint
-    const hint = this.add
-      .text(
-        0,
-        panelHeight / 2 - 36,
-        "UP/DOWN: Select | ESC: Back",
-        this.textStyleHint
-      )
+    this.textHint = this.add
+      .text(0, panelHeight / 2 - 36, t(this.hint), this.textStyleHint)
       .setOrigin(0.5);
-    this.modal.add(hint);
+    this.modal.add(this.textHint);
 
     this.input.keyboard?.on("keydown-ESC", () => this.close());
     // TODO: Gamepad input will be supported later
@@ -121,12 +117,19 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     // });
   }
 
+  /** Will be called when the entrance animation is completed */
+  protected abstract onEntranceCompleted(): void;
+
+  /** Will be called before the menu starts closing */
+  protected abstract beforeClose(): void;
+
   /**
    * Updates the menus text when the language changes.
    * @param lang - New language code
    */
-  private onLanguageChange(_lang: Locale) {
+  protected onLanguageChange(_lang: Locale) {
     this.textTitle.setText(t(this.title));
+    this.textHint.setText(t(this.hint));
   }
 
   protected close(): void {
@@ -136,6 +139,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
       scale: 0.96,
       duration: 140,
       ease: "Quad.easeIn",
+      onStart: () => this.beforeClose(),
       onComplete: () => this.scene.stop(),
     });
 

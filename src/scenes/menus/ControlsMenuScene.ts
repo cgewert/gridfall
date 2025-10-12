@@ -23,7 +23,7 @@ type SliderRef = {
 
 export class ControlsMenuScene extends BaseMenuScene {
   public static readonly KEY = "ControlsMenuScene";
-  private static HINT_TEXT = "↑/↓ Auswahl · ←/→ ändern · ESC/B zurück"; // TODO: translate
+  private static readonly HINT = "hints.mnu-controls";
 
   private sliders: SliderRef[] = [];
   private activeIndex = 0;
@@ -34,7 +34,7 @@ export class ControlsMenuScene extends BaseMenuScene {
   private onRight!: () => void;
 
   constructor() {
-    super(ControlsMenuScene.KEY, "labels.mnu-controls");
+    super(ControlsMenuScene.KEY, "labels.mnu-controls", ControlsMenuScene.HINT);
   }
 
   create(data: { parentKey?: string } = {}): void {
@@ -72,7 +72,7 @@ export class ControlsMenuScene extends BaseMenuScene {
       (v) => `${v} tiles/s`,
       1,
       1,
-      40
+      80
     );
 
     this.setActiveSlider(0);
@@ -239,4 +239,7 @@ export class ControlsMenuScene extends BaseMenuScene {
     this.input.removeAllListeners();
     this.sliders = [];
   }
+
+  protected onEntranceCompleted(): void {}
+  protected beforeClose(): void {}
 }

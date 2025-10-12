@@ -20,7 +20,18 @@
     "mnu-audio": "Audio",
     "mnu-general": "Général",
     "sliderMusicVolume": "Volume de la musique",
-    "sliderSfxVolume": "Volume des effets sonores"
+    "sliderSfxVolume": "Volume des effets sonores",
+    "settings": {
+      "language": "Langue"
+    }
+  },
+  "hints": {
+    "mnu-default": "↑↓ Navigation  ←→ Changer  ⏎ Sélectionner  ESC Retour",
+    "mnu-options": "↑↓ Navigation  ←→ Changer  ⏎ Sélectionner  ESC Retour",
+    "mnu-credits": "ESC Retour",
+    "mnu-controls": "↑↓ Navigation  ←→ Changer  ⏎ Sélectionner  ESC Retour",
+    "mnu-audio": "↑↓ Navigation  ←→ Changer  ⏎ Sélectionner  ESC Retour",
+    "mnu-general": "↑↓ Navigation  ←→ Changer  ⏎ Sélectionner  ESC Retour"
   },
   "debug": {
     "rotationNotPossible": "Rotation non possible"
@@ -29,5 +40,12 @@
     "mnu-infinity": "Mode infini, se termine uniquement lorsque vous atteignez le sommet. Combien de temps pouvez-vous survivre ?",
     "mnu-rush": "Effacez 40 lignes aussi vite que possible !",
     "mnu-ascent": "Effacez 150 lignes ! La gravité augmente toutes les 10 lignes."
+  },
+  "credits": {
+    "programming": "Programmation:",
+    "testingAndFeedback": "Tests et retours d'expérience:",
+    "tetrimino-art": "Sprites de Tetrimino:",
+    "specialThanks": "Remerciements spéciaux à:",
+    "thanksForPlaying": "Merci de jouer !"
   }
 }

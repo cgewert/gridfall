@@ -20,7 +20,18 @@
     "mnu-audio": "Audio",
     "mnu-general": "General",
     "sliderMusicVolume": "Music Volume",
-    "sliderSfxVolume": "SFX Volume"
+    "sliderSfxVolume": "SFX Volume",
+    "settings": {
+      "language": "Language"
+    }
+  },
+  "hints": {
+    "mnu-default": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
+    "mnu-options": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
+    "mnu-credits": "ESC Back",
+    "mnu-controls": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
+    "mnu-audio": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
+    "mnu-general": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back"
   },
   "debug": {
     "rotationNotPossible": "Rotation not possible"
@@ -29,5 +40,12 @@
     "mnu-infinity": "Endless mode, only ends when you top out. How long can you survive?",
     "mnu-rush": "Clear 40 lines as fast as you can!",
     "mnu-ascent": "Clear 150 lines! Gravity increases every 10 lines."
+  },
+  "credits": {
+    "programming": "Programming:",
+    "testingAndFeedback": "Testing & Feedback:",
+    "tetrimino-art": "Tetrimino Sprites:",
+    "specialThanks": "Special Thanks to:",
+    "thanksForPlaying": "Thanks for Playing!"
   }
 }

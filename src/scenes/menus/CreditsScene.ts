@@ -4,36 +4,68 @@ import { t } from "i18next";
 
 export class CreditsScene extends BaseMenuScene {
   public static readonly KEY = "CreditsScene";
+  public static readonly HINT = "hints.mnu-credits";
+  private texts: Phaser.GameObjects.Text[] = [];
 
   constructor() {
-    super(CreditsScene.KEY, "labels.mnu-credits");
+    super(CreditsScene.KEY, "labels.mnu-credits", CreditsScene.HINT);
   }
 
   create(data: { parentKey?: string } = {}) {
     super.create(data);
-    this.add.text(this.modal.x - 150, 350, "GRIDFALL v1.0.0", {
-      fontSize: "26px",
-      color: "#fff",
-      fontFamily: "Orbitron, sans-serif",
-    });
+  }
 
-    this.add.text(this.modal.x - 150, 400, "Developed by dexter_coding", {
-      fontSize: "18px",
-      color: "#fff",
-      fontFamily: "Orbitron, sans-serif",
-    });
+  protected onEntranceCompleted(): void {
+    this.texts.push(
+      this.add.text(this.modal.x - 150, 350, "GRIDFALL v1.0.0", {
+        fontSize: "26px",
+        color: "#fff",
+        fontFamily: "Orbitron, sans-serif",
+      })
+    );
 
-    this.add.text(this.modal.x - 150, 450, "Pastel/Neon Tetriminos by Aqua", {
-      fontSize: "18px",
-      color: "#fff",
-      fontFamily: "Orbitron, sans-serif",
-    });
+    this.texts.push(
+      this.add.text(
+        this.modal.x - 150,
+        400,
+        `${t("credits.programming")} dexter_coding`,
+        {
+          fontSize: "18px",
+          color: "#fff",
+          fontFamily: "Orbitron, sans-serif",
+        }
+      )
+    );
 
-    this.add.text(this.modal.x - 150, 490, "Testers: Overcast", {
-      fontSize: "18px",
-      color: "#fff",
-      fontFamily: "Orbitron, sans-serif",
-    });
+    this.texts.push(
+      this.add.text(
+        this.modal.x - 150,
+        450,
+        `${t("credits.tetrimino-art")} Aqua`,
+        {
+          fontSize: "18px",
+          color: "#fff",
+          fontFamily: "Orbitron, sans-serif",
+        }
+      )
+    );
+
+    this.texts.push(
+      this.add.text(
+        this.modal.x - 150,
+        490,
+        `${t("credits.testingAndFeedback")} Overcast`,
+        {
+          fontSize: "18px",
+          color: "#fff",
+          fontFamily: "Orbitron, sans-serif",
+        }
+      )
+    );
+  }
+
+  protected beforeClose(): void {
+    this.texts.forEach((text) => text.destroy());
   }
 
   public update() {}

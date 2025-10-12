@@ -20,7 +20,18 @@
     "mnu-audio": "オーディオ",
     "mnu-general": "一般",
     "sliderMusicVolume": "音楽の音量",
-    "sliderSfxVolume": "SFXの音量"
+    "sliderSfxVolume": "SFXの音量",
+    "settings": {
+      "language": "言語"
+    }
+  },
+  "hints": {
+    "mnu-default": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
+    "mnu-options": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
+    "mnu-credits": "ESC 戻る",
+    "mnu-controls": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
+    "mnu-audio": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
+    "mnu-general": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る"
   },
   "debug": {
     "rotationNotPossible": "回転不可"
@@ -29,5 +40,12 @@
     "mnu-infinity": "エンドレスモード、上に達するまで終了しません。どれだけ生き残れますか？",
     "mnu-rush": "40ラインをできるだけ早くクリアしよう！",
     "mnu-ascent": "150ラインをクリアしよう！10ラインごとに重力が増加します。"
+  },
+  "credits": {
+    "programming": "プログラミング:",
+    "testingAndFeedback": "テストとフィードバック:",
+    "tetrimino-art": "テトリミノスプライト:",
+    "specialThanks": "特別な感謝を:",
+    "thanksForPlaying": "プレイしてくれてありがとう！"
   }
 }

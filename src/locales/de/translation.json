@@ -20,7 +20,18 @@
     "mnu-audio": "Audio",
     "mnu-general": "Allgemein",
     "sliderMusicVolume": "Musiklautstärke",
-    "sliderSfxVolume": "SFX-Lautstärke"
+    "sliderSfxVolume": "SFX-Lautstärke",
+    "settings": {
+      "language": "Sprache"
+    }
+  },
+  "hints": {
+    "mnu-default": "↑↓ Navigation  ←→ Ändern  ⏎ Auswahl  ESC Zurück",
+    "mnu-options": "↑↓ Navigation  ←→ Ändern  ⏎ Auswahl  ESC Zurück",
+    "mnu-credits": "ESC Zurück",
+    "mnu-controls": "↑↓ Navigation  ←→ Ändern  ⏎ Auswahl  ESC Zurück",
+    "mnu-audio": "↑↓ Navigation  ←→ Ändern  ⏎ Auswahl  ESC Zurück",
+    "mnu-general": "↑↓ Navigation  ←→ Ändern  ⏎ Auswahl  ESC Zurück"
   },
   "debug": {
     "rotationNotPossible": "Rotation nicht möglich"
@@ -29,5 +40,12 @@
     "mnu-infinity": "Endlosmodus, endet nur, wenn du oben ankommst. Wie lange kannst du überleben?",
     "mnu-rush": "Löse so schnell wie möglich 40 Linien auf.",
     "mnu-ascent": "Löse 150 Linien auf! Die Schwerkraft erhöht sich alle 10 Linien."
+  },
+  "credits": {
+    "programming": "Programmierung:",
+    "testingAndFeedback": "Testen & Feedback:",
+    "tetrimino-art": "Tetrimino Sprites:",
+    "specialThanks": "Besonderer Dank an:",
+    "thanksForPlaying": "Danke fürs Spielen!"
   }
 }

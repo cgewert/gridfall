@@ -35,6 +35,8 @@ import {
 } from "../game";
 import { TimerDisplay } from "../ui/TimerDisplay";
 import { AudioBus } from "../services/AudioBus";
+import { InputSettings } from "../services/InputSettings";
+import { SettingsEvents } from "../services/SettingsEvents";
 
 export interface GameSceneConfiguration {
   spawnSystem: SpawnSystem;
@@ -64,8 +66,9 @@ export class GameScene extends Phaser.Scene {
   private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   private timer!: TimerDisplay;
 
-  private DAS = 166; // Delay Auto-Shift (DAS) in milliseconds
-  private ARR = 33; // Auto-Repeat Rate (ARR) in milliseconds
+  private DAS = 167;
+  private ARR = 33;
+  private SDF = 6;
   // private softDropDAS = 100; // Softdrop Delay Auto-Shift in milliseconds
   // private softDropARR = 1; // Softdrop speed in cells per second
   private leftHeld = false;
@@ -78,7 +81,6 @@ export class GameScene extends Phaser.Scene {
   private fallProgress: number = 0; // accumulated fall cells
 
   // Softdrop Fields
-  private readonly softDropMultiplier: number = 20; // Addition for softdrop speed
   private softDropActive: boolean = false;
 
   // Gamemode Fields
@@ -147,6 +149,13 @@ export class GameScene extends Phaser.Scene {
   // Game configuration fields
   private blockSkin!: BlockSkin;
   private gameMode!: GameMode;
+
+  // Event handlers
+  private onInputChanged?: (data: {
+    dasMs: number;
+    arrMs: number;
+    sdfTps: number;
+  }) => void;
 
   constructor() {
     super(GameScene.CONFIG);
@@ -294,6 +303,17 @@ export class GameScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
+    // Load input settings and apply them
+    this.applyInputSettings();
+    // Listen for live changes from the Controls menu
+    this.onInputChanged = (data) => {
+      this.DAS = data.dasMs;
+      this.ARR = data.arrMs;
+      this.SDF = data.sdfTps;
+      // Reset timers to avoid weird mid-hold transitions
+      this.resetAutoRepeat();
+    };
+    this.game.events.on(SettingsEvents.InputChanged, this.onInputChanged);
     this._main = this.cameras.main;
     this._viewPortHalfHeight = this.scale.height / 2;
     this._viewPortHalfWidth = this.scale.width / 2;
@@ -1237,7 +1257,7 @@ export class GameScene extends Phaser.Scene {
       let effectiveFallSpeed = this.fallSpeed;
 
       if (this.softDropActive) {
-        effectiveFallSpeed += this.softDropMultiplier;
+        effectiveFallSpeed += this.SDF;
       }
 
       this.fallProgress += effectiveFallSpeed * (delta / 1000); // delta in ms → s
@@ -1270,4 +1290,35 @@ export class GameScene extends Phaser.Scene {
       this.updateTetriminoPosition();
     }
   }
+
+  private applyInputSettings() {
+    this.DAS = InputSettings.DAS;
+    this.ARR = InputSettings.ARR;
+    this.SDF = InputSettings.SDF;
+    this.resetAutoRepeat();
+  }
+
+  private resetAutoRepeat() {
+    this.dasTimer = 0;
+    this.arrTimer = 0;
+  }
+
+  // // Called when a direction key is pressed
+  // private startHold(dir: -1 | 1) {
+  //   // If opposite was held, release it
+  //   if (dir === -1) this.rightHeld = false;
+  //   else this.leftHeld = false;
+
+  //   if (dir === -1) this.leftHeld = true;
+  //   if (dir === 1) this.rightHeld = true;
+
+  //   this.lastDir = dir;
+
+  //   // Initial single move immediately
+  //   this.moveHoriz(dir);
+
+  //   // (re)start DAS
+  //   this.dasTimer = this.dasMs;
+  //   this.arrTimer = 0;
+  // }
 }
