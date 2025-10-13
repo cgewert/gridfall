@@ -8,7 +8,7 @@ export const SettingsEvents = {
 
   InputChanged: "settings:input-changed",
 
-  GeneralChanged: "settings:general-changed",
+  TetriminoSkinChanged: "settings:tetrimino-skin-changed",
 } as const;
 
 export type SettingsEventKey =

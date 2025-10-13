@@ -1,3 +1,5 @@
+import { SkinId } from "./services/SkinSettings";
+
 export type TetriminoShape = number[][];
 
 export const SHAPES: Record<string, TetriminoShape[]> = {
@@ -204,3 +206,12 @@ export enum BlockSkin {
   MINOS_PASTEL = "minosPastel",
   MINOS_NEON = "neon",
 }
+
+export const SKIN_LABEL: Record<SkinId, string> = {
+  neon: "Neon",
+  pastel: "Pastel",
+  minos1: "Minos1",
+  minos2: "Minos2",
+  minos3: "Minos3",
+  minos4: "Minos4",
+};
