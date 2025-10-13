@@ -3,9 +3,11 @@ import { addScanlines } from "../../effects/effects";
 import { Locale } from "../../services/LanguageSettings";
 import { t } from "i18next";
 import { SettingsEvents } from "../../services/SettingsEvents";
+import { MenuList } from "./MenuList";
 
 export abstract class BaseMenuScene extends Phaser.Scene {
   protected parentKey?: string;
+  protected menuList?: MenuList;
   /*** Content container for the menu */
   protected modal!: Phaser.GameObjects.Container;
   protected contentBox!: Phaser.GameObjects.Rectangle;
@@ -130,6 +132,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
   protected onLanguageChange(_lang: Locale) {
     this.textTitle.setText(t(this.title));
     this.textHint.setText(t(this.hint));
+    if (this.menuList) this.menuList.updateText(_lang);
   }
 
   protected close(): void {
