@@ -13,7 +13,7 @@ export class OptionsScene extends BaseMenuScene {
   public create(data: { parentKey?: string } = {}): void {
     super.create(data);
 
-    const list = new MenuList(this, {
+    this.menuList = new MenuList(this, {
       x: 0,
       y: -20,
       gap: 64,
@@ -43,7 +43,7 @@ export class OptionsScene extends BaseMenuScene {
         },
       ],
     });
-    this.modal.add(list);
+    this.modal.add(this.menuList);
   }
 
   private openAudio() {
