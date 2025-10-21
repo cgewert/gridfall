@@ -3,7 +3,7 @@ import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { LanguageSettings, LOCALE_NAME } from "../../services/LanguageSettings";
 import { t } from "i18next";
 import { SkinId, SkinSettings } from "../../services/SkinSettings";
-import { SKIN_LABEL } from "../../shapes";
+import { SHAPE_TO_BLOCKSKIN_FRAME, SKIN_LABEL } from "../../shapes";
 
 export class GeneralMenuScene extends BaseMenuScene {
   public static readonly KEY = "GeneralMenuScene";
@@ -12,7 +12,6 @@ export class GeneralMenuScene extends BaseMenuScene {
   private textLanguage!: Phaser.GameObjects.Text;
   private preview!: Phaser.GameObjects.Container;
   private previewBox!: Phaser.GameObjects.Rectangle;
-  private previewLabel!: Phaser.GameObjects.Text;
 
   private entries: {
     label: Phaser.GameObjects.Text;
@@ -60,8 +59,11 @@ export class GeneralMenuScene extends BaseMenuScene {
     // TODO: Gamepad input will be supported later
     // this.input.gamepad?.on("down", this.onPadDown, this);
 
-    // Cleanup
+    this.buildPreviewArea(this.modal.width / 2, this.modal.height / 2);
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
+
+    this.refreshPreview();
   }
 
   private addLanguageRow(idx: number, y: number) {
@@ -89,7 +91,6 @@ export class GeneralMenuScene extends BaseMenuScene {
       })
       .setOrigin(1, 0.5);
 
-    // Maus: Klick links/rechts Hälfte = prev/next + Fokus holen
     bg.setInteractive({ useHandCursor: true });
     bg.on("pointerdown", (p: Phaser.Input.Pointer) => {
       this.setActiveIndex(idx);
@@ -114,7 +115,12 @@ export class GeneralMenuScene extends BaseMenuScene {
   }
 
   private onChange(dir: -1 | 1) {
+    // index 0 = Language; 1 = Skin
     if (this.activeIndex === 0) this.changeLanguage(dir);
+    else if (this.activeIndex === 1) {
+      if (dir < 0) this.prevSkin();
+      else this.nextSkin();
+    }
   }
 
   private changeLanguage(dir: -1 | 1) {
@@ -163,88 +169,25 @@ export class GeneralMenuScene extends BaseMenuScene {
 
   private prevSkin() {
     SkinSettings.prev();
-    //this.updateSkinRowAndPreview();
+    this.updateSkinRowAndPreview();
   }
   private nextSkin() {
     SkinSettings.next();
-    //this.updateSkinRowAndPreview();
+    this.updateSkinRowAndPreview();
   }
 
-  // private updateSkinRowAndPreview() {
-  //   const e = this.entries[1];
-  //   e.value.setText(this.getSkinLabel(SkinSettings.get()));
-  //   this.refreshPreview();
-  // }
+  private updateSkinRowAndPreview() {
+    const e = this.entries[1];
+    e.value.setText(this.getSkinLabel(SkinSettings.get()));
+    this.refreshPreview();
+  }
 
-  // ===== Preview Area =====
   private buildPreviewArea(rightX: number, topOffset: number) {
-    this.preview = this.add.container(rightX - 260, topOffset); // anchor point
+    const currentSkin = SKIN_LABEL[SkinSettings.get()];
+    this.preview = this.add.container(rightX, topOffset);
+
     this.modal.add(this.preview);
-
-    // background box
-    this.previewBox = this.add
-      .rectangle(0, 0, 480, 240, 0x0b0f18, 0.65)
-      .setOrigin(0, 0)
-      .setStrokeStyle(1, 0x00ffff, 0.55);
-    this.preview.add(this.previewBox);
-
-    this.previewLabel = this.add
-      .text(12, 12, "Preview", {
-        fontFamily: "Orbitron, sans-serif",
-        fontSize: "16px",
-        color: "#9ad",
-      })
-      .setOrigin(0, 0);
-    this.preview.add(this.previewLabel);
   }
-
-  // private refreshPreview() {
-  //   // clear previous children (except box + label)
-  //   this.preview.iterate((child: any) => {
-  //     if (child !== this.previewBox && child !== this.previewLabel)
-  //       child.destroy();
-  //   });
-
-  //   const skin = SkinSettings.get();
-  //   const texKey = SKIN_TO_TEXTURE[skin];
-
-  //   // A tiny 7-bag preview in two rows:
-  //   const pieces: (keyof typeof FRAME_BY_PIECE)[] = [
-  //     "I",
-  //     "O",
-  //     "T",
-  //     "S",
-  //     "Z",
-  //     "J",
-  //     "L",
-  //   ];
-  //   const frames = pieces.map((p) => FRAME_BY_PIECE[p]);
-
-  //   const startX = 24,
-  //     startY = 52;
-  //   const cell = 28; // pixel spacing in preview
-  //   const scale = 0.9; // sprite scaling for 32px tiles
-  //   let col = 0,
-  //     row = 0;
-
-  //   frames.forEach((frame, i) => {
-  //     // simple one-block preview per piece (compact). If you want polyomino shapes, render 4 blocks per piece in pattern.
-  //     const img = this.add
-  //       .image(startX + col * cell, startY + row * cell, texKey, frame)
-  //       .setOrigin(0, 0)
-  //       .setScale(scale);
-  //     this.preview.add(img);
-
-  //     col++;
-  //     if (col >= 7) {
-  //       col = 0;
-  //       row++;
-  //     }
-  //   });
-
-  //   // Optional: nicer look — render actual shapes
-  //   // Example for T piece at (x,y): place four images (0,1 / 1,1 / 2,1 / 1,0) with tighter cell spacing.
-  // }
 
   private addSkinRow(idx: number, y: number) {
     const cx = 0,
@@ -282,6 +225,47 @@ export class GeneralMenuScene extends BaseMenuScene {
 
   private getSkinLabel(id: SkinId) {
     return SKIN_LABEL[id];
+  }
+
+  private refreshPreview() {
+    this.preview.iterate((child: any) => {
+      if (child !== this.previewBox) child.destroy();
+    });
+
+    const skin = SkinSettings.get();
+
+    const pieces: (keyof typeof SHAPE_TO_BLOCKSKIN_FRAME)[] = [
+      "I",
+      "O",
+      "T",
+      "S",
+      "Z",
+      "J",
+      "L",
+    ];
+    const frames = pieces.map((p) => SHAPE_TO_BLOCKSKIN_FRAME[p]);
+
+    const startX = -50,
+      startY = 46;
+    const cell = 32;
+    let col = 0,
+      row = 0;
+
+    // TODO: render actual shapes instead of single blocks
+    // Example for T piece at (x,y): place four images (0,1 / 1,1 / 2,1 / 1,0) with tighter cell spacing.
+    frames.forEach((frame, i) => {
+      const img = this.add
+        .image(startX + col * cell, startY + row * cell, skin, frame)
+        .setOrigin(0, 0)
+        .setDisplaySize(32, 32);
+      this.preview.add(img);
+
+      col++;
+      if (col >= 7) {
+        col = 0;
+        row++;
+      }
+    });
   }
 
   protected onEntranceCompleted(): void {}

@@ -3,7 +3,7 @@ import { SettingsEvents } from "./SettingsEvents";
 
 export type SkinId =
   | "neon"
-  | "pastel"
+  | "minosPastel"
   | "minos1"
   | "minos2"
   | "minos3"
@@ -13,7 +13,7 @@ const KEY = "gridfall.skin.v1";
 
 const ORDER: SkinId[] = [
   "neon",
-  "pastel",
+  "minosPastel",
   "minos1",
   "minos2",
   "minos3",

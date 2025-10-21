@@ -37,6 +37,7 @@ import { TimerDisplay } from "../ui/TimerDisplay";
 import { AudioBus } from "../services/AudioBus";
 import { InputSettings } from "../services/InputSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
+import { SkinSettings } from "../services/SkinSettings";
 
 export interface GameSceneConfiguration {
   spawnSystem: SpawnSystem;
@@ -164,8 +165,7 @@ export class GameScene extends Phaser.Scene {
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
     this.currentSpawnSystem = data?.spawnSystem ?? SpawnSystem.SEVEN_BAG;
-    this.blockSkin = data?.blockSkin ?? BlockSkin.MINOS_NEON;
-    this.blockSkin = BlockSkin.MINOS_NEON;
+    this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
     if (this.gameMode === GameMode.ASCENT) {
       this.useSpeedCurve = true;
@@ -334,8 +334,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard!.on("keydown-T", () => this.timer.start());
 
     this.currentSpawnSystem = data.spawnSystem;
-    this.blockSkin = data.blockSkin;
-    this.blockSkin = BlockSkin.MINOS_NEON;
+    this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data.gameMode;
 
     // TODO: Game mode specific creation logic

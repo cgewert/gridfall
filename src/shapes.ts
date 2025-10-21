@@ -209,7 +209,7 @@ export enum BlockSkin {
 
 export const SKIN_LABEL: Record<SkinId, string> = {
   neon: "Neon",
-  pastel: "Pastel",
+  minosPastel: "Pastel",
   minos1: "Minos1",
   minos2: "Minos2",
   minos3: "Minos3",
