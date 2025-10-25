@@ -28,7 +28,6 @@ export class MainMenuScene extends Phaser.Scene {
   private currentSpawn = SpawnSystem.SEVEN_BAG;
   private blockSkin: BlockSkin = BlockSkin.MINOS2;
   private gameMode: GameMode = GameMode.INFINITY;
-  private blockpreview!: Phaser.GameObjects.Sprite;
 
   constructor() {
     super(MainMenuScene.CONFIG);

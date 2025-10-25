@@ -161,18 +161,26 @@ export class MenuList extends Phaser.GameObjects.Container {
   }
 
   private repositionDescBox() {
-    const cam = this.scene.cameras.main;
-    const view = cam.worldView;
+    // For some unknown reason, scene main cam dimensions are 0 when returning to the main menu scene.
+    // Workaround is to use scene scale dimensions instead.
+
+    const canvasBounds = {
+      x: 0,
+      y: 0,
+      width: this.scene.scale.width,
+      height: this.scene.scale.height,
+    };
     const bounds = this.descBox.getBounds();
 
     let dx = 0;
 
-    const rightLimit = view.right - this.descMargin;
+    const rightLimit = canvasBounds.width - this.descMargin;
     if (bounds.right > rightLimit) {
       dx += rightLimit - bounds.right;
     }
 
-    const leftLimit = view.left + this.descMargin;
+    const leftLimit = this.descMargin;
+
     if (bounds.left + dx < leftLimit) {
       dx += leftLimit - (bounds.left + dx);
     }
@@ -180,11 +188,6 @@ export class MenuList extends Phaser.GameObjects.Container {
     if (dx !== 0) {
       this.descContainer.x += dx;
     }
-  }
-
-  // TODO: Consider removing unused method
-  private get listContainer(): Phaser.GameObjects.Container {
-    return this;
   }
 
   private isEnabled(i: number) {
