@@ -1,8 +1,9 @@
 import { addSceneBackground } from "../effects/effects";
 import { DEFAULT_MENU_FONT } from "../fonts";
 import { GameMode } from "../game";
+import { SkinSettings } from "../services/SkinSettings";
+import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
 import { BlockSkin } from "../shapes";
-import { SpawnSystem } from "../spawn";
 import { GameSceneConfiguration } from "./game-scene";
 
 export class GameOverScene extends Phaser.Scene {
@@ -25,8 +26,8 @@ export class GameOverScene extends Phaser.Scene {
     console.debug("Initializing GameOverScene with data:", data);
     this.options = [];
     this.selectedIndex = 0;
-    this.currentSpawn = data.spawnSystem;
-    this.blockSkin = data.blockSkin;
+    this.currentSpawn = SpawnSettings.get();
+    this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data.gameMode;
   }
 
@@ -39,8 +40,8 @@ export class GameOverScene extends Phaser.Scene {
    */
   public create(data: GameSceneConfiguration) {
     this._main = this.cameras.main;
-    this.currentSpawn = data.spawnSystem;
-    this.blockSkin = data.blockSkin;
+    this.currentSpawn = SpawnSettings.get();
+    this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data.gameMode;
     addSceneBackground(this);
     this.add

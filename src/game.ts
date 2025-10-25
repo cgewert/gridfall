@@ -1,9 +1,4 @@
-import { BlockSkin } from "./shapes";
-import { SpawnSystem } from "./spawn";
-
 export type GameConfig = {
-  spawnSystem: SpawnSystem;
-  blockSkin: BlockSkin;
   gameMode: GameMode;
 };
 

@@ -1,10 +1,11 @@
 import Phaser from "phaser";
 import { SHAPE_TYPES } from "./shapes";
+import { SpawnSystem } from "./services/SpawnSettings";
 
-export enum SpawnSystem {
-  RANDOM,
-  SEVEN_BAG,
-}
+export const SPAWN_LABEL: Record<SpawnSystem, string> = {
+  sevenBag: "7-Bag",
+  pureRandom: "Random",
+};
 
 export class ShapesSpawner {
   private bag: string[] = [];
@@ -27,7 +28,7 @@ export class ShapesSpawner {
   }
 
   public getNext(): string {
-    if (this.system === SpawnSystem.RANDOM) {
+    if (this.system === "pureRandom") {
       return Phaser.Utils.Array.GetRandom(SHAPE_TYPES as string[]);
     }
 
