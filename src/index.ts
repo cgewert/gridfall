@@ -18,6 +18,7 @@ import { LanguageSettings } from "./services/LanguageSettings";
 import { InputSettings } from "./services/InputSettings";
 import { ControlsMenuScene } from "./scenes/menus/ControlsMenuScene";
 import { SkinSettings } from "./services/SkinSettings";
+import { SpawnSettings } from "./services/SpawnSettings";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -86,6 +87,7 @@ i18next.use(LanguageDetector).init({
   },
 });
 
+// Initialize all game services and load persistet settings.
 LanguageSettings.load();
 const game = new Game();
 LanguageSettings.init(game);
@@ -94,3 +96,5 @@ InputSettings.init(game);
 InputSettings.load();
 SkinSettings.load();
 SkinSettings.init(game);
+SpawnSettings.load();
+SpawnSettings.init(game);

@@ -10,7 +10,7 @@ import {
   SHAPES,
   TetriminoShape,
 } from "../shapes";
-import { ShapesSpawner, SpawnSystem } from "../spawn";
+import { ShapesSpawner } from "../spawn";
 import { gravityLevels } from "../speedCurves";
 import Phaser from "phaser";
 import { Rotation, GetKickData } from "../rotation";
@@ -38,10 +38,9 @@ import { AudioBus } from "../services/AudioBus";
 import { InputSettings } from "../services/InputSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { SkinSettings } from "../services/SkinSettings";
+import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
 
 export interface GameSceneConfiguration {
-  spawnSystem: SpawnSystem;
-  blockSkin: BlockSkin;
   gameMode: GameMode;
   DAS?: number;
   ARR?: number;
@@ -94,7 +93,7 @@ export class GameScene extends Phaser.Scene {
   private previewBox!: Phaser.GameObjects.Rectangle;
   private linesCleared: number = 0;
   private linesText!: Phaser.GameObjects.Text;
-  private currentSpawnSystem: SpawnSystem = SpawnSystem.SEVEN_BAG;
+  private currentSpawnSystem: SpawnSystem = "sevenBag";
 
   private pauseContainer!: Phaser.GameObjects.Container;
   private isPaused = false;
@@ -164,7 +163,7 @@ export class GameScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
-    this.currentSpawnSystem = data?.spawnSystem ?? SpawnSystem.SEVEN_BAG;
+    this.currentSpawnSystem = SpawnSettings.get();
     this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
     if (this.gameMode === GameMode.ASCENT) {
@@ -333,7 +332,7 @@ export class GameScene extends Phaser.Scene {
     this.add.existing(this.timer);
     this.input.keyboard!.on("keydown-T", () => this.timer.start());
 
-    this.currentSpawnSystem = data.spawnSystem;
+    this.currentSpawnSystem = SpawnSettings.get();
     this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data.gameMode;
 
@@ -539,8 +538,6 @@ export class GameScene extends Phaser.Scene {
       } else {
         // Set data for the start call
         const data: GameSceneConfiguration = {
-          spawnSystem: this.currentSpawnSystem,
-          blockSkin: this.blockSkin,
           gameMode: this.gameMode,
         };
         this.scene.start("MainMenuScene", data);
@@ -1216,8 +1213,6 @@ export class GameScene extends Phaser.Scene {
     this.sound.stopAll();
     this.music.stop();
     this.scene.start("GameOverScene", {
-      spawnSystem: this.currentSpawnSystem,
-      blockSkin: this.blockSkin,
       gameMode: this.gameMode,
     });
   }

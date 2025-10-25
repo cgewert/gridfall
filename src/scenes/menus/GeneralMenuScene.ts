@@ -1,6 +1,8 @@
 // src/scenes/menus/GeneralMenuScene.ts
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { LanguageSettings, LOCALE_NAME } from "../../services/LanguageSettings";
+import { SpawnSettings } from "../../services/SpawnSettings";
+import { SPAWN_LABEL } from "../../spawn";
 import { t } from "i18next";
 import { SkinId, SkinSettings } from "../../services/SkinSettings";
 import { SHAPE_TO_BLOCKSKIN_FRAME, SKIN_LABEL } from "../../shapes";
@@ -41,6 +43,7 @@ export class GeneralMenuScene extends BaseMenuScene {
 
     this.addLanguageRow(0, -20);
     this.addSkinRow(1, 60);
+    this.addSpawnRow(2, 140, 560);
     this.setActiveIndex(0);
 
     // Keyboard
@@ -102,6 +105,47 @@ export class GeneralMenuScene extends BaseMenuScene {
     this.entries.push({ label: this.textLanguage, value, bg, cx, cy: y, w, h });
   }
 
+  /**
+   * Add spawn system selection row
+   * @param idx: Entry index
+   * @param y: Y position inside modal container
+   * @param w: Width of the row
+   */
+  private addSpawnRow(idx: number, y: number, w: number) {
+    const cx = 0,
+      h = 48;
+    const bg = this.add
+      .rectangle(cx, y, w, h, 0xffffff, 0.06)
+      .setOrigin(0.5)
+      .setStrokeStyle(1, 0x00ffff, 0.6);
+    const label = this.add
+      .text(cx - w / 2 + 14, y, "Spawn System", {
+        fontFamily: "Orbitron, sans-serif",
+        fontSize: "22px",
+        color: "#9ad",
+      })
+      .setOrigin(0, 0.5);
+    const value = this.add
+      .text(cx + w / 2 - 14, y, SPAWN_LABEL[SpawnSettings.get()], {
+        fontFamily: "Orbitron, sans-serif",
+        fontSize: "22px",
+        color: "#cfefff",
+      })
+      .setOrigin(1, 0.5);
+
+    // Currently only keyboard input is supported for this menu
+
+    // bg.setInteractive({ useHandCursor: true });
+    // bg.on("pointerdown", (p: Phaser.Input.Pointer) => {
+    //   this.setActiveIndex(idx);
+    //   if (p.x < this.cameras.main.centerX) this.prevSpawn();
+    //   else this.nextSpawn();
+    // });
+
+    this.modal.add([bg, label, value]);
+    this.entries.push({ label, value, bg, cx, cy: y, w, h });
+  }
+
   private setActiveIndex(i: number) {
     if (!this.entries.length) return;
     this.activeIndex = (i + this.entries.length) % this.entries.length;
@@ -115,12 +159,47 @@ export class GeneralMenuScene extends BaseMenuScene {
   }
 
   private onChange(dir: -1 | 1) {
-    // index 0 = Language; 1 = Skin
+    // index 0 = Language; 1 = Skin; 2 = Spawn System
     if (this.activeIndex === 0) this.changeLanguage(dir);
     else if (this.activeIndex === 1) {
       if (dir < 0) this.prevSkin();
       else this.nextSkin();
+    } else if (this.activeIndex === 2) {
+      if (dir < -1) this.prevSpawnSystem();
+      else this.nextSpawnSystem();
     }
+  }
+
+  /**
+   * Change to previous spawn system
+   */
+  private prevSpawnSystem() {
+    SpawnSettings.prev();
+    const e = this.entries[2];
+    e.value.setText(SPAWN_LABEL[SpawnSettings.get()]);
+    this.tweens.add({
+      targets: e.value,
+      scale: 1.06,
+      duration: 80,
+      yoyo: true,
+      ease: "Quad.easeOut",
+    });
+  }
+
+  /**
+   * Change to next spawn system
+   */
+  private nextSpawnSystem() {
+    SpawnSettings.next();
+    const e = this.entries[2];
+    e.value.setText(SPAWN_LABEL[SpawnSettings.get()]);
+    this.tweens.add({
+      targets: e.value,
+      scale: 1.06,
+      duration: 80,
+      yoyo: true,
+      ease: "Quad.easeOut",
+    });
   }
 
   private changeLanguage(dir: -1 | 1) {

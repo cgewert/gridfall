@@ -1,7 +1,6 @@
 import * as Phaser from "phaser";
 import { GameSceneConfiguration } from "./game-scene";
 import { BlockSkin } from "../shapes";
-import { SpawnSystem } from "../spawn";
 import { addScanlines, addSceneBackground } from "../effects/effects";
 import {
   AudioAnalysis,
@@ -15,6 +14,8 @@ import { AudioBus } from "../services/AudioBus";
 import { t } from "i18next";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { Locale } from "../services/LanguageSettings";
+import { SpawnSettings } from "../services/SpawnSettings";
+import { SkinSettings } from "../services/SkinSettings";
 
 export class MainMenuScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -25,10 +26,9 @@ export class MainMenuScene extends Phaser.Scene {
   private menu!: MenuList;
   private audioAnalyser: AudioAnalysis = {} as AudioAnalysis;
   private music?: Phaser.Sound.WebAudioSound;
-  private currentSpawn = SpawnSystem.SEVEN_BAG;
+  private currentSpawn = "sevenBag";
   private blockSkin: BlockSkin = BlockSkin.MINOS2;
   private gameMode: GameMode = GameMode.INFINITY;
-  private blockpreview!: Phaser.GameObjects.Sprite;
 
   constructor() {
     super(MainMenuScene.CONFIG);
@@ -36,9 +36,9 @@ export class MainMenuScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
-    this.currentSpawn = data?.spawnSystem ?? SpawnSystem.SEVEN_BAG;
+    this.currentSpawn = SpawnSettings.get();
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
-    this.blockSkin = data?.blockSkin ?? BlockSkin.MINOS2;
+    this.blockSkin = SkinSettings.get() as BlockSkin;
   }
 
   public preload() {
@@ -110,8 +110,6 @@ export class MainMenuScene extends Phaser.Scene {
           action: () => {
             return this.startGame({
               gameMode: GameMode.ASCENT,
-              blockSkin: this.blockSkin,
-              spawnSystem: this.currentSpawn,
             });
           },
         },
@@ -124,8 +122,6 @@ export class MainMenuScene extends Phaser.Scene {
           action: () =>
             this.startGame({
               gameMode: GameMode.INFINITY,
-              blockSkin: this.blockSkin,
-              spawnSystem: this.currentSpawn,
             }),
         },
         {
@@ -137,8 +133,6 @@ export class MainMenuScene extends Phaser.Scene {
           action: () =>
             this.startGame({
               gameMode: GameMode.RUSH,
-              blockSkin: this.blockSkin,
-              spawnSystem: this.currentSpawn,
             }),
         },
         {
