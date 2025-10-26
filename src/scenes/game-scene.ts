@@ -150,6 +150,8 @@ export class GameScene extends Phaser.Scene {
   private blockSkin!: BlockSkin;
   private gameMode!: GameMode;
 
+  private checkWinCondition: CallableFunction = () => {};
+
   // Event handlers
   private onInputChanged?: (data: {
     dasMs: number;
@@ -335,6 +337,18 @@ export class GameScene extends Phaser.Scene {
     this.currentSpawnSystem = SpawnSettings.get();
     this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data.gameMode;
+    switch (this.gameMode) {
+      case GameMode.RUSH:
+        this.checkWinCondition = this.checkSprintWin;
+        break;
+      case GameMode.ASCENT:
+        this.checkWinCondition = this.checkAscentWin;
+        break;
+      case GameMode.INFINITY:
+        break;
+      default:
+        break;
+    }
 
     // TODO: Game mode specific creation logic
     if (this.gameMode === GameMode.INFINITY) {
@@ -562,6 +576,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private pauseGame(): void {
+    this.timer.pause();
     this.physics.world.pause();
     this.isPaused = true;
     this.tweens.add({
@@ -576,6 +591,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resumeGame(): void {
+    this.timer.resume();
     this.physics.world.resume();
     this.isPaused = false;
     this.sakuraEmitter.killAll();
@@ -1082,22 +1098,6 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private checkWinCondition() {
-    //LogGameAction(GameActions.CHECK_FOR_WIN_CONDITION);
-    switch (this.gameMode) {
-      case GameMode.RUSH:
-        this.checkSprintWin();
-        break;
-      case GameMode.ASCENT:
-        this.checkAscentWin();
-        break;
-      case GameMode.INFINITY:
-        break;
-      default:
-        break;
-    }
-  }
-
   private checkAscentWin() {
     if (this.linesCleared >= 150) {
       LogGameAction(GameActions.ASCENT_VICTORY);
@@ -1113,11 +1113,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   private triggerVictory(): void {
-    // TODO: Determine game mode inside Victory Scene
+    // TODO : Persist scores and times for the highscore table
     this.gameOver = true;
     this.music.stop();
     this.scene.start("VictoryScene", {
       score: this.score,
+      gameMode: this.gameMode,
+      time: this.timer.format(this.timer.getElapsedMs()),
     });
   }
 
@@ -1247,6 +1249,7 @@ export class GameScene extends Phaser.Scene {
   public update(time: number, delta: number) {
     this.checkWinCondition();
     this.doGameModeLogic();
+
     if (!this.isPaused && !this.gameOver) {
       let effectiveFallSpeed = this.fallSpeed;
 

@@ -64,14 +64,14 @@ export class TimerDisplay extends Phaser.GameObjects.Container {
   }
 
   /** Startet (oder resumed) den Timer – lässt die bisher akkumulierte Zeit stehen. */
-  start(): void {
+  public start(): void {
     if (this.running) return;
     this.running = true;
     this.lastStartNow = this.scene.time.now;
   }
 
   /** Pausiert (hält an, aber behält die Zeit). */
-  pause(): void {
+  public pause(): void {
     if (!this.running) return;
     const now = this.scene.time.now;
     this.accumulatedMs += now - this.lastStartNow;
@@ -81,26 +81,26 @@ export class TimerDisplay extends Phaser.GameObjects.Container {
   }
 
   /** Stoppt und setzt den Timer auf 0. */
-  stop(): void {
+  public stop(): void {
     this.running = false;
     this.accumulatedMs = 0;
     this.text.setText(this.prefix + this.format(0));
   }
 
   /** Setzt zurück (wie stop, aber ohne Anzeige zu ändern, wenn gewünscht). */
-  reset(): void {
+  public reset(): void {
     this.running = false;
     this.accumulatedMs = 0;
     this.text.setText(this.prefix + this.format(0));
   }
 
   /** Fortsetzen falls pausiert. Alias zu start(). */
-  resume(): void {
+  public resume(): void {
     this.start();
   }
 
   /** Setzt die Anzeige hart auf eine bestimmte ms-Zeit (optional nützlich). */
-  setElapsedMs(ms: number): void {
+  public setElapsedMs(ms: number): void {
     const clamped = Math.max(0, ms | 0);
     this.accumulatedMs = clamped;
     if (this.running) this.lastStartNow = this.scene.time.now;
@@ -108,26 +108,26 @@ export class TimerDisplay extends Phaser.GameObjects.Container {
   }
 
   /** Liefert die aktuelle verstrichene Zeit in Millisekunden. */
-  getElapsedMs(): number {
+  public getElapsedMs(): number {
     if (!this.running) return this.accumulatedMs;
     const now = this.scene.time.now;
     return this.accumulatedMs + (now - this.lastStartNow);
   }
 
   /** Optional: Präfix ändern (z. B. "SPRINT "). */
-  setPrefix(p: string): void {
+  public setPrefix(p: string): void {
     this.prefix = p ?? "";
     // Anzeige direkt neu schreiben
     this.text.setText(this.prefix + this.format(this.getElapsedMs()));
   }
 
   /** Textstil auch nachträglich anpassbar. */
-  setTextStyle(style: Phaser.Types.GameObjects.Text.TextStyle): void {
+  public setTextStyle(style: Phaser.Types.GameObjects.Text.TextStyle): void {
     this.text.setStyle(style);
   }
 
   /** Größe/Skalierung der gesamten Komponente wie gewohnt über setScale(). */
-  override setScale(x: number, y?: number): this {
+  public override setScale(x: number, y?: number): this {
     super.setScale(x, y);
     return this;
   }
@@ -144,7 +144,7 @@ export class TimerDisplay extends Phaser.GameObjects.Container {
   }
 
   /** Format hh:mm:ss:ms (ms = 3-stellig). */
-  private format(msTotal: number): string {
+  public format(msTotal: number): string {
     const ms = Math.floor(msTotal % 1000);
     const totalSeconds = Math.floor(msTotal / 1000);
     const s = totalSeconds % 60;
