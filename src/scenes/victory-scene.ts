@@ -1,13 +1,15 @@
 import Phaser from "phaser";
 import { addSceneBackground } from "../effects/effects";
 import { DEFAULT_MENU_FONT } from "../fonts";
+import { GameMode, GameModeToString } from "../game";
 
 export class VictoryScene extends Phaser.Scene {
   constructor() {
     super("VictoryScene");
   }
 
-  create() {
+  create(data: { gameMode: GameMode; score: number; time: string }) {
+    const { gameMode, score, time } = data;
     this.cameras.main.setBackgroundColor("#000000");
     addSceneBackground(this);
 
@@ -25,7 +27,9 @@ export class VictoryScene extends Phaser.Scene {
       .text(
         this.scale.width / 2,
         this.scale.height / 2,
-        "150 Lines – Gridfall Champion!",
+        `${GameModeToString(
+          gameMode
+        )} Completed!\nScore: ${score}\nTime: ${time}`,
         {
           fontSize: "32px",
           fontFamily: "Arial",

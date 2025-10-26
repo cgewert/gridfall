@@ -13,11 +13,18 @@ type InputData = {
 const KEY = "gridfall.input.v1";
 
 class InputSettingsStore {
+  public static readonly DEFAULTS: InputData = {
+    dasMs: 167,
+    arrMs: 33,
+    sdfTps: 6,
+  };
+
   private game?: Phaser.Game;
+
   private data: InputData = {
-    dasMs: 167, // 17–333ms
-    arrMs: 33, // 0–83ms; 0 = „instant“
-    sdfTps: 6, // 5–40 + infinity
+    dasMs: InputSettingsStore.DEFAULTS.dasMs,
+    arrMs: InputSettingsStore.DEFAULTS.arrMs,
+    sdfTps: InputSettingsStore.DEFAULTS.sdfTps,
   };
 
   public init(game: Phaser.Game) {

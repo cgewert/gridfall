@@ -1,13 +1,19 @@
-Main Menu:
-  ✔ Dont move whole scene but only menu list @done(25-09-28 16:17)
-  ✔ Check and improve scan line effect @started(25-09-28 16:17) @done(25-09-28 16:35) @lasted(18m52s)
-  ☐ Determine menu points to implement and implement them ^^ @started(25-09-28 16:37)
+# TODO
 
-Ingame Scene:
-  ☐ save times and scores
+  Settings:
+  ☐ Implement "Reset to defaults" button functionality @started(25-10-26 18:32)
+  ☐ Implement Feedback sound when toggling settings
+  ☐ Add missing translations
+  ☐ Fix bugs related to tweened animations
 
-  Main Menu Brainstorming:
-  - animated background (moving shapes, particles, etc.)
-  - Sprint => 
-  - Endless => 
-  - Marathon => 
+  Ingame:
+    ✔ Pause timer when game is paused @done(25-10-26 18:32)
+    ☐ Work on UI
+    ☐ Make sure all 3 game modes are implemented @started(25-10-26 18:03)
+    ☐ Rework and test controls make them TETR.IO like
+    ☐ Implement Wallkicks and rotations (SRS+)
+    ☐ Implement 180 ° rotations (Toggleable)
+    ☐ Fix gravity in Marathon mode, implement increasing difficulty
+    ✔ Implement game mode specific Game Over Screen @started(25-10-26 18:46) @done(25-10-26 18:52) @lasted(6m23s)
+    ☐ Persist High Scores
+    ☐ Implement High Score Screen
