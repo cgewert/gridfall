@@ -9,11 +9,11 @@
   Ingame:
     ✔ Pause timer when game is paused @done(25-10-26 18:32)
     ☐ Work on UI
-    ☐ Make sure all 3 game modes are implemented @started(25-10-26 18:03)
+    ☐ Fix gravity in Marathon mode, implement increasing difficulty
+    ✔ Make sure all 3 game modes are implemented @started(25-10-26 18:03) @done(25-11-01 19:25) @lasted(6d1h22m31s)
     ☐ Rework and test controls make them TETR.IO like
     ☐ Implement Wallkicks and rotations (SRS+)
     ☐ Implement 180 ° rotations (Toggleable)
-    ☐ Fix gravity in Marathon mode, implement increasing difficulty
     ✔ Implement game mode specific Game Over Screen @started(25-10-26 18:46) @done(25-10-26 18:52) @lasted(6m23s)
-    ☐ Persist High Scores
+    ✔ Persist High Scores @started(25-11-01 19:32) @done(25-11-01 20:13) @lasted(41m42s)
     ☐ Implement High Score Screen

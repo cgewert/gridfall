@@ -1113,7 +1113,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private triggerVictory(): void {
-    // TODO : Persist scores and times for the highscore table
     this.gameOver = true;
     this.music.stop();
     this.scene.start("VictoryScene", {

@@ -19,6 +19,7 @@ import { InputSettings } from "./services/InputSettings";
 import { ControlsMenuScene } from "./scenes/menus/ControlsMenuScene";
 import { SkinSettings } from "./services/SkinSettings";
 import { SpawnSettings } from "./services/SpawnSettings";
+import { HighScoreSettings } from "./services/HighScoreSettings";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -98,3 +99,4 @@ SkinSettings.load();
 SkinSettings.init(game);
 SpawnSettings.load();
 SpawnSettings.init(game);
+HighScoreSettings.load();
