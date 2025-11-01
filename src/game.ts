@@ -36,6 +36,14 @@ export const LogGameAction = (action: GameActions) => {
   console.debug(`Game Action: ${GameActionsToString(action)}`);
 };
 
+export const TimeStringToMilliseconds = (time: string): number => {
+  const parts = time.split(":").map((part) => parseInt(part, 10));
+  const [hours, minutes, seconds, milliseconds] = parts;
+  return (
+    hours * 60 * 60 * 1000 + minutes * 60 * 1000 + seconds * 1000 + milliseconds
+  );
+};
+
 export const GameActionsToString = (action: GameActions): string => {
   switch (action) {
     case GameActions.LINE_CLEAR:
