@@ -1,60 +1,68 @@
 import Phaser from "phaser";
 
+/**
+ * Configuration options for TimerDisplay.
+ */
 export type TimerDisplayOptions = {
-  x?: number;
-  y?: number;
-  autostart?: boolean;
-  prefix?: string; // z.B. "TIME "
-  fontFamily?: string; // z.B. "Orbitron"
+  x?: number; // Position on x-axis
+  y?: number; // Position on y-axis
+  autostart?: boolean; // automatically start the timer
+  prefix?: string; // e.g. "TIME "
+  fontFamily?: string; // e.g. "Orbitron"
   fontSize?: number; // px
-  color?: string; // z.B. "#FFFFFF"
-  stroke?: string; // Konturfarbe
+  color?: string; // e.g. "#FFFFFF"
+  stroke?: string; // outline color
   strokeThickness?: number;
-  shadow?: boolean; // Textschatten für bessere Lesbarkeit
-  alpha?: number;
+  shadow?: boolean; // text shadow for better readability
+  alpha?: number; // transparency
   depth?: number;
   align?: "left" | "center" | "right";
 };
 
 export class TimerDisplay extends Phaser.GameObjects.Container {
-  private text!: Phaser.GameObjects.Text;
+  private _text!: Phaser.GameObjects.Text;
 
-  private running = false;
-  private accumulatedMs = 0; // summierte Zeit aller Läufe
-  private lastStartNow = 0; // Zeitpunkt des letzten Starts (ms, scene.time.now)
-  private prefix: string;
+  private _running = false;
+  private _accumulatedMs = 0; // accumulated time in ms
+  private _lastStartNow = 0; // last start time (ms, scene.time.now)
+  private _prefix: string;
 
   constructor(scene: Phaser.Scene, opts: TimerDisplayOptions = {}) {
     const x = opts.x ?? 0;
     const y = opts.y ?? 0;
+
     super(scene, x, y);
 
-    this.prefix = opts.prefix ?? "";
-
-    // Textobjekt
-    this.text = scene.add.text(0, 0, this.format(0), {
-      fontFamily: opts.fontFamily ?? "Orbitron, monospace",
-      fontSize: `${opts.fontSize ?? 32}px`,
-      color: opts.color ?? "#FFFFFF",
-      align: opts.align ?? "left",
-    });
+    this._prefix = opts.prefix ?? "";
+    this._text = scene.make.text(
+      {
+        x: 0,
+        y: 0,
+        text: this.format(0),
+        style: {
+          fontFamily: opts.fontFamily ?? "Orbitron, monospace",
+          fontSize: `${opts.fontSize ?? 32}px`,
+          color: opts.color ?? "#FFFFFF",
+          align: opts.align ?? "left",
+        },
+      },
+      false
+    );
 
     if (opts.stroke) {
-      this.text.setStroke(opts.stroke, opts.strokeThickness ?? 2);
+      this._text.setStroke(opts.stroke, opts.strokeThickness ?? 2);
     }
     if (opts.shadow) {
-      this.text.setShadow(0, 2, "#000000", 4, true, true);
+      this._text.setShadow(0, 2, "#000000", 4, true, true);
     }
-
-    this.text.setOrigin(0, 0.5); // linksbündig, vertikal mittig
-    this.add(this.text);
+    this._text.setOrigin(0, 0.5);
+    this.add(this._text);
 
     if (opts.alpha !== undefined) this.setAlpha(opts.alpha);
     if (opts.depth !== undefined) this.setDepth(opts.depth);
 
     scene.add.existing(this);
 
-    // Auf Scene-Updates reagieren
     this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onUpdate, this);
     this.once(Phaser.GameObjects.Events.DESTROY, () => {
       this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.onUpdate, this);
@@ -63,87 +71,88 @@ export class TimerDisplay extends Phaser.GameObjects.Container {
     if (opts.autostart) this.start();
   }
 
-  /** Startet (oder resumed) den Timer – lässt die bisher akkumulierte Zeit stehen. */
+  /** Starts or resumes the timer. */
   public start(): void {
-    if (this.running) return;
-    this.running = true;
-    this.lastStartNow = this.scene.time.now;
+    if (this._running) return;
+    this._running = true;
+    this._lastStartNow = this.scene.time.now;
   }
 
-  /** Pausiert (hält an, aber behält die Zeit). */
+  /** Pauses the timer. */
   public pause(): void {
-    if (!this.running) return;
+    if (!this._running) return;
     const now = this.scene.time.now;
-    this.accumulatedMs += now - this.lastStartNow;
-    this.running = false;
-    // Anzeige direkt aktualisieren
-    this.text.setText(this.prefix + this.format(this.accumulatedMs));
+    this._accumulatedMs += now - this._lastStartNow;
+    this._running = false;
+    // Update display immediately
+    this._text.setText(this._prefix + this.format(this._accumulatedMs));
   }
 
-  /** Stoppt und setzt den Timer auf 0. */
+  /** Stops the timer (like reset, but without resetting the display). */
   public stop(): void {
-    this.running = false;
-    this.accumulatedMs = 0;
-    this.text.setText(this.prefix + this.format(0));
+    this._running = false;
+    this._accumulatedMs = 0;
   }
 
-  /** Setzt zurück (wie stop, aber ohne Anzeige zu ändern, wenn gewünscht). */
+  /** Stops and resets the timer to 0. */
   public reset(): void {
-    this.running = false;
-    this.accumulatedMs = 0;
-    this.text.setText(this.prefix + this.format(0));
+    this._running = false;
+    this._accumulatedMs = 0;
+    this._text.setText(this._prefix + this.format(0));
   }
 
-  /** Fortsetzen falls pausiert. Alias zu start(). */
+  /** Resumes the timer if paused. Alias for start(). */
   public resume(): void {
     this.start();
   }
 
-  /** Setzt die Anzeige hart auf eine bestimmte ms-Zeit (optional nützlich). */
+  /** Sets the display to a specific ms time. */
   public setElapsedMs(ms: number): void {
     const clamped = Math.max(0, ms | 0);
-    this.accumulatedMs = clamped;
-    if (this.running) this.lastStartNow = this.scene.time.now;
-    this.text.setText(this.prefix + this.format(clamped));
+    this._accumulatedMs = clamped;
+    if (this._running) this._lastStartNow = this.scene.time.now;
+    this._text.setText(this._prefix + this.format(clamped));
   }
 
-  /** Liefert die aktuelle verstrichene Zeit in Millisekunden. */
+  /** Returns the current elapsed time in milliseconds. */
   public getElapsedMs(): number {
-    if (!this.running) return this.accumulatedMs;
+    if (!this._running) return this._accumulatedMs;
     const now = this.scene.time.now;
-    return this.accumulatedMs + (now - this.lastStartNow);
+    return this._accumulatedMs + (now - this._lastStartNow);
   }
 
-  /** Optional: Präfix ändern (z. B. "SPRINT "). */
+  /** Optional: Change the prefix (e.g. "SPRINT "). */
   public setPrefix(p: string): void {
-    this.prefix = p ?? "";
-    // Anzeige direkt neu schreiben
-    this.text.setText(this.prefix + this.format(this.getElapsedMs()));
+    this._prefix = p ?? "";
+    this._text.setText(this._prefix + this.format(this.getElapsedMs()));
   }
 
-  /** Textstil auch nachträglich anpassbar. */
+  /** Text style can also be adjusted later. */
   public setTextStyle(style: Phaser.Types.GameObjects.Text.TextStyle): void {
-    this.text.setStyle(style);
+    this._text.setStyle(style);
   }
 
-  /** Größe/Skalierung der gesamten Komponente wie gewohnt über setScale(). */
+  /** Size/scale of the entire component can be adjusted as usual via setScale(). */
   public override setScale(x: number, y?: number): this {
     super.setScale(x, y);
     return this;
   }
 
-  /** Position anpassen: Container verschiebt Text mit. */
   override setPosition(x?: number, y?: number, z?: number, w?: number): this {
     return super.setPosition(x, y, z, w);
   }
 
+  /**
+   * Callback for scene update event.
+   */
   private onUpdate(): void {
-    if (!this.running) return;
+    if (!this._running) return;
+
     const ms = this.getElapsedMs();
-    this.text.setText(this.prefix + this.format(ms));
+    this._text.setText(this._prefix + this.format(ms));
   }
 
-  /** Format hh:mm:ss:ms (ms = 3-stellig). */
+  /** Format hh:mm:ss:ms (ms = 3-digits). */
   public format(msTotal: number): string {
     const ms = Math.floor(msTotal % 1000);
     const totalSeconds = Math.floor(msTotal / 1000);
