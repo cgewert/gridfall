@@ -11,6 +11,7 @@
     ☐ Work on UI
     ☐ Fix gravity in Marathon mode, implement increasing difficulty
     ✔ Make sure all 3 game modes are implemented @started(25-10-26 18:03) @done(25-11-01 19:25) @lasted(6d1h22m31s)
+    ☐ Infinity Mode shall only consider points scored, not time taken for a high score save
     ☐ Rework and test controls make them TETR.IO like
     ☐ Implement Wallkicks and rotations (SRS+)
     ☐ Implement 180 ° rotations (Toggleable)

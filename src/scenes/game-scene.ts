@@ -39,6 +39,7 @@ import { InputSettings } from "../services/InputSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { SkinSettings } from "../services/SkinSettings";
 import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
+import { AnimatableText, AnimatableTextTweenType } from "../ui/AnimatableText";
 
 export interface GameSceneConfiguration {
   gameMode: GameMode;
@@ -1213,9 +1214,15 @@ export class GameScene extends Phaser.Scene {
     this.gameOver = true;
     this.sound.stopAll();
     this.music.stop();
-    this.scene.start("GameOverScene", {
-      gameMode: this.gameMode,
-    });
+    if (this.gameMode === GameMode.INFINITY) {
+      this.scene.start("VictoryScene", {
+        gameMode: this.gameMode,
+        score: this.score,
+        time: this.timer.format(this.timer.getElapsedMs()),
+      });
+    } else {
+      this.scene.start("GameOverScene", { gameMode: this.gameMode });
+    }
   }
 
   private isTSpin(): boolean {

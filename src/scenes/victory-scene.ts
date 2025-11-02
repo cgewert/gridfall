@@ -3,6 +3,7 @@ import { addSceneBackground } from "../effects/effects";
 import { DEFAULT_MENU_FONT } from "../fonts";
 import { GameMode, GameModeToString, TimeStringToMilliseconds } from "../game";
 import { HighScoreSettings } from "../services/HighScoreSettings";
+import { AnimatableText, AnimatableTextTweenType } from "../ui/AnimatableText";
 
 export class VictoryScene extends Phaser.Scene {
   constructor() {
@@ -59,18 +60,16 @@ export class VictoryScene extends Phaser.Scene {
     }
 
     if (this.checkHighScore(data)) {
-      this.add
-        .text(
-          this.scale.width / 2,
-          this.scale.height / 2 + 100,
-          "New High Score!",
-          {
-            fontSize: "32px",
-            fontFamily: DEFAULT_MENU_FONT,
-            color: "#ffcc00",
-          }
-        )
-        .setOrigin(0.5);
+      new AnimatableText(this, {
+        x: this.scale.width / 2,
+        y: this.scale.height / 2 + 100,
+        text: "New High Score!",
+        fontSize: 32,
+        fontFamily: DEFAULT_MENU_FONT,
+        color: "#ffcc00",
+        depth: 10,
+        align: "center",
+      }).startAnimation(AnimatableTextTweenType.PULSE);
     }
   }
 
