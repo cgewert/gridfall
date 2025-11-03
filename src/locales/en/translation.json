@@ -7,6 +7,9 @@
     "backToMenu": "Back to Menu"
   },
   "labels": {
+    "best-time": "Best Time",
+    "high-score": "High Score",
+    "back": "Back",
     "holdBox": "HOLD",
     "previewBox": "PREVIEW",
     "nextBox": "NEXT",
@@ -17,6 +20,7 @@
     "mnu-options": "Options",
     "mnu-credits": "Credits",
     "mnu-controls": "Controls",
+    "mnu-highscores": "Highscores",
     "mnu-audio": "Audio",
     "mnu-general": "General",
     "sliderMusicVolume": "Music Volume",

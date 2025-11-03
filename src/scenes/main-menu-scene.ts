@@ -136,6 +136,13 @@ export class MainMenuScene extends Phaser.Scene {
             }),
         },
         {
+          identifier: "mnu-highscores",
+          label: t("labels.mnu-highscores"),
+          translatable: true,
+          disabled: false,
+          action: () => this.openSubmenu("HighscoreScene"),
+        },
+        {
           identifier: "mnu-credits",
           label: t("labels.mnu-credits"),
           translatable: true,
