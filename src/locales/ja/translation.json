@@ -7,6 +7,9 @@
     "backToMenu": "メニューに戻る"
   },
   "labels": {
+    "best-time": "ベストタイム",
+    "high-score": "ハイスコア",
+    "back": "戻る",
     "holdBox": "ホールド",
     "previewBox": "プレビュー",
     "nextBox": "次",
@@ -17,6 +20,7 @@
     "mnu-options": "オプション",
     "mnu-credits": "クレジット",
     "mnu-controls": "コントロール",
+    "mnu-highscores": "ハイスコア",
     "mnu-audio": "オーディオ",
     "mnu-general": "一般",
     "sliderMusicVolume": "音楽の音量",

@@ -7,6 +7,9 @@
     "backToMenu": "Zurück zum Menü"
   },
   "labels": {
+    "best-time": "Bestzeit",
+    "high-score": "Highscore",
+    "back": "Zurück",
     "holdBox": "HALTEN",
     "previewBox": "VORSCHAU",
     "nextBox": "NÄCHSTER",
@@ -19,6 +22,7 @@
     "mnu-controls": "Steuerung",
     "mnu-audio": "Audio",
     "mnu-general": "Allgemein",
+    "mnu-highscores": "Highscores",
     "sliderMusicVolume": "Musiklautstärke",
     "sliderSfxVolume": "SFX-Lautstärke",
     "settings": {

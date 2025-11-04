@@ -7,6 +7,9 @@
     "backToMenu": "Retour au menu"
   },
   "labels": {
+    "best-time": "Meilleur temps",
+    "high-score": "Meilleur score",
+    "back": "Retour",
     "holdBox": "TENIR",
     "previewBox": "PRÉVISUALISATION",
     "nextBox": "SUIVANT",
@@ -17,6 +20,7 @@
     "mnu-options": "Options",
     "mnu-credits": "Crédits",
     "mnu-controls": "Contrôles",
+    "mnu-highscores": "Hauts scores",
     "mnu-audio": "Audio",
     "mnu-general": "Général",
     "sliderMusicVolume": "Volume de la musique",
