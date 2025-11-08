@@ -12,7 +12,7 @@ import {
 } from "../shapes";
 import { ShapesSpawner } from "../spawn";
 import { gravityLevels } from "../speedCurves";
-import Phaser from "phaser";
+import Phaser, { Display } from "phaser";
 import { Rotation, GetKickData } from "../rotation";
 import {
   DEFAULT_MENU_FONT,
@@ -40,6 +40,7 @@ import { SettingsEvents } from "../services/SettingsEvents";
 import { SkinSettings } from "../services/SkinSettings";
 import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
 import { AnimatableText, AnimatableTextTweenType } from "../ui/AnimatableText";
+import { TextBox } from "../ui/TextBox";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -99,7 +100,7 @@ export class GameScene extends Phaser.Scene {
   private holdBox!: Phaser.GameObjects.Graphics;
   private previewBox!: Phaser.GameObjects.Rectangle;
   private linesCleared: number = 0;
-  private linesText!: Phaser.GameObjects.Text;
+  private linesText!: TextBox;
   private currentSpawnSystem: SpawnSystem = "sevenBag";
 
   private pauseContainer!: Phaser.GameObjects.Container;
@@ -139,8 +140,8 @@ export class GameScene extends Phaser.Scene {
   private score: number = 0;
   private combo: number = 0;
   private level: number = 1;
-  private scoreText!: Phaser.GameObjects.Text;
-  private levelText!: Phaser.GameObjects.Text;
+  private scoreText!: TextBox;
+  private levelText!: TextBox;
   private comboText!: Phaser.GameObjects.Text;
   private comboActive: boolean = false;
 
@@ -458,26 +459,52 @@ export class GameScene extends Phaser.Scene {
       })
       .setDepth(10000);
 
-    this.linesText = this.add.text(
-      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
-      this.gridOffsetY + GameScene.blockSize * 11,
-      "LINES: 0",
-      GUI_LINES_STYLE
+    this.linesText = this.add.existing(
+      new TextBox(this, {
+        name: "linesTextBox",
+        x: this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
+        y: this.gridOffsetY + GameScene.blockSize * 11,
+        width: 300,
+        height: 40,
+        text: "LINES: 0",
+        textStyle: GUI_LINES_STYLE,
+        fillColor: "#000000",
+        useLinearBackground: true,
+      })
     );
+    this.linesText.Padding = 25;
 
-    this.scoreText = this.add.text(
-      20,
-      20,
-      `${t("labels.score")}: 0`,
-      GUI_SCORE_STYLE
+    this.scoreText = this.add.existing(
+      new TextBox(this, {
+        name: "scoreTextBox",
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 40,
+        text: `${t("labels.score")}: 0`,
+        textStyle: GUI_SCORE_STYLE,
+        fillColor: "#000000",
+        useLinearBackground: true,
+      })
     );
+    this.scoreText.Padding = 25;
 
-    this.levelText = this.add.text(
-      20,
-      50,
-      `${t("labels.level")}: 1 (${t("gravity")} ${this.fallSpeed.toFixed(2)})`,
-      GUI_LEVEL_STYLE
+    this.levelText = this.add.existing(
+      new TextBox(this, {
+        name: "levelTextBox",
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 40,
+        text: `${t("labels.level")}: 1 (${t(
+          "gravity"
+        )} ${this.fallSpeed.toFixed(2)})`,
+        textStyle: GUI_LEVEL_STYLE,
+        fillColor: "#000000",
+        useLinearBackground: true,
+      })
     );
+    this.levelText.Padding = 25;
 
     this.comboText = this.add.text(20, 80, "", GUI_COMBO_STYLE);
 
@@ -493,6 +520,22 @@ export class GameScene extends Phaser.Scene {
     this.setUpKeyboardControls();
 
     AudioBus.PlayMusic(this, "track1", { loop: true });
+
+    // Align all UI elements after creation
+    Display.Align.To.BottomLeft(this.linesText, this.previewBox, 0, 8);
+    Display.Align.To.BottomLeft(
+      this.scoreText,
+      this.linesText,
+      0,
+      this.scoreText.ActualRenderHeight + 8
+    );
+    Display.Align.To.BottomLeft(
+      this.levelText,
+      this.scoreText,
+      0,
+      this.levelText.ActualRenderHeight + 8
+    );
+    //this.linesText.UseLinearBackground = false;
   }
 
   private setUpKeyboardControls() {
@@ -1029,8 +1072,12 @@ export class GameScene extends Phaser.Scene {
         if (cell !== GameScene.emptyGridValue) {
           const block = this.add
             .sprite(
-              x * GameScene.blockSize + this.gridOffsetX,
-              y * GameScene.blockSize + this.gridOffsetY,
+              x * GameScene.blockSize +
+                this.gridOffsetX +
+                this.borderThickness / 2,
+              y * GameScene.blockSize +
+                this.gridOffsetY +
+                this.borderThickness / 2,
               this.blockSkin,
               this.getOriginalSkinFrame(cell)
             )
