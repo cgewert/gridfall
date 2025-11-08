@@ -35,11 +35,11 @@ class LanguageSettingsStore {
     }
   }
 
-  get(): Locale {
+  public get(): Locale {
     return this.current;
   }
 
-  set(lang: Locale) {
+  public set(lang: Locale) {
     if (!SUPPORTED_LOCALES.includes(lang)) return;
     this.current = lang;
     try {
@@ -52,12 +52,19 @@ class LanguageSettingsStore {
     this._game?.events.emit(SettingsEvents.LanguageChanged, { lang });
   }
 
-  next() {
+  /**
+   * Go to next language in the supported list
+   */
+  public next() {
     const idx = SUPPORTED_LOCALES.indexOf(this.current);
     const next = SUPPORTED_LOCALES[(idx + 1) % SUPPORTED_LOCALES.length];
     this.set(next);
   }
-  prev() {
+
+  /**
+   * Go to previous language in the supported list
+   */
+  public prev() {
     const idx = SUPPORTED_LOCALES.indexOf(this.current);
     const prev =
       SUPPORTED_LOCALES[

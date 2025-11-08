@@ -8,7 +8,9 @@
 
   Ingame:
     ✔ Pause timer when game is paused @done(25-10-26 18:32)
-    ☐ Work on UI
+    ☐ Work on UI @started(25-11-08 13:49)
+    ✔ Overhaul the Grid @started(25-11-08 14:01) @done(25-11-08 17:29) @lasted(3h28m24s)
+    ☐ Add linear fading text boxes
     ☐ Fix gravity in Marathon mode, implement increasing difficulty
     ✔ Make sure all 3 game modes are implemented @started(25-10-26 18:03) @done(25-11-01 19:25) @lasted(6d1h22m31s)
     ☐ Infinity Mode shall only consider points scored, not time taken for a high score save

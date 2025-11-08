@@ -36,6 +36,7 @@ export class TitleScene extends Phaser.Scene {
     this.load.audio("title_music", Soundtrack.title);
     this.load.image("title_logo", "assets/gfx/logos/Gridfall.png");
     this.load.image("scanlines", "assets/gfx/sprites/scanlines.png");
+    this.load.image("gridCell", "assets/gfx/sprites/grid_cell.png");
   }
 
   /*
