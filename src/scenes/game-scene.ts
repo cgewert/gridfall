@@ -12,7 +12,7 @@ import {
 } from "../shapes";
 import { ShapesSpawner } from "../spawn";
 import { gravityLevels } from "../speedCurves";
-import Phaser from "phaser";
+import Phaser, { Display } from "phaser";
 import { Rotation, GetKickData } from "../rotation";
 import {
   DEFAULT_MENU_FONT,
@@ -40,6 +40,12 @@ import { SettingsEvents } from "../services/SettingsEvents";
 import { SkinSettings } from "../services/SkinSettings";
 import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
 import { AnimatableText, AnimatableTextTweenType } from "../ui/AnimatableText";
+import { TextBox } from "../ui/TextBox";
+
+export type GridConfiguration = {
+  borderThickness?: number;
+  gridOpacity: number;
+};
 
 export interface GameSceneConfiguration {
   gameMode: GameMode;
@@ -60,6 +66,7 @@ export class GameScene extends Phaser.Scene {
   private ghostGroup!: Phaser.GameObjects.Group;
   private previewGroup!: Phaser.GameObjects.Group;
   private lockedBlocksGroup!: Phaser.GameObjects.Group;
+  private gridCellGroup!: Phaser.GameObjects.Group;
   private currentShape!: TetriminoShape;
   private currentPosition = { x: 3, y: 0 }; // Starting position
   private currentRotationIndex: Rotation = Rotation.SPAWN; // Starting rotation
@@ -93,7 +100,7 @@ export class GameScene extends Phaser.Scene {
   private holdBox!: Phaser.GameObjects.Graphics;
   private previewBox!: Phaser.GameObjects.Rectangle;
   private linesCleared: number = 0;
-  private linesText!: Phaser.GameObjects.Text;
+  private linesText!: TextBox;
   private currentSpawnSystem: SpawnSystem = "sevenBag";
 
   private pauseContainer!: Phaser.GameObjects.Container;
@@ -129,11 +136,12 @@ export class GameScene extends Phaser.Scene {
     GameScene.gridHeight * GameScene.blockSize;
   private gridOffsetX = 0;
   private gridOffsetY = 0;
+  private borderThickness = 10;
   private score: number = 0;
   private combo: number = 0;
   private level: number = 1;
-  private scoreText!: Phaser.GameObjects.Text;
-  private levelText!: Phaser.GameObjects.Text;
+  private scoreText!: TextBox;
+  private levelText!: TextBox;
   private comboText!: Phaser.GameObjects.Text;
   private comboActive: boolean = false;
 
@@ -175,6 +183,7 @@ export class GameScene extends Phaser.Scene {
       this.useSpeedCurve = false;
     }
 
+    this.gridCellGroup?.destroy(true, true);
     this.gameOver = false;
     this.isPaused = false;
     this.holdUsedThisTurn = false;
@@ -450,31 +459,60 @@ export class GameScene extends Phaser.Scene {
       })
       .setDepth(10000);
 
-    this.linesText = this.add.text(
-      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
-      this.gridOffsetY + GameScene.blockSize * 11,
-      "LINES: 0",
-      GUI_LINES_STYLE
+    this.linesText = this.add.existing(
+      new TextBox(this, {
+        name: "linesTextBox",
+        x: this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
+        y: this.gridOffsetY + GameScene.blockSize * 11,
+        width: 300,
+        height: 40,
+        text: "LINES: 0",
+        textStyle: GUI_LINES_STYLE,
+        fillColor: "#000000",
+        useLinearBackground: true,
+      })
     );
+    this.linesText.Padding = 25;
 
-    this.scoreText = this.add.text(
-      20,
-      20,
-      `${t("labels.score")}: 0`,
-      GUI_SCORE_STYLE
+    this.scoreText = this.add.existing(
+      new TextBox(this, {
+        name: "scoreTextBox",
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 40,
+        text: `${t("labels.score")}: 0`,
+        textStyle: GUI_SCORE_STYLE,
+        fillColor: "#000000",
+        useLinearBackground: true,
+      })
     );
+    this.scoreText.Padding = 25;
 
-    this.levelText = this.add.text(
-      20,
-      50,
-      `${t("labels.level")}: 1 (${t("gravity")} ${this.fallSpeed.toFixed(2)})`,
-      GUI_LEVEL_STYLE
+    this.levelText = this.add.existing(
+      new TextBox(this, {
+        name: "levelTextBox",
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 40,
+        text: `${t("labels.level")}: 1 (${t(
+          "gravity"
+        )} ${this.fallSpeed.toFixed(2)})`,
+        textStyle: GUI_LEVEL_STYLE,
+        fillColor: "#000000",
+        useLinearBackground: true,
+      })
     );
+    this.levelText.Padding = 25;
 
     this.comboText = this.add.text(20, 80, "", GUI_COMBO_STYLE);
 
     this.initializeGrid();
-    this.createGridGraphics(0xffffff, 0.9);
+    this.createGridGraphics({
+      borderThickness: 25,
+      gridOpacity: 1.0,
+    });
     this.spawnTetrimino();
     this.createHoldBox();
     this.createPreviewBox();
@@ -482,6 +520,22 @@ export class GameScene extends Phaser.Scene {
     this.setUpKeyboardControls();
 
     AudioBus.PlayMusic(this, "track1", { loop: true });
+
+    // Align all UI elements after creation
+    Display.Align.To.BottomLeft(this.linesText, this.previewBox, 0, 8);
+    Display.Align.To.BottomLeft(
+      this.scoreText,
+      this.linesText,
+      0,
+      this.scoreText.ActualRenderHeight + 8
+    );
+    Display.Align.To.BottomLeft(
+      this.levelText,
+      this.scoreText,
+      0,
+      this.levelText.ActualRenderHeight + 8
+    );
+    //this.linesText.UseLinearBackground = false;
   }
 
   private setUpKeyboardControls() {
@@ -626,31 +680,34 @@ export class GameScene extends Phaser.Scene {
     );
   }
 
-  private createGridGraphics(
-    color: number = 0xffffff,
-    opacity: number = 1.0
-  ): void {
-    this.blocksGroup = this.add.group();
+  private createGridGraphics(configuration: GridConfiguration): void {
+    this.borderThickness = configuration?.borderThickness ?? 10;
 
-    for (let y = 0; y < GameScene.gridHeight; y++) {
-      for (let x = 0; x < GameScene.gridWidth; x++) {
-        const posX = x * GameScene.blockSize + this.gridOffsetX;
-        const posY = y * GameScene.blockSize + this.gridOffsetY;
-
-        const block = this.add.rectangle(
-          posX,
-          posY,
-          GameScene.blockSize,
-          GameScene.blockSize,
-          color,
-          opacity
-        );
-
-        block.setOrigin(0);
-        block.setStrokeStyle(1, 0x000000, 0.85);
-        this.blocksGroup.add(block);
-      }
-    }
+    // Add grid background and border
+    this.add
+      .rectangle(
+        this.gridOffsetX,
+        this.gridOffsetY,
+        GameScene.gridWidth * GameScene.blockSize + this.borderThickness,
+        GameScene.gridHeight * GameScene.blockSize + this.borderThickness,
+        0xffffff,
+        1.0
+      )
+      .setOrigin(0);
+    // Add grid cells
+    this.gridCellGroup = this.add.group({
+      key: "gridCell",
+      quantity: 10 * 20, // Rows * Columns elements,
+      "setAlpha.value": configuration.gridOpacity,
+      gridAlign: {
+        x: this.gridOffsetX + this.borderThickness / 2,
+        y: this.gridOffsetY + this.borderThickness / 2,
+        cellWidth: GameScene.blockSize,
+        cellHeight: GameScene.blockSize,
+        width: GameScene.gridWidth,
+        height: GameScene.gridHeight,
+      },
+    });
   }
 
   private spawnHeldTetrimino(): void {
@@ -676,10 +733,12 @@ export class GameScene extends Phaser.Scene {
         if (cell) {
           const blockX =
             (this.currentPosition.x + x) * GameScene.blockSize +
-            this.gridOffsetX;
+            this.gridOffsetX +
+            this.borderThickness / 2;
           const blockY =
             (this.currentPosition.y + y) * GameScene.blockSize +
-            this.gridOffsetY;
+            this.gridOffsetY -
+            this.borderThickness / 2;
 
           const frame = SHAPE_TO_BLOCKSKIN_FRAME[this.currentTetriminoType];
           const block = this.add.sprite(blockX, blockY, this.blockSkin, frame);
@@ -851,8 +910,12 @@ export class GameScene extends Phaser.Scene {
         if (cell) {
           const posX =
             (this.currentPosition.x + x) * GameScene.blockSize +
-            this.gridOffsetX;
-          const posY = (ghostY + y) * GameScene.blockSize + this.gridOffsetY;
+            this.gridOffsetX +
+            this.borderThickness / 2;
+          const posY =
+            (ghostY + y) * GameScene.blockSize +
+            this.gridOffsetY +
+            this.borderThickness / 2;
 
           const block = this.add
             .sprite(posX, posY, this.blockSkin, frame)
@@ -964,8 +1027,13 @@ export class GameScene extends Phaser.Scene {
       row.forEach((cell, x) => {
         if (cell) {
           const blockX =
-            (this.currentPosition.x + x) * blockSize + this.gridOffsetX;
-          const blockY = (baseY + y) * GameScene.blockSize + this.gridOffsetY;
+            (this.currentPosition.x + x) * blockSize +
+            this.gridOffsetX +
+            this.borderThickness / 2;
+          const blockY =
+            (baseY + y) * GameScene.blockSize +
+            this.gridOffsetY -
+            this.borderThickness / 2;
           const block = this.currentTetrimino.getChildren()[
             blockIndex
           ] as Phaser.GameObjects.Rectangle;
@@ -1004,8 +1072,12 @@ export class GameScene extends Phaser.Scene {
         if (cell !== GameScene.emptyGridValue) {
           const block = this.add
             .sprite(
-              x * GameScene.blockSize + this.gridOffsetX,
-              y * GameScene.blockSize + this.gridOffsetY,
+              x * GameScene.blockSize +
+                this.gridOffsetX +
+                this.borderThickness / 2,
+              y * GameScene.blockSize +
+                this.gridOffsetY +
+                this.borderThickness / 2,
               this.blockSkin,
               this.getOriginalSkinFrame(cell)
             )
