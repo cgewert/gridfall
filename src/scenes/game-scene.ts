@@ -124,6 +124,9 @@ export class GameScene extends Phaser.Scene {
   private particleManager!: Phaser.GameObjects.Particles.ParticleEmitter;
   private music!: Phaser.Sound.BaseSound;
 
+  // Video
+  private backgroundVideo!: Phaser.GameObjects.Video;
+
   private gameOver: boolean = false;
   private static readonly previewSize = 5; // Size of the Tetrimino preview
   private static readonly emptyGridValue = "Q"; // Placeholder for empty grid cells
@@ -233,6 +236,8 @@ export class GameScene extends Phaser.Scene {
       "sakuraParticle2",
       "assets/gfx/particles/sakura_particle2.png"
     );
+    // Loading videos
+    this.load.video("sakuraGarden", "assets/mov/sakura_garden.mp4");
   }
 
   private createPauseOverlay(): void {
@@ -314,6 +319,17 @@ export class GameScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
+    addSceneBackground(this);
+    this.backgroundVideo = this.add.video(0, 0, "sakuraGarden");
+    const scaleX = this.scale.width / this.backgroundVideo.width;
+    const scaleY = this.scale.height / this.backgroundVideo.height;
+    const scale = Math.max(scaleX, scaleY);
+    this.backgroundVideo.setScale(scale);
+    this.backgroundVideo.play(true);
+    const videoElement = this.backgroundVideo.video;
+    if (videoElement) {
+      videoElement.playbackRate = 0.33;
+    }
     // Load input settings and apply them
     this.applyInputSettings();
     // Listen for live changes from the Controls menu
@@ -329,15 +345,22 @@ export class GameScene extends Phaser.Scene {
     this._viewPortHalfHeight = this.scale.height / 2;
     this._viewPortHalfWidth = this.scale.width / 2;
     this.timer = new TimerDisplay(this, {
+      name: "gameTimer",
       x: 16,
       y: 92,
+      width: 200,
+      height: 40,
+      text: "",
       prefix: "TIME ",
-      fontFamily: "Orbitron, monospace",
-      fontSize: 28,
-      color: "#FFFFFF",
+      textStyle: {
+        fontFamily: "Orbitron, monospace",
+        fontSize: "32px",
+        color: "#FFFFFF",
+      },
       stroke: "#00FFFF",
       strokeThickness: 2,
       shadow: true,
+      useLinearBackground: true,
       autostart: true,
     });
     this.timer.setDepth(10000);
@@ -369,7 +392,6 @@ export class GameScene extends Phaser.Scene {
     this.gridOffsetX = this._viewPortHalfWidth - GameScene.totalGridWidth / 2;
     this.gridOffsetY = this._viewPortHalfHeight - GameScene.totalGridHeight / 2;
 
-    addSceneBackground(this);
     this.spawner.generateNextQueue(5);
     this.previewGroup = this.add.group();
     this.currentTetrimino = this.add.group();
@@ -468,7 +490,7 @@ export class GameScene extends Phaser.Scene {
         height: 40,
         text: "LINES: 0",
         textStyle: GUI_LINES_STYLE,
-        fillColor: "#000000",
+        fillColor: "#aaaaaa",
         useLinearBackground: true,
       })
     );
@@ -483,7 +505,7 @@ export class GameScene extends Phaser.Scene {
         height: 40,
         text: `${t("labels.score")}: 0`,
         textStyle: GUI_SCORE_STYLE,
-        fillColor: "#000000",
+        fillColor: "#666666",
         useLinearBackground: true,
       })
     );
@@ -500,7 +522,7 @@ export class GameScene extends Phaser.Scene {
           "gravity"
         )} ${this.fallSpeed.toFixed(2)})`,
         textStyle: GUI_LEVEL_STYLE,
-        fillColor: "#000000",
+        fillColor: "#333333",
         useLinearBackground: true,
       })
     );
@@ -535,7 +557,18 @@ export class GameScene extends Phaser.Scene {
       0,
       this.levelText.ActualRenderHeight + 8
     );
-    //this.linesText.UseLinearBackground = false;
+    Display.Align.To.BottomLeft(
+      this.timer,
+      this.levelText,
+      0,
+      this.timer.ActualRenderHeight + 8
+    );
+    Display.Align.To.BottomLeft(
+      this.comboText,
+      this.timer,
+      0,
+      this.comboText.displayHeight + 8
+    );
   }
 
   private setUpKeyboardControls() {
@@ -737,7 +770,7 @@ export class GameScene extends Phaser.Scene {
             this.borderThickness / 2;
           const blockY =
             (this.currentPosition.y + y) * GameScene.blockSize +
-            this.gridOffsetY -
+            this.gridOffsetY +
             this.borderThickness / 2;
 
           const frame = SHAPE_TO_BLOCKSKIN_FRAME[this.currentTetriminoType];
@@ -809,6 +842,9 @@ export class GameScene extends Phaser.Scene {
         }
       });
     });
+
+    // TODO: Center holdGroup within holdBox
+    // Phaser.Display.Align.In.Center(this.holdGroup, this.holdBox);
   }
 
   private holdTetrimino(): void {
@@ -982,6 +1018,8 @@ export class GameScene extends Phaser.Scene {
     this.lockTetrimino();
   }
 
+  // TODO : Collision detection works with indices not with pixel values
+  // Make sure it works with the grid border thickness, currently it does not calculate it
   private checkCollision(
     offsetX: number,
     offsetY: number,
@@ -1032,7 +1070,7 @@ export class GameScene extends Phaser.Scene {
             this.borderThickness / 2;
           const blockY =
             (baseY + y) * GameScene.blockSize +
-            this.gridOffsetY -
+            this.gridOffsetY +
             this.borderThickness / 2;
           const block = this.currentTetrimino.getChildren()[
             blockIndex

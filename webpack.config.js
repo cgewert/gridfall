@@ -30,6 +30,7 @@ module.exports = {
         {from: 'src/index.html'},
         {from: 'assets/gfx', to: 'assets/gfx/'},
         {from: 'assets/audio', to: 'assets/audio/'},
+        {from: 'assets/mov', to: 'assets/mov/'},
       ],
     }),
   ],
