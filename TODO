@@ -20,3 +20,5 @@
     ✔ Implement game mode specific Game Over Screen @started(25-10-26 18:46) @done(25-10-26 18:52) @lasted(6m23s)
     ✔ Persist High Scores @started(25-11-01 19:32) @done(25-11-01 20:13) @lasted(41m42s)
     ☐ Implement High Score Screen
+    ☐ Center holdGroup within holdBox
+    ☐ Pause video when game is paused

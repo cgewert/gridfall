@@ -1,3 +1,5 @@
+import Phaser from "phaser";
+
 export type TextBoxConfig = {
   name: string;
   x: number;
@@ -11,13 +13,17 @@ export type TextBoxConfig = {
   useLinearBackground?: boolean; // Determines whether to use a linear gradient background or a solid color
 };
 
+/**
+ * An extendable UI TextBox component with optional linear gradient background.
+ * Extends Phaser.GameObjects.Container.
+ */
 export class TextBox extends Phaser.GameObjects.Container {
-  private background: Phaser.GameObjects.Rectangle;
-  private textObject: Phaser.GameObjects.Text;
-  private gradientImage?: Phaser.GameObjects.Image;
-  private padding: number = 10;
-  private gradientCanvas: Phaser.Textures.CanvasTexture | null = null;
-  private useLinearBackground: boolean = false;
+  protected background: Phaser.GameObjects.Rectangle;
+  protected textObject: Phaser.GameObjects.Text;
+  protected gradientImage?: Phaser.GameObjects.Image;
+  protected padding: number = 10;
+  protected gradientCanvas: Phaser.Textures.CanvasTexture | null = null;
+  protected useLinearBackground: boolean = false;
 
   constructor(scene: Phaser.Scene, private config: TextBoxConfig) {
     super(scene, config.x, config.y);
@@ -35,7 +41,7 @@ export class TextBox extends Phaser.GameObjects.Container {
       .setOrigin(0);
     this.textObject = scene.add.text(0, 0, config.text, config.textStyle);
     this.add([this.background, this.textObject]);
-    this.alignText();
+    this.alignText(true);
 
     this.UseLinearBackground = config.useLinearBackground || false;
   }
@@ -78,22 +84,25 @@ export class TextBox extends Phaser.GameObjects.Container {
       this.background.width = this.textObject.displayWidth + value;
     }
     this.background.height = this.textObject.displayHeight + value;
-    this.alignText();
+    this.alignText(true);
   }
 
   public setText(newText: string): void {
     this.textObject.setText(newText);
+    var sizeChanged = false;
     // Automatic width and height adjustment of background
     if (this.textObject.displayWidth > this.background.displayWidth) {
       this.background.width = this.textObject.displayWidth + this.Padding;
+      sizeChanged = true;
     }
     if (this.textObject.displayHeight > this.background.displayHeight) {
       this.background.height = this.textObject.displayHeight + this.Padding;
+      sizeChanged = true;
     }
-    this.alignText();
+    this.alignText(sizeChanged);
   }
 
-  private alignText(): void {
+  private alignText(sizeChanged: boolean): void {
     if (this.textObject && this.background) {
       if (!this.useLinearBackground) {
         Phaser.Display.Align.In.Center(this.textObject, this.background, 0, 0);
@@ -105,7 +114,7 @@ export class TextBox extends Phaser.GameObjects.Container {
           0
         );
       }
-      if (this.gradientImage) {
+      if (this.gradientImage && sizeChanged) {
         this.refreshGradient();
         Phaser.Display.Align.In.Center(
           this.gradientImage,
@@ -117,15 +126,17 @@ export class TextBox extends Phaser.GameObjects.Container {
     }
   }
 
+  // TODO: When setting UseLinearBackground to true after it was false at creation time, the gradient is not visible. Fix that.
   /** Refreshes the gradient texture based on the current size of the background.
    * @param config - The configuration object for the TextBox.
    * @returns The created CanvasTexture or null if creation failed.
    */
   private refreshGradient(): Phaser.Textures.CanvasTexture | null {
     this.gradientImage?.destroy();
-    this.gradientCanvas?.destroy();
+    this.gradientCanvas = null;
 
     if (this.scene.textures.exists(this.name)) {
+      console.debug("TextBox: Removing existing gradient texture", this.name);
       this.scene.textures.remove(this.name);
     }
     const canvas = this.scene.textures.createCanvas(
@@ -147,11 +158,11 @@ export class TextBox extends Phaser.GameObjects.Container {
       );
       grd.addColorStop(
         0,
-        `rgba(${color.red}, ${color.green}, ${color.blue}, 0.5)`
+        `rgba(${color.red}, ${color.green}, ${color.blue}, 0.65)`
       );
       grd.addColorStop(
         0.5,
-        `rgba(${color.red}, ${color.green}, ${color.blue}, 0.2)`
+        `rgba(${color.red}, ${color.green}, ${color.blue}, 0.45)`
       );
       grd.addColorStop(
         1.0,
@@ -165,11 +176,14 @@ export class TextBox extends Phaser.GameObjects.Container {
         this.background.displayHeight
       );
       canvas.refresh();
-      this.background.setFillStyle(0x000000, 0); // Make background fully transparent
+      this.background.isFilled = false; // Make background fully transparent
       this.gradientImage = this.scene.add
         .image(0, 0, this.name)
-        .setSize(this.background.displayWidth, this.background.displayHeight);
+        .setSize(this.background.displayWidth, this.background.displayHeight)
+        .setVisible(true);
       this.add(this.gradientImage).bringToTop(this.textObject);
+    } else {
+      console.error("Failed to create gradient texture.");
     }
 
     return canvas;
@@ -183,12 +197,7 @@ export class TextBox extends Phaser.GameObjects.Container {
       this.gradientImage?.destroy();
       this.gradientCanvas?.destroy();
       this.gradientCanvas = null;
-      this.background.setFillStyle(
-        Phaser.Display.Color.HexStringToColor(
-          this.config.fillColor || "#000000"
-        ).color,
-        this.config.fillAlpha || 0.5
-      );
+      this.background.isFilled = true;
     }
   }
 }
