@@ -1,24 +1,18 @@
 # TODO
 
   Settings:
-  ☐ Implement "Reset to defaults" button functionality @started(25-10-26 18:32)
+  ☐ Implement "Reset to defaults" button functionality
   ☐ Implement Feedback sound when toggling settings
   ☐ Add missing translations
   ☐ Fix bugs related to tweened animations
+  ☐ Fix bug where toggling the language does not update all texts immediately
 
   Ingame:
-    ✔ Pause timer when game is paused @done(25-10-26 18:32)
     ☐ Work on UI @started(25-11-08 13:49)
-    ✔ Overhaul the Grid @started(25-11-08 14:01) @done(25-11-08 17:29) @lasted(3h28m24s)
-    ✔ Add linear fading text boxes @done(25-11-08 23:01)
-    ☐ Fix gravity in Marathon mode, implement increasing difficulty
-    ✔ Make sure all 3 game modes are implemented @started(25-10-26 18:03) @done(25-11-01 19:25) @lasted(6d1h22m31s)
-    ☐ Infinity Mode shall only consider points scored, not time taken for a high score save
-    ☐ Rework and test controls make them TETR.IO like
-    ☐ Implement Wallkicks and rotations (SRS+)
-    ☐ Implement 180 ° rotations (Toggleable)
-    ✔ Implement game mode specific Game Over Screen @started(25-10-26 18:46) @done(25-10-26 18:52) @lasted(6m23s)
-    ✔ Persist High Scores @started(25-11-01 19:32) @done(25-11-01 20:13) @lasted(41m42s)
-    ☐ Implement High Score Screen
-    ☐ Center holdGroup within holdBox
-    ☐ Pause video when game is paused
+    ☐ Implement gravity increse in Ascent and Infinity modes, implement increasing difficulty
+    ☐ Work on High Score screen UI and functionality (Reflect game modes)
+    ☐ Make sure and test that all wall kicks and spins work as intended
+    ☐ Implement 180° piece rotations (Toggleable)
+    ☐ Work on Holdbox UI
+    ☐ Work on Next Queue UI
+    ☐ Fix collision detection, some bugs occured

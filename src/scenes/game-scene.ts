@@ -39,7 +39,6 @@ import { InputSettings } from "../services/InputSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { SkinSettings } from "../services/SkinSettings";
 import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
-import { AnimatableText, AnimatableTextTweenType } from "../ui/AnimatableText";
 import { TextBox } from "../ui/TextBox";
 
 export type GridConfiguration = {
@@ -74,22 +73,38 @@ export class GameScene extends Phaser.Scene {
   private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   private timer!: TimerDisplay;
 
+  // Lock Delay System Fields
+  private lockDelay: number = 500; // 500ms standard lock delay
+  private lockTimer: number = 0;
+  private isLocking: boolean = false;
+  private lockResets: number = 0;
+  private maxLockResets: number = 15; // Number of lock resets allowed
+  private maxLockTime: number = 30000; // Maximum lock time in ms
+  private totalLockTime: number = 0; // Accumulated lock time
+
+  private keys!: {
+    left: Phaser.Input.Keyboard.Key;
+    right: Phaser.Input.Keyboard.Key;
+    down: Phaser.Input.Keyboard.Key;
+    up: Phaser.Input.Keyboard.Key;
+    rotateLeft: Phaser.Input.Keyboard.Key;
+    rotateRight: Phaser.Input.Keyboard.Key;
+    hold: Phaser.Input.Keyboard.Key;
+    pause: Phaser.Input.Keyboard.Key;
+  };
+  private movementState = {
+    left: { held: false, dasTimer: 0, arrTimer: 0, justPressed: false },
+    right: { held: false, dasTimer: 0, arrTimer: 0, justPressed: false },
+    down: { held: false },
+  };
+
   private DAS = 167;
   private ARR = 33;
   private SDF = 6;
-  // private softDropDAS = 100; // Softdrop Delay Auto-Shift in milliseconds
-  // private softDropARR = 1; // Softdrop speed in cells per second
-  private leftHeld = false;
-  private rightHeld = false;
-  private dasTimer: number = 0;
-  private arrTimer: number = 0;
 
   // Gravity Fields
   private fallSpeed: number = 1.0; // in cells per second (level-based adjustable)
   private fallProgress: number = 0; // accumulated fall cells
-
-  // Softdrop Fields
-  private softDropActive: boolean = false;
 
   // Gamemode Fields
   private useSpeedCurve: boolean = false;
@@ -177,6 +192,11 @@ export class GameScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
+    this.lockTimer = 0;
+    this.isLocking = false;
+    this.lockResets = 0;
+    this.totalLockTime = 0;
+
     this.currentSpawnSystem = SpawnSettings.get();
     this.blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
@@ -196,11 +216,6 @@ export class GameScene extends Phaser.Scene {
     this.combo = 0;
     this.level = 1;
     this.fallSpeed = 1.0;
-    this.leftHeld = false;
-    this.rightHeld = false;
-    this.softDropActive = false;
-    this.dasTimer = 0;
-    this.arrTimer = 0;
     this.initializeGrid();
     this.spawner = new ShapesSpawner(this.currentSpawnSystem);
     console.log(
@@ -227,7 +242,7 @@ export class GameScene extends Phaser.Scene {
     this.load.audio("move", "assets/audio/sfx/move.ogg");
     this.load.audio("softDrop", "assets/audio/sfx/soft-drop.wav");
     // Loading images
-    this.load.image("sparkle", "assets/gfx/sprites/sparkle.png");
+    this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
     this.load.image(
       "sakuraParticle",
       "assets/gfx/particles/sakura_particle.png"
@@ -378,6 +393,7 @@ export class GameScene extends Phaser.Scene {
         this.checkWinCondition = this.checkAscentWin;
         break;
       case GameMode.INFINITY:
+        this.checkWinCondition = () => {};
         break;
       default:
         break;
@@ -567,43 +583,36 @@ export class GameScene extends Phaser.Scene {
       this.comboText,
       this.timer,
       0,
-      this.comboText.displayHeight + 8
+      this.comboText.displayHeight + 50
     );
   }
 
   private setUpKeyboardControls() {
     if (!this.input?.keyboard) return;
 
-    // TODO: Refactor to use polling instead of events for better control
-    this.input.keyboard.on("keydown-LEFT", () => {
-      if (this.isPaused) return;
-      this.leftHeld = true;
-      this.moveTetrimino(-1);
-      this.dasTimer = this.time.now + this.DAS;
-    });
+    this.keys = {
+      left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
+      right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
+      down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
+      up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
+      rotateLeft: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y),
+      rotateRight: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
+      hold: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+      pause: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P),
+    };
 
-    this.input.keyboard.on("keyup-LEFT", () => {
+    this.input.keyboard.on("keydown-SPACE", () => {
       if (this.isPaused) return;
-      this.leftHeld = false;
-    });
-
-    this.input.keyboard.on("keydown-RIGHT", () => {
-      if (this.isPaused) return;
-      this.rightHeld = true;
-      this.moveTetrimino(1);
-      this.dasTimer = this.time.now + this.DAS;
-    });
-
-    this.input.keyboard.on("keyup-RIGHT", () => {
-      if (this.isPaused) return;
-      this.rightHeld = false;
+      this.holdTetrimino();
     });
 
     this.input.keyboard.on("keydown-P", () => {
       if (!this.isPaused) {
         this.pauseGame();
+        this.backgroundVideo.pause();
       } else {
         this.resumeGame();
+        this.backgroundVideo.resume();
       }
     });
 
@@ -616,20 +625,10 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    this.input.keyboard.on("keyup-DOWN", () => {
-      this.softDropActive = false;
-      // this.fallProgress = Math.floor(this.fallProgress); // Activate SDF Behaviour?
-      // this.softDropSound.stop();
-    });
-
     this.input.keyboard.on("keydown-DOWN", () => {
       if (this.isPaused) {
         this.pauseIndex = (this.pauseIndex + 1) % 2;
         this.updatePauseHighlight();
-      } else {
-        if (this.softDropActive) return;
-        this.softDropActive = true;
-        //AudioBus.PlaySfx(this, "softDrop");
       }
     });
 
@@ -638,7 +637,6 @@ export class GameScene extends Phaser.Scene {
       if (this.pauseIndex === 0) {
         this.resumeGame();
       } else {
-        // Set data for the start call
         const data: GameSceneConfiguration = {
           gameMode: this.gameMode,
         };
@@ -646,21 +644,180 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    this.input.keyboard.on("keydown", (event: KeyboardEvent) => {
+    this.input.keyboard.on("keydown-Y", () => {
       if (this.isPaused) return;
-
-      switch (event.key.toLowerCase()) {
-        case "y":
-          this.rotateTetrimino("left");
-          break;
-        case "x":
-          this.rotateTetrimino("right");
-          break;
-        case " ":
-          this.holdTetrimino();
-          break;
-      }
+      this.rotateTetrimino("left");
+      this.resetLockDelay();
     });
+
+    this.input.keyboard.on("keydown-X", () => {
+      if (this.isPaused) return;
+      this.rotateTetrimino("right");
+      this.resetLockDelay();
+    });
+  }
+
+  private resetLockDelay(): void {
+    if (!this.isLocking) return;
+
+    if (this.lockResets < this.maxLockResets) {
+      this.lockTimer = 0;
+      this.lockResets++;
+      console.log(
+        `Lock delay reset (${this.lockResets}/${this.maxLockResets})`
+      );
+      console.log("Lock timer: ", this.lockTimer);
+    } else {
+      console.log("Lock reset limit reached - forcing lock");
+    }
+  }
+
+  private handleMovement(time: number, delta: number): void {
+    const leftJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.left);
+    const rightJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.right);
+
+    // <-- Links/Rechts Logic
+    if (leftJustPressed) {
+      this.moveTetrimino(-1);
+      this.resetLockDelay();
+      this.movementState.left.dasTimer = time + this.DAS;
+      this.movementState.left.arrTimer = 0;
+      this.movementState.left.held = true;
+      this.movementState.right.held = false;
+    } else if (rightJustPressed) {
+      this.moveTetrimino(1);
+      this.resetLockDelay();
+      this.movementState.right.dasTimer = time + this.DAS;
+      this.movementState.right.arrTimer = 0;
+      this.movementState.right.held = true;
+      this.movementState.left.held = false;
+    }
+
+    // <-- DAS/ARR for left
+    if (this.keys.left.isDown && this.movementState.left.held) {
+      if (time >= this.movementState.left.dasTimer) {
+        if (this.ARR === 0) {
+          // <-- Instant ARR (0ms)
+          while (!this.checkCollision(-1, 0, this.currentShape)) {
+            this.moveTetrimino(-1);
+          }
+        } else if (time >= this.movementState.left.arrTimer) {
+          this.moveTetrimino(-1);
+          this.resetLockDelay();
+          this.movementState.left.arrTimer = time + this.ARR;
+        }
+      }
+    } else if (this.keys.left.isUp) {
+      this.movementState.left.held = false;
+    }
+
+    // <-- DAS/ARR for right
+    if (this.keys.right.isDown && this.movementState.right.held) {
+      if (time >= this.movementState.right.dasTimer) {
+        if (this.ARR === 0) {
+          // <-- Instant ARR (0ms)
+          while (!this.checkCollision(1, 0, this.currentShape)) {
+            this.moveTetrimino(1);
+          }
+        } else if (time >= this.movementState.right.arrTimer) {
+          this.moveTetrimino(1);
+          this.resetLockDelay();
+          this.movementState.right.arrTimer = time + this.ARR;
+        }
+      }
+    } else if (this.keys.right.isUp) {
+      this.movementState.right.held = false;
+    }
+  }
+
+  private handleSoftDrop(delta: number): void {
+    if (this.keys.down.isDown) {
+      // Soft Drop: Instant fall with SDF speed
+      const cellsToFall = this.SDF * (delta / 1000);
+      let remainingFall = cellsToFall;
+
+      while (remainingFall > 0) {
+        if (!this.checkCollision(0, 1, this.currentShape)) {
+          this.currentPosition.y += 1;
+          remainingFall -= 1;
+          this.fallProgress = 0; // <-- Reset fall progress
+          this.score += 1; // <-- Soft Drop Score Bonus
+
+          if (this.isLocking) {
+            console.log("Soft drop - CANCELING lock delay");
+            this.isLocking = false;
+            this.lockTimer = 0;
+            this.lockResets = 0;
+          }
+        } else {
+          console.log("Soft drop collision detected!");
+          if (!this.isLocking) {
+            console.log("STARTING LOCK DELAY (from soft drop)");
+            this.isLocking = true;
+            this.lockTimer = 0;
+          }
+          break;
+        }
+      }
+      this.updateTetriminoPosition();
+    }
+  }
+
+  private handleGravity(delta: number): void {
+    if (this.keys.down.isDown) {
+      return; // Soft drop takes precedence over gravity
+    }
+
+    const effectiveFallSpeed = this.fallSpeed;
+    this.fallProgress += effectiveFallSpeed * (delta / 1000);
+    while (this.fallProgress >= 1) {
+      if (!this.checkCollision(0, 1, this.currentShape)) {
+        this.currentPosition.y += 1;
+        this.fallProgress -= 1.0;
+        console.log("Piece moved down one cell");
+        // Reset lock delay when piece falls again
+        if (this.isLocking) {
+          console.log("Piece is falling again - CANCELING lock delay");
+          this.isLocking = false;
+          this.lockTimer = 0;
+          this.lockResets = 0;
+          this.totalLockTime = 0;
+        }
+      } else {
+        // Starting lock delay when collision detected
+        if (!this.isLocking) {
+          console.log("Starting lock delay");
+          this.isLocking = true;
+          this.lockTimer = 0;
+        } else {
+          console.log("Lock delay already active");
+        }
+        this.fallProgress = 0;
+        break;
+      }
+    }
+  }
+
+  private handleLockDelay(delta: number): void {
+    if (this.isLocking) {
+      this.lockTimer += delta;
+      this.totalLockTime += delta;
+      console.log(
+        `Lock timer: ${this.lockTimer.toFixed(0)}ms / ${
+          this.lockDelay
+        }ms (resets: ${this.lockResets})`
+      );
+      if (
+        this.lockTimer >= this.lockDelay ||
+        this.totalLockTime >= this.maxLockTime
+      ) {
+        this.lockTetrimino();
+        this.isLocking = false;
+        this.lockTimer = 0;
+        this.lockResets = 0;
+        this.totalLockTime = 0;
+      }
+    }
   }
 
   private pauseGame(): void {
@@ -746,7 +903,7 @@ export class GameScene extends Phaser.Scene {
   private spawnHeldTetrimino(): void {
     this.currentRotationIndex = 0;
     this.currentShape = SHAPES[this.currentTetriminoType][0];
-    this.currentPosition = { x: 3, y: 0 };
+    this.currentPosition = { x: 3, y: -1 };
 
     if (this.checkCollision(0, 0)) {
       this.handleGameOver();
@@ -794,13 +951,14 @@ export class GameScene extends Phaser.Scene {
       throw new Error("Invalid Tetrimino Type");
     }
 
-    this.currentPosition = { x: 3, y: 0 };
+    // Spawn pieces above the visible grid
+    this.currentPosition = { x: 3, y: -1 };
 
     this.renderNextQueue();
     this.createTetriminoBlocks();
     this.updateGhost();
 
-    if (this.checkCollision(0, 0)) {
+    if (this.checkCollision(0, 0, this.currentShape)) {
       this.handleGameOver();
       return;
     }
@@ -1011,15 +1169,19 @@ export class GameScene extends Phaser.Scene {
 
   private hardDrop(): void {
     LogGameAction(GameActions.HARD_DROP);
+    let dropDistance = 0;
+
     while (!this.checkCollision(0, 1, this.currentShape)) {
       this.currentPosition.y += 1;
+      dropDistance++;
     }
+
+    this.score += dropDistance * 2; // Hard Drop Score: 2 points per cell
+    this.scoreText.setText(`Score: ${this.score}`);
     this.updateTetriminoPosition();
     this.lockTetrimino();
   }
 
-  // TODO : Collision detection works with indices not with pixel values
-  // Make sure it works with the grid border thickness, currently it does not calculate it
   private checkCollision(
     offsetX: number,
     offsetY: number,
@@ -1084,18 +1246,29 @@ export class GameScene extends Phaser.Scene {
 
   private lockTetrimino(): void {
     LogGameAction(GameActions.LOCK_PIECE);
+
     this.currentShape.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           const gridX = this.currentPosition.x + x;
           const gridY = this.currentPosition.y + y;
-          this.grid[gridY][gridX] = this.currentTetriminoType;
+          if (gridY >= 0 && gridY < GameScene.gridHeight) {
+            this.grid[gridY][gridX] = this.currentTetriminoType;
+          }
         }
       });
     });
+
     this.currentTetrimino.clear(true, true);
     this.checkAndClearLines();
     this.drawLockedBlocks();
+
+    // Reset lock delay variables when spawning a new piece
+    this.isLocking = false;
+    this.lockTimer = 0;
+    this.lockResets = 0;
+    this.totalLockTime = 0;
+
     this.spawnTetrimino();
     this.holdUsedThisTurn = false;
     this._main?.shake(50, 0.005);
@@ -1367,39 +1540,10 @@ export class GameScene extends Phaser.Scene {
     this.doGameModeLogic();
 
     if (!this.isPaused && !this.gameOver) {
-      let effectiveFallSpeed = this.fallSpeed;
-
-      if (this.softDropActive) {
-        effectiveFallSpeed += this.SDF;
-      }
-
-      this.fallProgress += effectiveFallSpeed * (delta / 1000); // delta in ms → s
-
-      while (this.fallProgress >= 1) {
-        if (!this.checkCollision(0, 1, this.currentShape)) {
-          this.currentPosition.y += 1;
-          this.fallProgress -= 1.0;
-        } else {
-          this.lockTetrimino();
-          this.fallProgress = 0;
-          break;
-        }
-      }
-
-      if (this.leftHeld && time > this.dasTimer) {
-        if (time > this.arrTimer) {
-          this.moveTetrimino(-1);
-          this.arrTimer = time + this.ARR;
-        }
-      }
-
-      if (this.rightHeld && time > this.dasTimer) {
-        if (time > this.arrTimer) {
-          this.moveTetrimino(1);
-          this.arrTimer = time + this.ARR;
-        }
-      }
-
+      this.handleMovement(time, delta);
+      this.handleSoftDrop(delta);
+      this.handleGravity(delta);
+      this.handleLockDelay(delta);
       this.updateTetriminoPosition();
     }
   }
@@ -1412,26 +1556,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resetAutoRepeat() {
-    this.dasTimer = 0;
-    this.arrTimer = 0;
+    this.movementState.left.dasTimer = 0;
+    this.movementState.left.arrTimer = 0;
+    this.movementState.left.held = false;
+    this.movementState.right.dasTimer = 0;
+    this.movementState.right.arrTimer = 0;
+    this.movementState.right.held = false;
   }
-
-  // // Called when a direction key is pressed
-  // private startHold(dir: -1 | 1) {
-  //   // If opposite was held, release it
-  //   if (dir === -1) this.rightHeld = false;
-  //   else this.leftHeld = false;
-
-  //   if (dir === -1) this.leftHeld = true;
-  //   if (dir === 1) this.rightHeld = true;
-
-  //   this.lastDir = dir;
-
-  //   // Initial single move immediately
-  //   this.moveHoriz(dir);
-
-  //   // (re)start DAS
-  //   this.dasTimer = this.dasMs;
-  //   this.arrTimer = 0;
-  // }
 }
