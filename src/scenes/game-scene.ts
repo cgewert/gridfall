@@ -40,6 +40,7 @@ import { SettingsEvents } from "../services/SettingsEvents";
 import { SkinSettings } from "../services/SkinSettings";
 import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
 import { TextBox } from "../ui/TextBox";
+import { HoldBox } from "../ui/HoldBox";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -109,10 +110,9 @@ export class GameScene extends Phaser.Scene {
   // Gamemode Fields
   private useSpeedCurve: boolean = false;
 
-  private holdType: string | null = null;
+  private _holdType: string | null = null;
   private holdUsedThisTurn: boolean = false;
-  private holdGroup!: Phaser.GameObjects.Group;
-  private holdBox!: Phaser.GameObjects.Graphics;
+  private holdBox!: HoldBox;
   private previewBox!: Phaser.GameObjects.Rectangle;
   private linesCleared: number = 0;
   private linesText!: TextBox;
@@ -147,11 +147,11 @@ export class GameScene extends Phaser.Scene {
   private static readonly emptyGridValue = "Q"; // Placeholder for empty grid cells
   private static readonly gridWidth = 10;
   private static readonly gridHeight = 20;
-  private static readonly blockSize = 40; // Size in pixels
+  public static readonly BLOCKSIZE = 40;
   private static readonly totalGridWidth =
-    GameScene.gridWidth * GameScene.blockSize;
+    GameScene.gridWidth * GameScene.BLOCKSIZE;
   private static readonly totalGridHeight =
-    GameScene.gridHeight * GameScene.blockSize;
+    GameScene.gridHeight * GameScene.BLOCKSIZE;
   private gridOffsetX = 0;
   private gridOffsetY = 0;
   private borderThickness = 10;
@@ -174,7 +174,7 @@ export class GameScene extends Phaser.Scene {
   private _viewPortHalfWidth: number = 0;
 
   // Game configuration fields
-  private blockSkin!: BlockSkin;
+  private _blockSkin!: BlockSkin;
   private gameMode!: GameMode;
 
   private checkWinCondition: CallableFunction = () => {};
@@ -190,6 +190,14 @@ export class GameScene extends Phaser.Scene {
     super(GameScene.CONFIG);
   }
 
+  public get BlockSkin(): BlockSkin {
+    return this._blockSkin;
+  }
+
+  public get HoldType(): string | null {
+    return this._holdType;
+  }
+
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
     this.lockTimer = 0;
@@ -198,7 +206,7 @@ export class GameScene extends Phaser.Scene {
     this.totalLockTime = 0;
 
     this.currentSpawnSystem = SpawnSettings.get();
-    this.blockSkin = SkinSettings.get() as BlockSkin;
+    this._blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
     if (this.gameMode === GameMode.ASCENT) {
       this.useSpeedCurve = true;
@@ -210,7 +218,7 @@ export class GameScene extends Phaser.Scene {
     this.gameOver = false;
     this.isPaused = false;
     this.holdUsedThisTurn = false;
-    this.holdType = null;
+    this._holdType = null;
     this.linesCleared = 0;
     this.score = 0;
     this.combo = 0;
@@ -252,7 +260,8 @@ export class GameScene extends Phaser.Scene {
       "assets/gfx/particles/sakura_particle2.png"
     );
     // Loading videos
-    this.load.video("sakuraGarden", "assets/mov/sakura_garden.mp4");
+    //this.load.video("sakuraGarden", "assets/mov/sakura_garden.mp4");
+    this.load.video("sakuraGarden", "assets/mov/bubbles.mp4");
   }
 
   private createPauseOverlay(): void {
@@ -297,29 +306,12 @@ export class GameScene extends Phaser.Scene {
       .setDepth(GameScene.PAUSE_OVERLAY_DEPTH);
   }
 
-  private createHoldBox(): void {
-    const boxX = this.gridOffsetX - 120;
-    const boxY = this.gridOffsetY;
-    const boxWidth = 120;
-    const boxHeight = 120;
-
-    this.holdBox = this.add
-      .graphics()
-      .fillStyle(0xffffff, 1.0)
-      .fillRoundedRect(boxX, boxY, boxWidth, boxHeight)
-      .fillStyle(0x000000, 0.8)
-      .fillRoundedRect(boxX + 5, boxY + 5, boxWidth - 10, boxHeight - 10);
-    this.add
-      .text(boxX, boxY - 24, t("labels.holdBox"), GUI_LABEL_HOLDBOX_STYLE)
-      .setOrigin(1, 0);
-  }
-
   private createPreviewBox(): void {
     const boxX =
-      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32;
+      this.gridOffsetX + GameScene.gridWidth * GameScene.BLOCKSIZE + 32;
     const boxY = this.gridOffsetY;
-    const boxWidth = GameScene.blockSize * 4;
-    const boxHeight = GameScene.blockSize * 10;
+    const boxWidth = GameScene.BLOCKSIZE * 4;
+    const boxHeight = GameScene.BLOCKSIZE * 10;
     this.add
       .text(boxX, boxY - 24, t("labels.nextBox"), GUI_LABEL_HOLDBOX_STYLE)
       .setOrigin(0, 0);
@@ -339,6 +331,7 @@ export class GameScene extends Phaser.Scene {
     const scaleX = this.scale.width / this.backgroundVideo.width;
     const scaleY = this.scale.height / this.backgroundVideo.height;
     const scale = Math.max(scaleX, scaleY);
+    this.backgroundVideo.setSize(this.scale.width, this.scale.height);
     this.backgroundVideo.setScale(scale);
     this.backgroundVideo.play(true);
     const videoElement = this.backgroundVideo.video;
@@ -383,7 +376,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard!.on("keydown-T", () => this.timer.start());
 
     this.currentSpawnSystem = SpawnSettings.get();
-    this.blockSkin = SkinSettings.get() as BlockSkin;
+    this._blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data.gameMode;
     switch (this.gameMode) {
       case GameMode.RUSH:
@@ -412,7 +405,6 @@ export class GameScene extends Phaser.Scene {
     this.previewGroup = this.add.group();
     this.currentTetrimino = this.add.group();
     this.ghostGroup = this.add.group();
-    this.holdGroup = this.add.group();
     this.renderNextQueue();
     this.lockedBlocksGroup = this.add.group();
 
@@ -500,8 +492,8 @@ export class GameScene extends Phaser.Scene {
     this.linesText = this.add.existing(
       new TextBox(this, {
         name: "linesTextBox",
-        x: this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32,
-        y: this.gridOffsetY + GameScene.blockSize * 11,
+        x: this.gridOffsetX + GameScene.gridWidth * GameScene.BLOCKSIZE + 32,
+        y: this.gridOffsetY + GameScene.BLOCKSIZE * 11,
         width: 300,
         height: 40,
         text: "LINES: 0",
@@ -552,7 +544,12 @@ export class GameScene extends Phaser.Scene {
       gridOpacity: 1.0,
     });
     this.spawnTetrimino();
-    this.createHoldBox();
+    this.holdBox = new HoldBox(this, 0, 0, {
+      borderThickness: 12,
+      size: 120,
+      fillColor: 0x000000,
+      borderColor: 0xffffff,
+    });
     this.createPreviewBox();
     this.createPauseOverlay();
     this.setUpKeyboardControls();
@@ -585,6 +582,7 @@ export class GameScene extends Phaser.Scene {
       0,
       this.comboText.displayHeight + 50
     );
+    this.holdBox.setPosition(this.gridOffsetX - 120, this.gridOffsetY);
   }
 
   private setUpKeyboardControls() {
@@ -601,6 +599,7 @@ export class GameScene extends Phaser.Scene {
       pause: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P),
     };
 
+    // TODO: Refactor to use the key objects instead of global events
     this.input.keyboard.on("keydown-SPACE", () => {
       if (this.isPaused) return;
       this.holdTetrimino();
@@ -878,8 +877,8 @@ export class GameScene extends Phaser.Scene {
       .rectangle(
         this.gridOffsetX,
         this.gridOffsetY,
-        GameScene.gridWidth * GameScene.blockSize + this.borderThickness,
-        GameScene.gridHeight * GameScene.blockSize + this.borderThickness,
+        GameScene.gridWidth * GameScene.BLOCKSIZE + this.borderThickness,
+        GameScene.gridHeight * GameScene.BLOCKSIZE + this.borderThickness,
         0xffffff,
         1.0
       )
@@ -892,8 +891,8 @@ export class GameScene extends Phaser.Scene {
       gridAlign: {
         x: this.gridOffsetX + this.borderThickness / 2,
         y: this.gridOffsetY + this.borderThickness / 2,
-        cellWidth: GameScene.blockSize,
-        cellHeight: GameScene.blockSize,
+        cellWidth: GameScene.BLOCKSIZE,
+        cellHeight: GameScene.BLOCKSIZE,
         width: GameScene.gridWidth,
         height: GameScene.gridHeight,
       },
@@ -922,17 +921,17 @@ export class GameScene extends Phaser.Scene {
       row.forEach((cell, x) => {
         if (cell) {
           const blockX =
-            (this.currentPosition.x + x) * GameScene.blockSize +
+            (this.currentPosition.x + x) * GameScene.BLOCKSIZE +
             this.gridOffsetX +
             this.borderThickness / 2;
           const blockY =
-            (this.currentPosition.y + y) * GameScene.blockSize +
+            (this.currentPosition.y + y) * GameScene.BLOCKSIZE +
             this.gridOffsetY +
             this.borderThickness / 2;
 
           const frame = SHAPE_TO_BLOCKSKIN_FRAME[this.currentTetriminoType];
-          const block = this.add.sprite(blockX, blockY, this.blockSkin, frame);
-          block.setDisplaySize(GameScene.blockSize, GameScene.blockSize);
+          const block = this.add.sprite(blockX, blockY, this._blockSkin, frame);
+          block.setDisplaySize(GameScene.BLOCKSIZE, GameScene.BLOCKSIZE);
           block.setOrigin(0);
           this.currentTetrimino.add(block);
         }
@@ -964,82 +963,42 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private renderHold(): void {
-    this.holdGroup?.clear(true, true);
-    this.holdGroup = this.add.group();
-
-    if (!this.holdType) return;
-
-    const shape = SHAPES[this.holdType][0];
-
-    const cols = shape[0].length;
-    const rows = shape.length;
-
-    const offsetX =
-      (GameScene.blockSize * 3 - cols * (GameScene.blockSize / 2)) / 2;
-    const offsetY =
-      (GameScene.blockSize * 3 - rows * (GameScene.blockSize / 2)) / 2;
-
-    const startX = this.gridOffsetX - GameScene.blockSize * 4 + offsetX;
-    const startY = this.gridOffsetY + offsetY;
-
-    shape.forEach((row, y) => {
-      row.forEach((cell, x) => {
-        if (cell) {
-          const block = this.add
-            .sprite(
-              startX + x * (GameScene.blockSize / 2),
-              startY + y * (GameScene.blockSize / 2),
-              this.blockSkin,
-              SHAPE_TO_BLOCKSKIN_FRAME[this.holdType!]
-            )
-            .setOrigin(0)
-            .setDisplaySize(GameScene.blockSize / 2, GameScene.blockSize / 2);
-
-          this.holdGroup.add(block);
-        }
-      });
-    });
-
-    // TODO: Center holdGroup within holdBox
-    // Phaser.Display.Align.In.Center(this.holdGroup, this.holdBox);
-  }
-
   private holdTetrimino(): void {
+    // TODO: Introduce a gameplay rule option to allow multiple holds per turn
     if (this.holdUsedThisTurn) return;
 
     this.holdUsedThisTurn = true;
     this.currentTetrimino?.clear(true, true);
 
-    if (this.holdType) {
+    if (this._holdType) {
       console.debug("Swapping current piece with hold piece");
       const temp = this.currentTetriminoType;
-      this.currentTetriminoType = this.holdType;
-      this.holdType = temp;
+      this.currentTetriminoType = this._holdType;
+      this._holdType = temp;
       this.spawnHeldTetrimino();
     } else {
       console.debug("Holding current piece and spawn new piece");
-      this.holdType = this.currentTetriminoType;
+      this._holdType = this.currentTetriminoType;
       this.spawnTetrimino();
     }
 
     AudioBus.PlaySfx(this, "hold");
-    this.renderHold();
+    this.holdBox?.renderHold();
   }
 
   private renderNextQueue(): void {
     this.previewGroup?.clear(true, true);
 
-    const previewBoxHeight = GameScene.blockSize * 10;
-    const tetriminoHeight = GameScene.blockSize * 2;
+    const previewBoxHeight = GameScene.BLOCKSIZE * 10;
+    const tetriminoHeight = GameScene.BLOCKSIZE * 2;
     const previewContentHeight = GameScene.previewSize * tetriminoHeight;
     const startX =
-      this.gridOffsetX + GameScene.gridWidth * GameScene.blockSize + 32;
+      this.gridOffsetX + GameScene.gridWidth * GameScene.BLOCKSIZE + 32;
 
     const adjustedStartY =
       this.gridOffsetY +
       (previewBoxHeight - previewContentHeight) / 2 -
-      GameScene.blockSize;
+      GameScene.BLOCKSIZE;
 
     this.spawner.NextQueue.slice(0, GameScene.previewSize).forEach(
       (type, index) => {
@@ -1048,28 +1007,28 @@ export class GameScene extends Phaser.Scene {
         const rows = shape.length;
 
         const offsetX =
-          (GameScene.blockSize * 4 - cols * (GameScene.blockSize / 2)) / 2;
+          (GameScene.BLOCKSIZE * 4 - cols * (GameScene.BLOCKSIZE / 2)) / 2;
         const offsetY =
-          (GameScene.blockSize * 4 - rows * (GameScene.blockSize / 2)) / 2;
+          (GameScene.BLOCKSIZE * 4 - rows * (GameScene.BLOCKSIZE / 2)) / 2;
 
         const previewX = startX + offsetX;
         const previewY =
-          adjustedStartY + index * GameScene.blockSize * 2 + offsetY;
+          adjustedStartY + index * GameScene.BLOCKSIZE * 2 + offsetY;
 
         shape.forEach((row, y) => {
           row.forEach((cell, x) => {
             if (cell) {
               const block = this.add
                 .sprite(
-                  previewX + x * (GameScene.blockSize / 2),
-                  previewY + y * (GameScene.blockSize / 2),
-                  this.blockSkin,
+                  previewX + x * (GameScene.BLOCKSIZE / 2),
+                  previewY + y * (GameScene.BLOCKSIZE / 2),
+                  this._blockSkin,
                   SHAPE_TO_BLOCKSKIN_FRAME[type]
                 )
                 .setOrigin(0)
                 .setDisplaySize(
-                  GameScene.blockSize / 2,
-                  GameScene.blockSize / 2
+                  GameScene.BLOCKSIZE / 2,
+                  GameScene.BLOCKSIZE / 2
                 );
 
               this.previewGroup.add(block);
@@ -1130,19 +1089,19 @@ export class GameScene extends Phaser.Scene {
       row.forEach((cell, x) => {
         if (cell) {
           const posX =
-            (this.currentPosition.x + x) * GameScene.blockSize +
+            (this.currentPosition.x + x) * GameScene.BLOCKSIZE +
             this.gridOffsetX +
             this.borderThickness / 2;
           const posY =
-            (ghostY + y) * GameScene.blockSize +
+            (ghostY + y) * GameScene.BLOCKSIZE +
             this.gridOffsetY +
             this.borderThickness / 2;
 
           const block = this.add
-            .sprite(posX, posY, this.blockSkin, frame)
+            .sprite(posX, posY, this._blockSkin, frame)
             .setAlpha(0.3)
             .setOrigin(0)
-            .setDisplaySize(GameScene.blockSize, GameScene.blockSize);
+            .setDisplaySize(GameScene.BLOCKSIZE, GameScene.BLOCKSIZE);
 
           this.ghostGroup.add(block);
         }
@@ -1251,7 +1210,7 @@ export class GameScene extends Phaser.Scene {
     const useFraction = !landed;
     const baseY =
       this.currentPosition.y + (useFraction ? this.fallProgress : 0);
-    const blockSize = GameScene.blockSize;
+    const blockSize = GameScene.BLOCKSIZE;
     let blockIndex = 0;
     this.currentShape.forEach((row, y) => {
       row.forEach((cell, x) => {
@@ -1261,7 +1220,7 @@ export class GameScene extends Phaser.Scene {
             this.gridOffsetX +
             this.borderThickness / 2;
           const blockY =
-            (baseY + y) * GameScene.blockSize +
+            (baseY + y) * GameScene.BLOCKSIZE +
             this.gridOffsetY +
             this.borderThickness / 2;
           const block = this.currentTetrimino.getChildren()[
@@ -1313,17 +1272,17 @@ export class GameScene extends Phaser.Scene {
         if (cell !== GameScene.emptyGridValue) {
           const block = this.add
             .sprite(
-              x * GameScene.blockSize +
+              x * GameScene.BLOCKSIZE +
                 this.gridOffsetX +
                 this.borderThickness / 2,
-              y * GameScene.blockSize +
+              y * GameScene.BLOCKSIZE +
                 this.gridOffsetY +
                 this.borderThickness / 2,
-              this.blockSkin,
+              this._blockSkin,
               this.getOriginalSkinFrame(cell)
             )
             .setOrigin(0)
-            .setDisplaySize(GameScene.blockSize, GameScene.blockSize);
+            .setDisplaySize(GameScene.BLOCKSIZE, GameScene.BLOCKSIZE);
 
           this.lockedBlocksGroup.add(block);
         }
@@ -1341,10 +1300,10 @@ export class GameScene extends Phaser.Scene {
     let clearedLinesCount = 0;
     for (let y = GameScene.gridHeight - 1; y >= 0; y--) {
       if (this.grid[y].every((cell) => cell !== GameScene.emptyGridValue)) {
-        const offset = GameScene.blockSize / 2;
+        const offset = GameScene.BLOCKSIZE / 2;
         for (let x = 0; x < GameScene.gridWidth; x++) {
-          const posX = this.gridOffsetX + x * GameScene.blockSize + offset;
-          const posY = (y + 1) * GameScene.blockSize + offset;
+          const posX = this.gridOffsetX + x * GameScene.BLOCKSIZE + offset;
+          const posY = (y + 1) * GameScene.BLOCKSIZE + offset;
           this.particleManager.emitParticleAt(posX, posY);
         }
         this.clearLine(y);
