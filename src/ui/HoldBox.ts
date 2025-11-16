@@ -16,6 +16,7 @@ export type HoldBoxConfig = {
  * This component represents the Hold Box in Gridfall.
  */
 export class HoldBox extends Phaser.GameObjects.Container {
+  private static readonly DEFAULT_SIZE = 120;
   private _graphics: Phaser.GameObjects.Graphics;
   private _text: Phaser.GameObjects.Text;
   private _borderThickness: number;
@@ -35,19 +36,23 @@ export class HoldBox extends Phaser.GameObjects.Container {
     this._borderThickness = config?.borderThickness ?? 5;
     this._graphics = scene.make.graphics({ x: 0, y: 0 }, false);
     this._graphics.fillStyle(config?.borderColor ?? 0xffffff, 1);
-    this._graphics.fillRect(0, 0, config?.size ?? 120, config?.size ?? 120);
+    this._graphics.fillRect(
+      0,
+      0,
+      config?.size ?? HoldBox.DEFAULT_SIZE,
+      config?.size ?? HoldBox.DEFAULT_SIZE
+    );
     this._graphics.fillStyle(config?.fillColor ?? 0x000000, 1);
     this._graphics.fillRect(
       this._borderThickness,
       this._borderThickness,
-      (config?.size ?? 120) - 2 * this._borderThickness,
-      (config?.size ?? 120) - 2 * this._borderThickness
+      (config?.size ?? HoldBox.DEFAULT_SIZE) - 2 * this._borderThickness,
+      (config?.size ?? HoldBox.DEFAULT_SIZE) - 2 * this._borderThickness
     );
     this.add(this._graphics);
     this._holdGroup = scene.make.group({});
     this.add(this._holdGroup.getChildren());
 
-    // Create text "Hold"
     this._text = scene.make
       .text({
         x,
@@ -58,7 +63,6 @@ export class HoldBox extends Phaser.GameObjects.Container {
       .setOrigin(0, 0);
     this.add(this._text);
 
-    // Add this container to the scene
     scene.add.existing(this);
   }
 
@@ -80,29 +84,15 @@ export class HoldBox extends Phaser.GameObjects.Container {
               SHAPE_TO_BLOCKSKIN_FRAME[this._gameScene.HoldType!]
             )
             .setDisplaySize(GameScene.BLOCKSIZE / 2, GameScene.BLOCKSIZE / 2)
-            .setOrigin(0);
+            .setOrigin(0.5);
 
           this._holdGroup.add(block);
         }
       });
     });
 
-    // Use bounding box of the hold group to center it in the hold box
-    const bounds = GetGroupBounds(this._holdGroup);
-    let yOffset = bounds.height / 2;
-    let xOffset = bounds.width / 2;
-    console.log("Bounds: ", bounds);
-    console.log("yOffset: ", yOffset);
-
     this.add([...this._holdGroup.getChildren()]);
-    this._holdGroup.children.iterate((child) => {
-      const sprite = child as Phaser.GameObjects.Sprite;
-      sprite.x = sprite.x + (this._config.size ?? 120) / 2 - xOffset;
-      sprite.y = sprite.y + (this._config.size ?? 120) / 2 - 20;
-      //   sprite.x += this._graphics.x + (this._config.size ?? 120) / 2;
-      //   sprite.y += this._graphics.y + (this._config.size ?? 120) / 2;
-      return true;
-    });
+    this.centerHoldGroupInBox();
   }
 
   public get Graphics(): Phaser.GameObjects.Graphics {
@@ -115,5 +105,37 @@ export class HoldBox extends Phaser.GameObjects.Container {
 
   public get HoldGroup(): Phaser.GameObjects.Group {
     return this._holdGroup;
+  }
+
+  private centerHoldGroupInBox(): void {
+    const sprites =
+      this._holdGroup.getChildren() as Phaser.GameObjects.Sprite[];
+
+    if (sprites.length === 0) {
+      return;
+    }
+
+    const union = sprites[0].getBounds();
+
+    for (let i = 1; i < sprites.length; i++) {
+      const b = sprites[i].getBounds();
+      Phaser.Geom.Rectangle.Union(union, b, union);
+    }
+
+    const pieceCenterX = union.centerX;
+    const pieceCenterY = union.centerY;
+
+    const targetCenterX =
+      this.x + (this._config.size ?? HoldBox.DEFAULT_SIZE) / 2;
+    const targetCenterY =
+      this.y + (this._config.size ?? HoldBox.DEFAULT_SIZE) / 2;
+
+    const dx = targetCenterX - pieceCenterX;
+    const dy = targetCenterY - pieceCenterY;
+
+    sprites.forEach((s) => {
+      s.x += dx;
+      s.y += dy;
+    });
   }
 }
