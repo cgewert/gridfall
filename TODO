@@ -9,12 +9,13 @@
 
   Ingame:
     ☐ Work on UI @started(25-11-08 13:49)
-    ☐ Implement gravity increse in Ascent and Infinity modes, implement increasing difficulty
+    ☐ Implement gravity increase in Ascent and Infinity modes, implement increasing difficulty
     ☐ Work on High Score screen UI and functionality (Reflect game modes)
     ☐ Make sure and test that all wall kicks and spins work as intended
     ☐ Implement 180° piece rotations (Toggleable)
-    ☐ Work on Holdbox UI
-    ☐ Work on Next Queue UI
-    ☐ Fix collision detection, some bugs occured
+    ✔ Work on Holdbox UI @done(25-11-16 18:59)
+    ☐ Work on Next Queue UI @started(25-11-16 18:59)
+    ✔ Fix collision detection, some bugs occured @done(25-11-16 18:59)
     ☐ Prevent accidental multiple hard drops when pressing the hard drop key
     ☐ DT Cannon funktioniert nicht, weil das t-spin an der wand nicht funktioniert
+    ✔ Create a Holdbox game component including the translatable text "Hold" @started(25-11-15 17:34) @done(25-11-16 18:58) @lasted(1d1h24m43s)
