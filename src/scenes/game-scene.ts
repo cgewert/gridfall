@@ -390,7 +390,6 @@ export class GameScene extends Phaser.Scene {
     this.previewGroup = this.add.group();
     this.currentTetrimino = this.add.group();
     this.ghostGroup = this.add.group();
-    this.renderNextQueue();
     this.lockedBlocksGroup = this.add.group();
 
     this.music = AudioBus.AddSceneAudio(this, "track1");
@@ -578,6 +577,8 @@ export class GameScene extends Phaser.Scene {
       this.gridOffsetX + 30 + GameScene.totalGridWidth,
       this.gridOffsetY + 6
     );
+
+    this.renderNextQueue();
   }
 
   private setUpKeyboardControls() {
@@ -1033,7 +1034,6 @@ export class GameScene extends Phaser.Scene {
       }
     );
     this.previewGroup.setDepth(500);
-    // TODO: Center the previewGroup within the NextPreview box WIP
     this.nextPreview?.centerGroupInBox(this.previewGroup);
   }
 
