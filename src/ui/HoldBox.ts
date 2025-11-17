@@ -2,8 +2,6 @@ import { t } from "i18next";
 import { GUI_LABEL_HOLDBOX_STYLE } from "../fonts";
 import { GameScene } from "../scenes/game-scene";
 import { SHAPE_TO_BLOCKSKIN_FRAME, SHAPES } from "../shapes";
-import { GetGroupBounds } from "../utilities/Utilities";
-import { Game } from "phaser";
 
 export type HoldBoxConfig = {
   borderThickness?: number;
@@ -18,7 +16,7 @@ export type HoldBoxConfig = {
 export class HoldBox extends Phaser.GameObjects.Container {
   private static readonly DEFAULT_SIZE = 120;
   private _graphics: Phaser.GameObjects.Graphics;
-  private _text: Phaser.GameObjects.Text;
+  private _label: Phaser.GameObjects.Text;
   private _borderThickness: number;
   private _holdGroup!: Phaser.GameObjects.Group;
   private _gameScene: GameScene;
@@ -53,7 +51,7 @@ export class HoldBox extends Phaser.GameObjects.Container {
     this._holdGroup = scene.make.group({});
     this.add(this._holdGroup.getChildren());
 
-    this._text = scene.make
+    this._label = scene.make
       .text({
         x,
         y: y - 24,
@@ -61,7 +59,7 @@ export class HoldBox extends Phaser.GameObjects.Container {
         style: GUI_LABEL_HOLDBOX_STYLE,
       })
       .setOrigin(0, 0);
-    this.add(this._text);
+    this.add(this._label);
 
     scene.add.existing(this);
   }

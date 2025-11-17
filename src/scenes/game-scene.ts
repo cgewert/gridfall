@@ -41,6 +41,7 @@ import { SkinSettings } from "../services/SkinSettings";
 import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
 import { TextBox } from "../ui/TextBox";
 import { HoldBox } from "../ui/HoldBox";
+import { NextPreview } from "../ui/NextPreview";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -70,7 +71,7 @@ export class GameScene extends Phaser.Scene {
   private currentShape!: TetriminoShape;
   private currentPosition = { x: 3, y: 0 }; // Starting position
   private currentRotationIndex: Rotation = Rotation.SPAWN; // Starting rotation
-  private currentTetriminoType = "T"; // Starting with T-Tetrimino
+  private currentTetriminoType = "T";
   private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   private timer!: TimerDisplay;
 
@@ -113,7 +114,7 @@ export class GameScene extends Phaser.Scene {
   private _holdType: string | null = null;
   private holdUsedThisTurn: boolean = false;
   private holdBox!: HoldBox;
-  private previewBox!: Phaser.GameObjects.Rectangle;
+  private nextPreview!: NextPreview;
   private linesCleared: number = 0;
   private linesText!: TextBox;
   private currentSpawnSystem: SpawnSystem = "sevenBag";
@@ -304,22 +305,6 @@ export class GameScene extends Phaser.Scene {
       .setAlpha(0)
       .setVisible(true)
       .setDepth(GameScene.PAUSE_OVERLAY_DEPTH);
-  }
-
-  private createPreviewBox(): void {
-    const boxX =
-      this.gridOffsetX + GameScene.gridWidth * GameScene.BLOCKSIZE + 32;
-    const boxY = this.gridOffsetY;
-    const boxWidth = GameScene.BLOCKSIZE * 4;
-    const boxHeight = GameScene.BLOCKSIZE * 10;
-    this.add
-      .text(boxX, boxY - 24, t("labels.nextBox"), GUI_LABEL_HOLDBOX_STYLE)
-      .setOrigin(0, 0);
-
-    this.previewBox = this.add
-      .rectangle(boxX, boxY, boxWidth, boxHeight, 0x000000, 0.3)
-      .setOrigin(0)
-      .setStrokeStyle(2, 0xffffff, 1.0);
   }
 
   /*
@@ -550,14 +535,20 @@ export class GameScene extends Phaser.Scene {
       fillColor: 0x000000,
       borderColor: 0xffffff,
     });
-    this.createPreviewBox();
+    this.nextPreview = new NextPreview(this, 0, 0, {
+      borderThickness: 12,
+      width: GameScene.BLOCKSIZE * 4,
+      height: GameScene.BLOCKSIZE * 10,
+      fillColor: 0x000000,
+      fillAlpha: 1,
+      borderColor: 0xffffff,
+    });
     this.createPauseOverlay();
     this.setUpKeyboardControls();
 
     AudioBus.PlayMusic(this, "track1", { loop: true });
 
     // Align all UI elements after creation
-    Display.Align.To.BottomLeft(this.linesText, this.previewBox, 0, 8);
     Display.Align.To.BottomLeft(
       this.scoreText,
       this.linesText,
@@ -583,6 +574,10 @@ export class GameScene extends Phaser.Scene {
       this.comboText.displayHeight + 50
     );
     this.holdBox.setPosition(this.gridOffsetX - 120, this.gridOffsetY);
+    this.nextPreview.setPosition(
+      this.gridOffsetX + 30 + GameScene.totalGridWidth,
+      this.gridOffsetY + 6
+    );
   }
 
   private setUpKeyboardControls() {
@@ -1037,6 +1032,9 @@ export class GameScene extends Phaser.Scene {
         });
       }
     );
+    this.previewGroup.setDepth(500);
+    // TODO: Center the previewGroup within the NextPreview box WIP
+    this.nextPreview?.centerGroupInBox(this.previewGroup);
   }
 
   private moveTetrimino(direction: number): void {
