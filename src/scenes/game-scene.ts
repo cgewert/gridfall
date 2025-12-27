@@ -17,7 +17,6 @@ import { Rotation, GetKickData } from "../rotation";
 import {
   DEFAULT_MENU_FONT,
   GUI_COMBO_STYLE,
-  GUI_LABEL_HOLDBOX_STYLE,
   GUI_LEVEL_STYLE,
   GUI_LINES_STYLE,
   GUI_SCORE_STYLE,
@@ -28,18 +27,19 @@ import {
 import { t } from "i18next";
 import { addSceneBackground } from "../effects/effects";
 import {
+  DefaultGameModeDecorators,
   GameActions,
   GameMode,
   GameModeToString,
   LogGameAction,
 } from "../game";
-import { TimerDisplay } from "../ui/TimerDisplay";
+import * as Decorators from "../ui/decorators/index";
 import { AudioBus } from "../services/AudioBus";
 import { InputSettings } from "../services/InputSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { SkinSettings } from "../services/SkinSettings";
 import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
-import { TextBox } from "../ui/TextBox";
+import { TextBox } from "../ui/decorators/TextBox";
 import { HoldBox } from "../ui/HoldBox";
 import { NextPreview } from "../ui/NextPreview";
 
@@ -73,7 +73,7 @@ export class GameScene extends Phaser.Scene {
   private currentRotationIndex: Rotation = Rotation.SPAWN; // Starting rotation
   private currentTetriminoType = "T";
   private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
-  private timer!: TimerDisplay;
+  private timer?: Decorators.TimerDisplay;
 
   // Lock Delay System Fields
   private lockDelay: number = 2000; // 500ms standard lock delay
@@ -116,7 +116,7 @@ export class GameScene extends Phaser.Scene {
   private holdBox!: HoldBox;
   private nextPreview!: NextPreview;
   private linesCleared: number = 0;
-  private linesText!: TextBox;
+  private linesText?: TextBox;
   private currentSpawnSystem: SpawnSystem = "sevenBag";
 
   private pauseContainer!: Phaser.GameObjects.Container;
@@ -159,8 +159,8 @@ export class GameScene extends Phaser.Scene {
   private score: number = 0;
   private combo: number = 0;
   private level: number = 1;
-  private scoreText!: TextBox;
-  private levelText!: TextBox;
+  private scoreText?: TextBox;
+  private levelText?: TextBox;
   private comboText!: Phaser.GameObjects.Text;
   private comboActive: boolean = false;
 
@@ -337,28 +337,6 @@ export class GameScene extends Phaser.Scene {
     this._main = this.cameras.main;
     this._viewPortHalfHeight = this.scale.height / 2;
     this._viewPortHalfWidth = this.scale.width / 2;
-    this.timer = new TimerDisplay(this, {
-      name: "gameTimer",
-      x: 16,
-      y: 92,
-      width: 200,
-      height: 40,
-      text: "",
-      prefix: "TIME ",
-      textStyle: {
-        fontFamily: "Orbitron, monospace",
-        fontSize: "32px",
-        color: "#FFFFFF",
-      },
-      stroke: "#00FFFF",
-      strokeThickness: 2,
-      shadow: true,
-      useLinearBackground: true,
-      autostart: true,
-    });
-    this.timer.setDepth(10000);
-    this.add.existing(this.timer);
-    this.input.keyboard!.on("keydown-T", () => this.timer.start());
 
     this.currentSpawnSystem = SpawnSettings.get();
     this._blockSkin = SkinSettings.get() as BlockSkin;
@@ -473,53 +451,6 @@ export class GameScene extends Phaser.Scene {
       })
       .setDepth(10000);
 
-    this.linesText = this.add.existing(
-      new TextBox(this, {
-        name: "linesTextBox",
-        x: this.gridOffsetX + GameScene.gridWidth * GameScene.BLOCKSIZE + 32,
-        y: this.gridOffsetY + GameScene.BLOCKSIZE * 11,
-        width: 300,
-        height: 40,
-        text: "LINES: 0",
-        textStyle: GUI_LINES_STYLE,
-        fillColor: "#aaaaaa",
-        useLinearBackground: true,
-      })
-    );
-    this.linesText.Padding = 25;
-
-    this.scoreText = this.add.existing(
-      new TextBox(this, {
-        name: "scoreTextBox",
-        x: 0,
-        y: 0,
-        width: 300,
-        height: 40,
-        text: `${t("labels.score")}: 0`,
-        textStyle: GUI_SCORE_STYLE,
-        fillColor: "#666666",
-        useLinearBackground: true,
-      })
-    );
-    this.scoreText.Padding = 25;
-
-    this.levelText = this.add.existing(
-      new TextBox(this, {
-        name: "levelTextBox",
-        x: 0,
-        y: 0,
-        width: 300,
-        height: 40,
-        text: `${t("labels.level")}: 1 (${t(
-          "gravity"
-        )} ${this.fallSpeed.toFixed(2)})`,
-        textStyle: GUI_LEVEL_STYLE,
-        fillColor: "#333333",
-        useLinearBackground: true,
-      })
-    );
-    this.levelText.Padding = 25;
-
     this.comboText = this.add.text(20, 80, "", GUI_COMBO_STYLE);
 
     this.initializeGrid();
@@ -527,7 +458,6 @@ export class GameScene extends Phaser.Scene {
       borderThickness: 25,
       gridOpacity: 1.0,
     });
-    this.spawnTetrimino();
     this.holdBox = new HoldBox(this, 0, 0, {
       borderThickness: 12,
       size: 120,
@@ -547,38 +477,148 @@ export class GameScene extends Phaser.Scene {
 
     AudioBus.PlayMusic(this, "track1", { loop: true });
 
-    // Align all UI elements after creation
-    Display.Align.To.BottomLeft(
-      this.scoreText,
-      this.linesText,
-      0,
-      this.scoreText.ActualRenderHeight + 8
-    );
-    Display.Align.To.BottomLeft(
-      this.levelText,
-      this.scoreText,
-      0,
-      this.levelText.ActualRenderHeight + 8
-    );
-    Display.Align.To.BottomLeft(
-      this.timer,
-      this.levelText,
-      0,
-      this.timer.ActualRenderHeight + 8
-    );
-    Display.Align.To.BottomLeft(
-      this.comboText,
-      this.timer,
-      0,
-      this.comboText.displayHeight + 50
-    );
+    // For now create a decorator list dependent from the game mode
+    const decorators = DefaultGameModeDecorators[this.gameMode];
+    this.createDecorators(decorators);
+
     this.holdBox.setPosition(this.gridOffsetX - 120, this.gridOffsetY);
     this.nextPreview.setPosition(
       this.gridOffsetX + 30 + GameScene.totalGridWidth,
       this.gridOffsetY + 6
     );
 
-    this.renderNextQueue();
+    this.spawnTetrimino();
+  }
+
+  /**
+   * Creates and adds decorators to the game scene.
+   * These are TextBoxes and TimerDisplays that show game information
+   * and they are created based on the provided list of decorator names.
+   * This way each game mode can show different decorators as needed.
+   */
+  public createDecorators(decorators: string[]) {
+    let lastRef: Decorators.TextBox | null = null; // Reference to the last created decorator for alignment
+    let prevRef: Decorators.TextBox | null = null; // Reference to the previous decorator for alignment
+
+    // Sanitize decorators list, each entry should be unique
+    decorators = Array.from(new Set(decorators));
+
+    decorators.forEach((dec) => {
+      switch (dec) {
+        case "TimerDisplay":
+          this.timer = new Decorators.TimerDisplay(this, {
+            name: "gameTimer",
+            x: 0,
+            y: 0,
+            width: 200,
+            height: 40,
+            text: "",
+            prefix: "TIME ",
+            textStyle: {
+              fontFamily: "Orbitron, monospace",
+              fontSize: "32px",
+              color: "#FFFFFF",
+            },
+            stroke: "#00FFFF",
+            strokeThickness: 2,
+            shadow: true,
+            useLinearBackground: true,
+            autostart: true,
+          });
+          this.timer.setDepth(10000);
+          this.add.existing(this.timer);
+          prevRef = lastRef;
+          lastRef = this.timer;
+          break;
+        case "LinesClearedDisplay":
+          this.linesText = this.add.existing(
+            new TextBox(this, {
+              name: "linesTextBox",
+              x: 0,
+              y: 0,
+              width: 300,
+              height: 40,
+              text: "LINES: 0",
+              textStyle: GUI_LINES_STYLE,
+              fillColor: "#aaaaaa",
+              useLinearBackground: true,
+            })
+          );
+          this.linesText.Padding = 25;
+          prevRef = lastRef;
+          lastRef = this.linesText;
+          break;
+        case "ScoreDisplay":
+          this.scoreText = this.add.existing(
+            new TextBox(this, {
+              name: "scoreTextBox",
+              x: 0,
+              y: 0,
+              width: 300,
+              height: 40,
+              text: `${t("labels.score")}: 0`,
+              textStyle: GUI_SCORE_STYLE,
+              fillColor: "#666666",
+              useLinearBackground: true,
+            })
+          );
+          this.scoreText.Padding = 25;
+          prevRef = lastRef;
+          lastRef = this.scoreText;
+          break;
+        case "LevelDisplay":
+          this.levelText = this.add.existing(
+            new TextBox(this, {
+              name: "levelTextBox",
+              x: 0,
+              y: 0,
+              width: 300,
+              height: 40,
+              text: `${t("labels.level")}: 1 (${t(
+                "gravity"
+              )} ${this.fallSpeed.toFixed(2)})`,
+              textStyle: GUI_LEVEL_STYLE,
+              fillColor: "#333333",
+              useLinearBackground: true,
+            })
+          );
+          this.levelText.Padding = 25;
+          prevRef = lastRef;
+          lastRef = this.levelText;
+          break;
+        case "TargetLineClearsDisplay":
+          prevRef = lastRef;
+          lastRef = null; // TODO: Implement TargetLineClearsDisplay
+          break;
+        default:
+          break;
+      }
+
+      if (lastRef === null) return;
+      // Align decorators to bottom-left in order
+      if (prevRef === null) {
+        // Placing the first decorator
+        lastRef.setPosition(
+          this.gridOffsetX + GameScene.gridWidth * GameScene.BLOCKSIZE + 32,
+          this.gridOffsetY + GameScene.BLOCKSIZE * 10 + 20
+        );
+      } else {
+        Display.Align.To.BottomLeft(
+          lastRef,
+          prevRef,
+          0,
+          lastRef.ActualRenderHeight + 8
+        );
+      }
+    });
+
+    // Align the combo text to the last decorator
+    Display.Align.To.BottomLeft(
+      this.comboText,
+      lastRef!,
+      0,
+      this.comboText.displayHeight + 25
+    );
   }
 
   private setUpKeyboardControls() {
@@ -816,7 +856,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private pauseGame(): void {
-    this.timer.pause();
+    this.timer?.pause();
     this.physics.world.pause();
     this.isPaused = true;
     this.tweens.add({
@@ -831,7 +871,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resumeGame(): void {
-    this.timer.resume();
+    this.timer?.resume();
     this.physics.world.resume();
     this.isPaused = false;
     this.sakuraEmitter.killAll();
@@ -1164,7 +1204,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.score += dropDistance * 2; // Hard Drop Score: 2 points per cell
-    this.scoreText.setText(`Score: ${this.score}`);
+    this.scoreText?.setText(`Score: ${this.score}`);
     this.updateTetriminoPosition();
     this.lockTetrimino();
   }
@@ -1337,13 +1377,13 @@ export class GameScene extends Phaser.Scene {
         console.log(
           `Level up! New level: ${this.level} - Fall Speed: ${this.fallSpeed}`
         );
-        this.levelText.setText(
+        this.levelText?.setText(
           `${t("labels.level")}: ${this.level} (${t(
             "gravity"
           )} ${this.fallSpeed.toFixed(2)})`
         );
       }
-      this.linesText.setText(`${t("labels.lines")}: ${this.linesCleared}`);
+      this.linesText?.setText(`${t("labels.lines")}: ${this.linesCleared}`);
     } else {
       this.combo = 0;
       this.comboActive = false;
@@ -1389,7 +1429,7 @@ export class GameScene extends Phaser.Scene {
     this.scene.start("VictoryScene", {
       score: this.score,
       gameMode: this.gameMode,
-      time: this.timer.format(this.timer.getElapsedMs()),
+      time: this.timer?.format(this.timer.getElapsedMs()) ?? "",
     });
   }
 
@@ -1432,7 +1472,7 @@ export class GameScene extends Phaser.Scene {
     const points = (basePoints + comboBonus) * this.level;
     this.score += points;
 
-    this.scoreText.setText(`Score: ${this.score}`);
+    this.scoreText?.setText(`Score: ${this.score}`);
   }
 
   private playLineClearSound(clearedLinesCount: number) {
@@ -1488,7 +1528,7 @@ export class GameScene extends Phaser.Scene {
       this.scene.start("VictoryScene", {
         gameMode: this.gameMode,
         score: this.score,
-        time: this.timer.format(this.timer.getElapsedMs()),
+        time: this.timer?.format(this.timer.getElapsedMs()) ?? "",
       });
     } else {
       this.scene.start("GameOverScene", { gameMode: this.gameMode });

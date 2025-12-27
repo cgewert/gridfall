@@ -8,6 +8,26 @@ export enum GameMode {
   INFINITY = 3,
 }
 
+export const DefaultGameModeDecorators: { [key in GameMode]: string[] } = {
+  [GameMode.ASCENT]: [
+    "TimerDisplay",
+    "ScoreDisplay",
+    "LevelDisplay",
+    "LinesClearedDisplay",
+  ],
+  [GameMode.RUSH]: [
+    "LinesClearedDisplay",
+    "TimerDisplay",
+    //"TargetLineClearsDisplay",
+  ],
+  [GameMode.INFINITY]: [
+    "TimerDisplay",
+    "ScoreDisplay",
+    "LevelDisplay",
+    "LinesClearedDisplay",
+  ],
+};
+
 export const GameModeToString = (mode: GameMode): string => {
   switch (mode) {
     case GameMode.ASCENT:

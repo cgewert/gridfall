@@ -56,7 +56,10 @@ export const GUI_LABEL_HOLDBOX_STYLE: Phaser.Types.GameObjects.Text.TextStyle =
   };
 export const GUI_COMBO_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   fontFamily: DEFAULT_MENU_FONT,
-  fontSize: "20px",
+  fontSize: "24px",
+  fontStyle: "bold",
+  stroke: "#000000",
+  strokeThickness: 4,
   color: "#ffcc00",
 };
 export const GUI_LEVEL_STYLE = {
