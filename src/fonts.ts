@@ -62,18 +62,15 @@ export const GUI_COMBO_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   strokeThickness: 4,
   color: "#ffcc00",
 };
-export const GUI_LEVEL_STYLE = {
-  fontFamily: DEFAULT_MENU_FONT,
-  fontSize: "20px",
-  color: DEFAULT_FONT_COLOR,
-};
-export const GUI_SCORE_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: DEFAULT_MENU_FONT,
-  fontSize: "20px",
-  color: "#ffffff",
-};
-export const GUI_LINES_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
+export const TEXTBOX_DEFAULT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   fontSize: "24px",
   color: "#ffffff",
   fontFamily: DEFAULT_MENU_FONT,
+  stroke: "#000000",
+  strokeThickness: 2,
+};
+export const TIMER_DISPLAY_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
+  fontFamily: "Orbitron, monospace",
+  fontSize: "32px",
+  color: "#FFFFFF",
 };
