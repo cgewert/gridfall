@@ -17,9 +17,7 @@ import { Rotation, GetKickData } from "../rotation";
 import {
   DEFAULT_MENU_FONT,
   GUI_COMBO_STYLE,
-  GUI_LEVEL_STYLE,
-  GUI_LINES_STYLE,
-  GUI_SCORE_STYLE,
+  TEXTBOX_DEFAULT_STYLE,
   MENU_TITLE_FONT_COLOR,
   PAUSE_OVERLAY_FONT_STYLE_ACTIVE_ENTRY,
   PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
@@ -510,22 +508,20 @@ export class GameScene extends Phaser.Scene {
             name: "gameTimer",
             x: 0,
             y: 0,
-            width: 200,
+            width: 300,
             height: 40,
             text: "",
             prefix: "TIME ",
-            textStyle: {
-              fontFamily: "Orbitron, monospace",
-              fontSize: "32px",
-              color: "#FFFFFF",
-            },
-            stroke: "#00FFFF",
+            textStyle: TEXTBOX_DEFAULT_STYLE,
+            fillColor: "#aaaaaa",
+            stroke: "#000000",
             strokeThickness: 2,
             shadow: true,
             useLinearBackground: true,
             autostart: true,
           });
           this.timer.setDepth(10000);
+          this.timer.Padding = 25;
           this.add.existing(this.timer);
           prevRef = lastRef;
           lastRef = this.timer;
@@ -539,7 +535,8 @@ export class GameScene extends Phaser.Scene {
               width: 300,
               height: 40,
               text: "LINES: 0",
-              textStyle: GUI_LINES_STYLE,
+              textStyle: TEXTBOX_DEFAULT_STYLE,
+              shadow: true,
               fillColor: "#aaaaaa",
               useLinearBackground: true,
             })
@@ -556,9 +553,10 @@ export class GameScene extends Phaser.Scene {
               y: 0,
               width: 300,
               height: 40,
+              shadow: true,
               text: `${t("labels.score")}: 0`,
-              textStyle: GUI_SCORE_STYLE,
-              fillColor: "#666666",
+              textStyle: TEXTBOX_DEFAULT_STYLE,
+              fillColor: "#aaaaaa",
               useLinearBackground: true,
             })
           );
@@ -574,11 +572,12 @@ export class GameScene extends Phaser.Scene {
               y: 0,
               width: 300,
               height: 40,
+              shadow: true,
               text: `${t("labels.level")}: 1 (${t(
                 "gravity"
               )} ${this.fallSpeed.toFixed(2)})`,
-              textStyle: GUI_LEVEL_STYLE,
-              fillColor: "#333333",
+              textStyle: TEXTBOX_DEFAULT_STYLE,
+              fillColor: "#aaaaaa",
               useLinearBackground: true,
             })
           );

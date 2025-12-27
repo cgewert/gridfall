@@ -10,6 +10,7 @@ export type TextBoxConfig = {
   textStyle?: Phaser.Types.GameObjects.Text.TextStyle;
   fillColor?: string;
   fillAlpha?: number;
+  shadow?: boolean;
   useLinearBackground?: boolean; // Determines whether to use a linear gradient background or a solid color
 };
 
@@ -40,6 +41,9 @@ export class TextBox extends Phaser.GameObjects.Container {
       )
       .setOrigin(0);
     this.textObject = scene.add.text(0, 0, config.text, config.textStyle);
+    if (config.shadow) {
+      this.textObject.setShadow(0, 2, "#000000", 4, true, true);
+    }
     this.add([this.background, this.textObject]);
     this.alignText(true);
 
