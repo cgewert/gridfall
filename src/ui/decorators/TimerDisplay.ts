@@ -10,7 +10,6 @@ export type TimerDisplayConfig = TextBoxConfig & {
   prefix?: string;
   stroke?: string;
   strokeThickness?: number;
-  shadow?: boolean;
   align?: "left" | "center" | "right";
 };
 
@@ -61,9 +60,7 @@ export class TimerDisplay extends TextBox {
     if (config.stroke) {
       this.textObject.setStroke(config.stroke, config.strokeThickness ?? 2);
     }
-    if (config.shadow) {
-      this.textObject.setShadow(0, 2, "#000000", 4, true, true);
-    }
+
     this.textObject.setOrigin(0, 0.5);
 
     // Hook this object into the scene update loop
