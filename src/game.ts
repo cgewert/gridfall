@@ -18,7 +18,7 @@ export const DefaultGameModeDecorators: { [key in GameMode]: string[] } = {
   [GameMode.RUSH]: [
     "LinesClearedDisplay",
     "TimerDisplay",
-    //"TargetLineClearsDisplay",
+    "TargetLineClearsDisplay",
   ],
   [GameMode.INFINITY]: [
     "TimerDisplay",
