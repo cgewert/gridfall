@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { Decoratable } from "./decorator";
 
 export type TextBoxConfig = {
   name: string;
@@ -18,7 +19,10 @@ export type TextBoxConfig = {
  * An extendable UI TextBox component with optional linear gradient background.
  * Extends Phaser.GameObjects.Container.
  */
-export class TextBox extends Phaser.GameObjects.Container {
+export class TextBox
+  extends Phaser.GameObjects.Container
+  implements Decoratable
+{
   protected background: Phaser.GameObjects.Rectangle;
   protected textObject: Phaser.GameObjects.Text;
   protected gradientImage?: Phaser.GameObjects.Image;
@@ -48,6 +52,10 @@ export class TextBox extends Phaser.GameObjects.Container {
     this.alignText(true);
 
     this.UseLinearBackground = config.useLinearBackground || false;
+  }
+
+  public get UseAutoAlign(): boolean {
+    return true;
   }
 
   public get ActualRenderWidth(): number {

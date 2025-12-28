@@ -1,5 +1,3 @@
-# TODO
-
   Settings:
   ☐ Implement "Reset to defaults" button functionality
   ☐ Implement Feedback sound when toggling settings
@@ -9,11 +7,8 @@
   Release 1.0.0: (Target Date: 2025-12-31):
   ☐ Publish on itch.io
   ☐ Work on UI @started(25-11-08 13:49)
-  ☐ Fix null error for textblocks after changing game modes
-  ☐ Implement all Game Modes (Polish score system and difficulty for each mode)
-  ☐ Implement decors (addable components for the game scene) @started(25-12-20 22:00)
-  ☐ Build a decorator target line clears for the Rush mode
-  ☐ Implement specific High Score modes and screens for each mode
+  ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
+  ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
   ☐ Implement all rudimentary Settings
   ☐ Finish all translations
   ☐ Add all assets and replace placeholder assets
@@ -21,24 +16,17 @@
   ☐ Prevent accidental multiple hard drops when pressing the hard drop key
   ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems)
 
-  Later Releases:
-  ☐ Implement 180° piece rotations (Toggleable)
-  ☐ Multiplayer modes
-  ☐ Make game mode decorators configurable in settings
-  Gather statistics for a played round:
-    ☐ Add number of Quad cleared
-    ☐ Add number of T-Spins performed
-    ☐ Add number of combos performed
-    ☐ Add number of perfect clears achieved
-
   Ascent:
     ☐ Add Lines cleared data to high scores
     ☐ Add date to high scores
     ☐ Implement a proper difficulty curve
 
-    Decorators:
-      ☐ Score
-      ☐ Lines cleared
-      ☐ Time elapsed
-      ☐ Level/Speed
-      ☐ Target Line clears
+  Later Releases:
+  ☐ Implement 180° piece rotations (Toggleable)
+  ☐ Multiplayer modes
+  ☐ Make game mode decorators configurable in settings
+  Gather statistics for a played round:
+  ☐ Add number of Quad cleared
+  ☐ Add number of T-Spins performed
+  ☐ Add number of combos performed
+  ☐ Add number of perfect clears achieved

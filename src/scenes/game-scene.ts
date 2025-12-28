@@ -21,6 +21,7 @@ import {
   MENU_TITLE_FONT_COLOR,
   PAUSE_OVERLAY_FONT_STYLE_ACTIVE_ENTRY,
   PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
+  DEFAULT_FONT_STYLE,
 } from "../fonts";
 import { t } from "i18next";
 import { addSceneBackground } from "../effects/effects";
@@ -40,6 +41,7 @@ import { SpawnSettings, SpawnSystem } from "../services/SpawnSettings";
 import { TextBox } from "../ui/decorators/TextBox";
 import { HoldBox } from "../ui/HoldBox";
 import { NextPreview } from "../ui/NextPreview";
+import { LineClearCountdown } from "../ui/decorators/LineClearCountdown";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -71,7 +73,7 @@ export class GameScene extends Phaser.Scene {
   private currentRotationIndex: Rotation = Rotation.SPAWN; // Starting rotation
   private currentTetriminoType = "T";
   private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
-  private timer?: Decorators.TimerDisplay;
+  private timer?: Decorators.TimerDisplay | null;
 
   // Lock Delay System Fields
   private lockDelay: number = 2000; // 500ms standard lock delay
@@ -114,7 +116,7 @@ export class GameScene extends Phaser.Scene {
   private holdBox!: HoldBox;
   private nextPreview!: NextPreview;
   private linesCleared: number = 0;
-  private linesText?: TextBox;
+  private linesText?: TextBox | null;
   private currentSpawnSystem: SpawnSystem = "sevenBag";
 
   private pauseContainer!: Phaser.GameObjects.Container;
@@ -157,8 +159,9 @@ export class GameScene extends Phaser.Scene {
   private score: number = 0;
   private combo: number = 0;
   private level: number = 1;
-  private scoreText?: TextBox;
-  private levelText?: TextBox;
+  private scoreText?: TextBox | null;
+  private levelText?: TextBox | null;
+  private linesCountdown?: LineClearCountdown | null;
   private comboText!: Phaser.GameObjects.Text;
   private comboActive: boolean = false;
 
@@ -353,12 +356,6 @@ export class GameScene extends Phaser.Scene {
         break;
     }
 
-    // TODO: Game mode specific creation logic
-    if (this.gameMode === GameMode.INFINITY) {
-    } else if (this.gameMode === GameMode.RUSH) {
-    } else if (this.gameMode === GameMode.ASCENT) {
-    }
-
     this.gridOffsetX = this._viewPortHalfWidth - GameScene.totalGridWidth / 2;
     this.gridOffsetY = this._viewPortHalfHeight - GameScene.totalGridHeight / 2;
 
@@ -449,7 +446,7 @@ export class GameScene extends Phaser.Scene {
       })
       .setDepth(10000);
 
-    this.comboText = this.add.text(20, 80, "", GUI_COMBO_STYLE);
+    this.comboText = this.add.text(0, 0, "", GUI_COMBO_STYLE);
 
     this.initializeGrid();
     this.createGridGraphics({
@@ -475,9 +472,8 @@ export class GameScene extends Phaser.Scene {
 
     AudioBus.PlayMusic(this, "track1", { loop: true });
 
-    // For now create a decorator list dependent from the game mode
-    const decorators = DefaultGameModeDecorators[this.gameMode];
-    this.createDecorators(decorators);
+    // Create a decorator list dependent from the game mode
+    this.createDecorators(DefaultGameModeDecorators[this.gameMode]);
 
     this.holdBox.setPosition(this.gridOffsetX - 120, this.gridOffsetY);
     this.nextPreview.setPosition(
@@ -495,8 +491,17 @@ export class GameScene extends Phaser.Scene {
    * This way each game mode can show different decorators as needed.
    */
   public createDecorators(decorators: string[]) {
-    let lastRef: Decorators.TextBox | null = null; // Reference to the last created decorator for alignment
-    let prevRef: Decorators.TextBox | null = null; // Reference to the previous decorator for alignment
+    let lastRef: Decorators.TextBox | Decorators.LineClearCountdown | null =
+      null; // Reference to the last created decorator for alignment
+    let prevRef: Decorators.TextBox | Decorators.LineClearCountdown | null =
+      null; // Reference to the previous decorator for alignment
+
+    // Reset decorator references
+    this.timer = null;
+    this.levelText = null;
+    this.scoreText = null;
+    this.linesText = null;
+    this.linesCountdown = null;
 
     // Sanitize decorators list, each entry should be unique
     decorators = Array.from(new Set(decorators));
@@ -586,8 +591,40 @@ export class GameScene extends Phaser.Scene {
           lastRef = this.levelText;
           break;
         case "TargetLineClearsDisplay":
+          this.linesCountdown = new LineClearCountdown(this, {
+            x: this.gridOffsetX + GameScene.totalGridWidth / 2,
+            y: this.gridOffsetY + GameScene.totalGridHeight / 3,
+            limit: 40,
+            textStyle: DEFAULT_FONT_STYLE,
+          });
           prevRef = lastRef;
-          lastRef = null; // TODO: Implement TargetLineClearsDisplay
+          lastRef = this.linesCountdown;
+          const gridRect = new Phaser.Geom.Rectangle(
+            this.gridOffsetX,
+            this.gridOffsetY,
+            GameScene.totalGridWidth,
+            GameScene.totalGridHeight
+          );
+          this.linesCountdown.setTextStyle({
+            fontStyle: "700",
+            color: "#ffffff",
+            align: "center",
+          });
+          this.linesCountdown.TextObject.setAlpha(0.15);
+          this.linesCountdown.TextObject.setStroke("#000000", 10);
+          this.linesCountdown.TextObject.setShadow(
+            0,
+            4,
+            "#000000",
+            8,
+            true,
+            true
+          );
+          this.linesCountdown.fitIntoRect(gridRect, {
+            padding: 8,
+            minFontSize: 18,
+            maxFontSize: 200,
+          });
           break;
         default:
           break;
@@ -602,12 +639,14 @@ export class GameScene extends Phaser.Scene {
           this.gridOffsetY + GameScene.BLOCKSIZE * 10 + 20
         );
       } else {
-        Display.Align.To.BottomLeft(
-          lastRef,
-          prevRef,
-          0,
-          lastRef.ActualRenderHeight + 8
-        );
+        if (lastRef.UseAutoAlign) {
+          Display.Align.To.BottomLeft(
+            lastRef,
+            prevRef,
+            0,
+            lastRef.ActualRenderHeight + 8
+          );
+        }
       }
     });
 
@@ -1203,6 +1242,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.score += dropDistance * 2; // Hard Drop Score: 2 points per cell
+    console.log(this.scoreText);
+
     this.scoreText?.setText(`Score: ${this.score}`);
     this.updateTetriminoPosition();
     this.lockTetrimino();
@@ -1351,6 +1392,7 @@ export class GameScene extends Phaser.Scene {
 
     if (clearedLinesCount > 0) {
       this.linesCleared += clearedLinesCount;
+      this.linesCountdown?.applyLineClears(clearedLinesCount);
       if (this.comboActive) {
         this.combo++;
         this.comboText.setText(`${t("labels.combo")} x${this.combo}`);
@@ -1572,7 +1614,6 @@ export class GameScene extends Phaser.Scene {
       this.handleLockDelay(delta);
       this.updateTetriminoPosition();
       this.updateLockDelayVisual();
-      //this.updateLockDelayVisual2();
     }
   }
 
@@ -1610,41 +1651,6 @@ export class GameScene extends Phaser.Scene {
     this.currentTetrimino.getChildren().forEach((block) => {
       const sprite = block as Phaser.GameObjects.Sprite;
       sprite.setTint(tintColor);
-    });
-  }
-
-  private updateLockDelayVisual2(): void {
-    if (!this.isLocking || !this.currentTetrimino) {
-      this.currentTetrimino.getChildren().forEach((block) => {
-        const sprite = block as Phaser.GameObjects.Sprite;
-        sprite.clearTint();
-      });
-      return;
-    }
-
-    const lockProgress = Math.min(this.lockTimer / this.lockDelay, 1.0);
-
-    const blocks =
-      this.currentTetrimino.getChildren() as Phaser.GameObjects.Sprite[];
-    const yPositions = blocks.map((block) => block.y);
-    const minY = Math.min(...yPositions);
-    const maxY = Math.max(...yPositions);
-    const totalHeight = maxY - minY;
-
-    const fillHeight = minY + totalHeight * lockProgress;
-
-    blocks.forEach((sprite) => {
-      const blockY = sprite.y;
-
-      if (blockY < fillHeight) {
-        const redValue = 255;
-        const greenBlueValue = 0;
-        const tintColor =
-          (redValue << 16) | (greenBlueValue << 8) | greenBlueValue;
-        sprite.setTint(tintColor);
-      } else {
-        sprite.clearTint();
-      }
     });
   }
 }
