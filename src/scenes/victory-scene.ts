@@ -1,21 +1,33 @@
 import Phaser from "phaser";
 import { addSceneBackground } from "../effects/effects";
 import { DEFAULT_MENU_FONT } from "../fonts";
-import { GameMode, GameModeToString, TimeStringToMilliseconds } from "../game";
-import { HighScoreSettings } from "../services/HighScoreSettings";
+import {
+  GameMode,
+  GameModeToString,
+  MillisecondsToTimeString,
+  TimeStringToMilliseconds,
+} from "../game";
+import { HighscoreService } from "../services/HighScoreService";
 import { AnimatableText, AnimatableTextTweenType } from "../ui/AnimatableText";
+
+export type VictorySceneData = {
+  gameMode: GameMode;
+  score: number;
+  time: number;
+  linesCleared: number;
+};
 
 export class VictoryScene extends Phaser.Scene {
   constructor() {
     super("VictoryScene");
   }
 
-  create(data: { gameMode: GameMode; score: number; time: string }) {
-    const { gameMode, score, time } = data;
+  create(data: VictorySceneData): void {
+    const { gameMode, score, time, linesCleared } = data;
     this.cameras.main.setBackgroundColor("#000000");
     addSceneBackground(this);
 
-    this.add
+    const victoryTitle = this.add
       .text(this.scale.width / 2, this.scale.height / 2 - 100, "Victory!", {
         fontSize: "64px",
         fontFamily: DEFAULT_MENU_FONT,
@@ -25,13 +37,14 @@ export class VictoryScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    this.add
+    const formattedTime = MillisecondsToTimeString(time);
+    const victoryInfo = this.add
       .text(
         this.scale.width / 2,
         this.scale.height / 2,
         `${GameModeToString(
           gameMode
-        )} Completed!\nScore: ${score}\nTime: ${time}`,
+        )} Completed!\nScore: ${score}\nTime: ${formattedTime}\nLines Cleared: ${linesCleared}`,
         {
           fontSize: "32px",
           fontFamily: "Arial",
@@ -39,6 +52,7 @@ export class VictoryScene extends Phaser.Scene {
         }
       )
       .setOrigin(0.5);
+    Phaser.Display.Align.To.BottomCenter(victoryInfo, victoryTitle, 0, 20);
 
     this.add
       .text(
@@ -60,7 +74,7 @@ export class VictoryScene extends Phaser.Scene {
     }
 
     if (this.checkHighScore(data)) {
-      new AnimatableText(this, {
+      const newHighScoreText = new AnimatableText(this, {
         x: this.scale.width / 2,
         y: this.scale.height / 2 + 100,
         text: "New High Score!",
@@ -69,61 +83,60 @@ export class VictoryScene extends Phaser.Scene {
         color: "#ffcc00",
         depth: 10,
         align: "center",
-      }).startAnimation(AnimatableTextTweenType.PULSE);
+      });
+      newHighScoreText.startAnimation(AnimatableTextTweenType.PULSE);
+
+      Phaser.Display.Align.To.BottomCenter(
+        newHighScoreText,
+        victoryInfo,
+        0,
+        50
+      );
     }
   }
 
   /**
    * Save to local storage if the current score is a high score.
    */
-  private checkHighScore(data: {
-    gameMode: GameMode;
-    score: number;
-    time: string;
-  }): boolean {
-    const currentScore = data.score;
-    const currentTime = data.time;
-    let highScore = { score: 0, time: 0 };
+  private checkHighScore(data: VictorySceneData): boolean {
+    const { gameMode, linesCleared, score, time } = data;
 
     switch (data.gameMode) {
       case GameMode.ASCENT:
-        highScore = HighScoreSettings.AscentHighScore;
-        if (
-          currentScore > highScore.score ||
-          TimeStringToMilliseconds(currentTime) < highScore.time
-        ) {
-          HighScoreSettings.AscentHighScore = {
-            score: currentScore,
-            time: TimeStringToMilliseconds(currentTime),
-          };
-          return true;
-        }
+        // highScore = HighscoreService.AscentHighScore;
+        // if (
+        //   currentScore > highScore.score ||
+        //   TimeStringToMilliseconds(currentTime) < highScore.time
+        // ) {
+        //   HighscoreService.AscentHighScore = {
+        //     score: currentScore,
+        //     time: TimeStringToMilliseconds(currentTime),
+        //   };
+        //   return true;
+        // }
         break;
       case GameMode.RUSH:
-        highScore = HighScoreSettings.RushHighScore;
-        if (
-          currentScore > highScore.score ||
-          TimeStringToMilliseconds(currentTime) < highScore.time
-        ) {
-          HighScoreSettings.RushHighScore = {
-            score: currentScore,
-            time: TimeStringToMilliseconds(currentTime),
-          };
+        let isHighScore = HighscoreService.submitRush({
+          timeMs: time,
+          linesCleared,
+          achievedAt: new Date().toISOString(),
+        });
+        if (isHighScore.isNewBest) {
           return true;
         }
         break;
       case GameMode.INFINITY:
-        highScore = HighScoreSettings.InfinityHighScore;
-        if (
-          currentScore > highScore.score ||
-          TimeStringToMilliseconds(currentTime) < highScore.time
-        ) {
-          HighScoreSettings.InfinityHighScore = {
-            score: currentScore,
-            time: TimeStringToMilliseconds(currentTime),
-          };
-          return true;
-        }
+        // highScore = HighscoreService.InfinityHighScore;
+        // if (
+        //   currentScore > highScore.score ||
+        //   TimeStringToMilliseconds(currentTime) < highScore.time
+        // ) {
+        //   HighscoreService.InfinityHighScore = {
+        //     score: currentScore,
+        //     time: TimeStringToMilliseconds(currentTime),
+        //   };
+        //   return true;
+        // }
         break;
       default:
         return false;

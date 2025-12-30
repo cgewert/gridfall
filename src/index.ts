@@ -19,7 +19,7 @@ import { InputSettings } from "./services/InputSettings";
 import { ControlsMenuScene } from "./scenes/menus/ControlsMenuScene";
 import { SkinSettings } from "./services/SkinSettings";
 import { SpawnSettings } from "./services/SpawnSettings";
-import { HighScoreSettings } from "./services/HighScoreSettings";
+import { HighscoreService } from "./services/HighScoreService";
 import { HighscoreScene } from "./scenes/high-score-scene";
 import { TestScene } from "./scenes/TestScene";
 
@@ -103,4 +103,4 @@ SkinSettings.load();
 SkinSettings.init(game);
 SpawnSettings.load();
 SpawnSettings.init(game);
-HighScoreSettings.load();
+HighscoreService.load();

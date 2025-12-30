@@ -40,4 +40,9 @@ export class ShapesSpawner {
     while (this.bag.length < count) this.refillBag();
     return this.bag.slice(0, count);
   }
+
+  public emptyQueue(): void {
+    this._nextQueue = [];
+    this.bag = [];
+  }
 }

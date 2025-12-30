@@ -8,6 +8,8 @@
   ☐ Publish on itch.io
   ☐ Work on UI @started(25-11-08 13:49)
   ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
+  ☐ Add Game Begin Countdown component
+  ✔ Add a fast restart button to the game scene @started(25-12-30 23:06) @done(25-12-31 00:18) @lasted(1h12m33s)
   ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
   ☐ Implement all rudimentary Settings
   ☐ Finish all translations

@@ -52,6 +52,21 @@ export enum GameActions {
   RUSH_VICTORY,
 }
 
+export type InputActions = {
+  left: Phaser.Input.Keyboard.Key;
+  right: Phaser.Input.Keyboard.Key;
+  down: Phaser.Input.Keyboard.Key;
+  up: Phaser.Input.Keyboard.Key;
+  rotateLeft: Phaser.Input.Keyboard.Key;
+  rotateRight: Phaser.Input.Keyboard.Key;
+  rotate180: Phaser.Input.Keyboard.Key;
+  softDrop: Phaser.Input.Keyboard.Key;
+  hardDrop: Phaser.Input.Keyboard.Key;
+  hold: Phaser.Input.Keyboard.Key;
+  pause: Phaser.Input.Keyboard.Key;
+  resetRound: Phaser.Input.Keyboard.Key;
+};
+
 export const LogGameAction = (action: GameActions) => {
   console.debug(`Game Action: ${GameActionsToString(action)}`);
 };
@@ -62,6 +77,19 @@ export const TimeStringToMilliseconds = (time: string): number => {
   return (
     hours * 60 * 60 * 1000 + minutes * 60 * 1000 + seconds * 1000 + milliseconds
   );
+};
+
+export const MillisecondsToTimeString = (ms: number): string => {
+  if (ms === 0) return "--:--:--";
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 };
 
 export const GameActionsToString = (action: GameActions): string => {

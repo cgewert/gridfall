@@ -1,10 +1,40 @@
 import * as Phaser from "phaser";
 import { addScanlines, addSceneBackground } from "../effects/effects";
-import { HighScoreSettings } from "../services/HighScoreSettings";
+import { HighscoreService } from "../services/HighScoreService";
 import { t } from "i18next";
 import { Locale } from "../services/LanguageSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { AudioBus } from "../services/AudioBus";
+import { MillisecondsToTimeString } from "../game";
+
+type StackOptions = {
+  spacing?: number;
+  align?: "left" | "center" | "right";
+};
+
+function layoutVerticalStack(
+  items: Phaser.GameObjects.Container[],
+  startX: number,
+  startY: number,
+  opts?: StackOptions
+): void {
+  const spacing = opts?.spacing ?? 18;
+  //const align = opts?.align ?? "left";
+
+  let y = startY;
+
+  for (const item of items) {
+    const b = item.getBounds();
+
+    // if (align === "left") item.x = startX;
+    // if (align === "center") item.x = startX;
+    // if (align === "right") item.x = startX;
+    item.x = startX;
+    item.y = y;
+
+    y += b.height + spacing;
+  }
+}
 
 export class HighscoreScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -51,47 +81,58 @@ export class HighscoreScene extends Phaser.Scene {
 
   public create() {
     const { width, height } = this.scale;
+    const marginTop = 150;
+    const marginX = 80;
 
     addSceneBackground(this);
     addScanlines(this, { alpha: 0.12, speedY: 1.2 });
+
+    const root = this.add.container(0, 0);
+    const sections: Phaser.GameObjects.Container[] = [];
 
     this.titleText = this.add
       .text(width / 2, 80, t("labels.mnu-highscores"), this.titleStyle)
       .setOrigin(0.5)
       .setDepth(100);
 
+    root.add(this.titleText);
+
     // Rush Highscore
-    const rushData = HighScoreSettings.RushHighScore;
-    this.createModeSection(
-      width / 2,
-      200,
-      "Rush",
-      rushData.time,
-      rushData.score,
-      "#ff6b6b"
-    );
+    const rushData = HighscoreService.getRushBest();
+    if (rushData !== null) {
+      const rushSection = this.createModeSectionRush(width - marginX * 2);
+      root.add(rushSection);
+      sections.push(rushSection);
+    }
+    // Später:
+    // sections.push(this.createAscentSection(...))
+    // sections.push(this.createInfinitySection(...))
 
-    // Ascent Highscore
-    const ascentData = HighScoreSettings.AscentHighScore;
-    this.createModeSection(
-      width / 2,
-      340,
-      "Ascent",
-      ascentData.time,
-      ascentData.score,
-      "#4ecdc4"
-    );
+    layoutVerticalStack(sections, marginX, marginTop, {
+      spacing: 20,
+      align: "left",
+    });
+    // // Ascent Highscore
+    // const ascentData = HighscoreService.getAscentBest();
+    // this.createModeSection(
+    //   width / 2,
+    //   340,
+    //   "Ascent",
+    //   ascentData.time,
+    //   ascentData.score,
+    //   "#4ecdc4"
+    // );
 
-    // Infinity Highscore
-    const infinityData = HighScoreSettings.InfinityHighScore;
-    this.createModeSection(
-      width / 2,
-      480,
-      "Infinity",
-      infinityData.time,
-      infinityData.score,
-      "#ffe66d"
-    );
+    // // Infinity Highscore
+    // const infinityData = HighScoreSettings.InfinityHighScore;
+    // this.createModeSection(
+    //   width / 2,
+    //   480,
+    //   "Infinity",
+    //   infinityData.time,
+    //   infinityData.score,
+    //   "#ffe66d"
+    // );
 
     this.backText = this.add
       .text(width / 2, height - 80, t("labels.back"), this.backStyle)
@@ -101,11 +142,12 @@ export class HighscoreScene extends Phaser.Scene {
         this.backText.setColor("#ffffff");
         AudioBus.PlaySfx(this, "ui-move");
       })
-      .on("pointerout", () => this.backText.setColor("#888888"))
-      .on("pointerdown", () => {
-        AudioBus.PlaySfx(this, "ui-choose");
-        this.closeScene();
-      });
+      .on("pointerout", () => this.backText.setColor("#888888"));
+    // TODO: Add mouse support later
+    // .on("pointerdown", () => {
+    //   AudioBus.PlaySfx(this, "ui-choose");
+    //   this.closeScene();
+    // });
 
     // Keyboard controls
     this.input.keyboard!.on("keydown-ESC", () => this.closeScene());
@@ -123,77 +165,93 @@ export class HighscoreScene extends Phaser.Scene {
     });
   }
 
-  private createModeSection(
-    x: number,
-    y: number,
-    modeName: string,
-    timeMs: number,
-    score: number,
-    color: string
-  ) {
-    const modeTitle = this.add
-      .text(x, y, modeName, {
-        ...this.labelStyle,
-        color: color,
+  private createModeSectionRush(
+    sectionWidth: number
+  ): Phaser.GameObjects.Container {
+    const section = this.add.container(0, 0);
+
+    const padding = 18;
+    const headerH = 48;
+    const rowH = 44;
+    const sectionHeight = headerH + 10 + rowH + padding * 2;
+
+    const bg = this.add
+      .rectangle(0, 0, sectionWidth, sectionHeight, 0x000000, 0.55)
+      .setOrigin(0, 0);
+    bg.setStrokeStyle(4, 0xffffff, 1);
+
+    section.add(bg);
+
+    // Header
+    const title = this.add
+      .text(padding, padding, "RUSH (40 LINES)", {
+        fontFamily: "Orbitron, Arial, sans-serif",
+        fontSize: "26px",
+        color: "#ffffff",
       })
-      .setOrigin(0.5);
+      .setOrigin(0, 0);
 
-    const boxWidth = 500;
-    const boxHeight = 90;
-    const box = this.add
-      .rectangle(x, y + 65, boxWidth, boxHeight, 0xffffff, 0.05)
-      .setStrokeStyle(1, parseInt(color.replace("#", "0x")), 0.6);
+    section.add(title);
 
-    this.add
-      .text(
-        x - boxWidth / 2 + 20,
-        y + 35,
-        t("labels.best-time") + ":",
-        this.valueStyle
-      )
-      .setOrigin(0, 0.5);
+    const colY = padding + headerH;
+    const colStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: "Orbitron, Arial, sans-serif",
+      fontSize: "18px",
+      color: "#ffffff",
+    };
 
-    const timeStr = this.formatTime(timeMs);
-    this.add
-      .text(x + boxWidth / 2 - 20, y + 35, timeStr, {
-        ...this.valueStyle,
-        color: timeMs > 0 ? "#00ff88" : "#666666",
-      })
-      .setOrigin(1, 0.5);
+    const colTime = this.add
+      .text(padding, colY, "TIME", colStyle)
+      .setOrigin(0, 0);
+    const colLines = this.add
+      .text(padding + 260, colY, "LINES", colStyle)
+      .setOrigin(0, 0);
+    const colDate = this.add
+      .text(padding + 380, colY, "DATE", colStyle)
+      .setOrigin(0, 0);
 
-    this.add
-      .text(
-        x - boxWidth / 2 + 20,
-        y + 70,
-        t("labels.high-score") + ":",
-        this.valueStyle
-      )
-      .setOrigin(0, 0.5);
+    colTime.setAlpha(0.8);
+    colLines.setAlpha(0.8);
+    colDate.setAlpha(0.8);
 
-    this.add
-      .text(
-        x + boxWidth / 2 - 20,
-        y + 70,
-        score > 0 ? score.toLocaleString() : "---",
-        {
-          ...this.valueStyle,
-          color: score > 0 ? "#ffff00" : "#666666",
-        }
-      )
-      .setOrigin(1, 0.5);
-  }
+    section.add([colTime, colLines, colDate]);
 
-  private formatTime(ms: number): string {
-    if (ms === 0) return "--:--:--";
+    const bestTimes = HighscoreService.getRushTimes(3);
 
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    const valueStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: "Orbitron, Arial, sans-serif",
+      fontSize: "20px",
+      color: "#ffffff",
+    };
 
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    let rowY = colY + 26;
+
+    bestTimes.forEach((entry, index) => {
+      const timeStr = MillisecondsToTimeString(entry.timeMs);
+      const linesStr = String(entry.linesCleared);
+      const dateStr = this.formatDate(entry.achievedAt);
+      const vTime = this.add
+        .text(padding, rowY, timeStr, valueStyle)
+        .setOrigin(0, 0);
+      const vLines = this.add
+        .text(padding + 260, rowY, linesStr, valueStyle)
+        .setOrigin(0, 0);
+      const vDate = this.add
+        .text(padding + 380, rowY, dateStr, valueStyle)
+        .setOrigin(0, 0);
+
+      for (const t of [vTime, vLines, vDate]) {
+        t.setAlpha(0.9);
+        t.setStroke("#000000", 6);
+      }
+      section.add([vTime, vLines, vDate]);
+      section.setSize(sectionWidth, sectionHeight);
+
+      rowY += 26;
+      bg.setSize(sectionWidth, rowY + 26);
+    });
+
+    return section;
   }
 
   private closeScene() {
@@ -206,5 +264,9 @@ export class HighscoreScene extends Phaser.Scene {
   public onLanguageChange(e: { lang: Locale }) {
     this.titleText.setText(t("labels.mnu-highscores"));
     this.backText.setText(t("labels.back"));
+  }
+
+  private formatDate(iso: string): string {
+    return iso?.slice(0, 10) ?? "-";
   }
 }
