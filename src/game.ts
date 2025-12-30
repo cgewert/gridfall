@@ -52,6 +52,21 @@ export enum GameActions {
   RUSH_VICTORY,
 }
 
+export type InputActions = {
+  left: Phaser.Input.Keyboard.Key;
+  right: Phaser.Input.Keyboard.Key;
+  down: Phaser.Input.Keyboard.Key;
+  up: Phaser.Input.Keyboard.Key;
+  rotateLeft: Phaser.Input.Keyboard.Key;
+  rotateRight: Phaser.Input.Keyboard.Key;
+  rotate180: Phaser.Input.Keyboard.Key;
+  softDrop: Phaser.Input.Keyboard.Key;
+  hardDrop: Phaser.Input.Keyboard.Key;
+  hold: Phaser.Input.Keyboard.Key;
+  pause: Phaser.Input.Keyboard.Key;
+  resetRound: Phaser.Input.Keyboard.Key;
+};
+
 export const LogGameAction = (action: GameActions) => {
   console.debug(`Game Action: ${GameActionsToString(action)}`);
 };

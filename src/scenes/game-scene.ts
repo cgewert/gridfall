@@ -30,6 +30,7 @@ import {
   GameActions,
   GameMode,
   GameModeToString,
+  InputActions,
   LogGameAction,
 } from "../game";
 import * as Decorators from "../ui/decorators/index";
@@ -85,16 +86,8 @@ export class GameScene extends Phaser.Scene {
   private maxLockTime: number = 30000; // Maximum lock time in ms
   private totalLockTime: number = 0; // Accumulated lock time
 
-  private keys!: {
-    left: Phaser.Input.Keyboard.Key;
-    right: Phaser.Input.Keyboard.Key;
-    down: Phaser.Input.Keyboard.Key;
-    up: Phaser.Input.Keyboard.Key;
-    rotateLeft: Phaser.Input.Keyboard.Key;
-    rotateRight: Phaser.Input.Keyboard.Key;
-    hold: Phaser.Input.Keyboard.Key;
-    pause: Phaser.Input.Keyboard.Key;
-  };
+  private keys!: InputActions;
+
   private movementState = {
     left: { held: false, dasTimer: 0, arrTimer: 0, justPressed: false },
     right: { held: false, dasTimer: 0, arrTimer: 0, justPressed: false },
@@ -203,7 +196,6 @@ export class GameScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
-    console.log("INIT");
     this.lockTimer = 0;
     this.isLocking = false;
     this.lockResets = 0;
@@ -314,8 +306,6 @@ export class GameScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
-    console.log("CREATE");
-
     addSceneBackground(this);
     this.backgroundVideo = this.add.video(0, 0, "sakuraGarden");
     const scaleX = this.scale.width / this.backgroundVideo.width;
@@ -676,10 +666,14 @@ export class GameScene extends Phaser.Scene {
       right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
       down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
       up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
+      hardDrop: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
+      softDrop: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
       rotateLeft: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y),
       rotateRight: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
+      rotate180: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C),
       hold: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       pause: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P),
+      resetRound: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
     };
 
     // TODO: Refactor to use the key objects instead of global events
@@ -758,7 +752,6 @@ export class GameScene extends Phaser.Scene {
     const leftJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.left);
     const rightJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.right);
 
-    // <-- Links/Rechts Logic
     if (leftJustPressed) {
       this.moveTetrimino(-1);
       this.resetLockDelay();
@@ -1618,6 +1611,15 @@ export class GameScene extends Phaser.Scene {
     this.checkWinCondition();
     this.doGameModeLogic();
 
+    const resetRoundJustPressed = Phaser.Input.Keyboard.JustDown(
+      this.keys.resetRound
+    );
+
+    if (resetRoundJustPressed) {
+      this.resetRound();
+      return;
+    }
+
     if (!this.isPaused && !this.gameOver) {
       this.handleMovement(time, delta);
       this.handleSoftDrop(delta);
@@ -1663,5 +1665,34 @@ export class GameScene extends Phaser.Scene {
       const sprite = block as Phaser.GameObjects.Sprite;
       sprite.setTint(tintColor);
     });
+  }
+
+  private resetRound() {
+    this.grid = [];
+    this.lockedBlocksGroup.clear(true, true);
+    this.initializeGrid();
+    this.timer?.reset();
+    this.score = 0;
+    this.scoreText?.setText(`Score: ${this.score}`);
+    this.linesCleared = 0;
+    this.linesText?.setText(`${t("labels.lines")}: ${this.linesCleared}`);
+    this.level = 1;
+    this.levelText?.setText(`${t("labels.level")}: ${this.level}`);
+    this.linesCountdown?.reset();
+    this.spawner.emptyQueue();
+    this.spawner.generateNextQueue(5);
+    this.renderNextQueue();
+    this._holdType = null;
+    this.holdBox?.renderHold();
+    this.currentTetrimino?.clear(true, true);
+    this.ghostGroup?.clear(true, true);
+    this.isLocking = false;
+    this.lockTimer = 0;
+    this.lockResets = 0;
+    this.totalLockTime = 0;
+    this.holdUsedThisTurn = false;
+    this.spawnTetrimino();
+    this._main?.flash(250, 255, 255, 255);
+    this.timer?.start();
   }
 }
