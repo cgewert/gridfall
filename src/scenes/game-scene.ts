@@ -42,6 +42,7 @@ import { TextBox } from "../ui/decorators/TextBox";
 import { HoldBox } from "../ui/HoldBox";
 import { NextPreview } from "../ui/NextPreview";
 import { LineClearCountdown } from "../ui/decorators/LineClearCountdown";
+import { VictorySceneData } from "./victory-scene";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -202,6 +203,7 @@ export class GameScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
+    console.log("INIT");
     this.lockTimer = 0;
     this.isLocking = false;
     this.lockResets = 0;
@@ -312,6 +314,8 @@ export class GameScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
+    console.log("CREATE");
+
     addSceneBackground(this);
     this.backgroundVideo = this.add.video(0, 0, "sakuraGarden");
     const scaleX = this.scale.width / this.backgroundVideo.width;
@@ -344,7 +348,7 @@ export class GameScene extends Phaser.Scene {
     this.gameMode = data.gameMode;
     switch (this.gameMode) {
       case GameMode.RUSH:
-        this.checkWinCondition = this.checkSprintWin;
+        this.checkWinCondition = this.checkRushWin;
         break;
       case GameMode.ASCENT:
         this.checkWinCondition = this.checkAscentWin;
@@ -497,10 +501,15 @@ export class GameScene extends Phaser.Scene {
       null; // Reference to the previous decorator for alignment
 
     // Reset decorator references
+    this.timer?.destroy();
     this.timer = null;
+    this.levelText?.destroy();
     this.levelText = null;
+    this.scoreText?.destroy();
     this.scoreText = null;
+    this.linesText?.destroy();
     this.linesText = null;
+    this.linesCountdown?.destroy();
     this.linesCountdown = null;
 
     // Sanitize decorators list, each entry should be unique
@@ -1457,7 +1466,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private checkSprintWin() {
+  private checkRushWin() {
     if (this.linesCleared >= 40) {
       LogGameAction(GameActions.RUSH_VICTORY);
       this.triggerVictory();
@@ -1465,13 +1474,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private triggerVictory(): void {
-    this.gameOver = true;
-    this.music.stop();
-    this.scene.start("VictoryScene", {
+    const sceneData: VictorySceneData = {
       score: this.score,
       gameMode: this.gameMode,
-      time: this.timer?.format(this.timer.getElapsedMs()) ?? "",
-    });
+      time: this.timer?.getElapsedMs() ?? 0,
+      linesCleared: this.linesCleared,
+    };
+    this.gameOver = true;
+    this.music.stop();
+    this.scene.start("VictoryScene", sceneData);
   }
 
   private updateFallSpeed(): void {

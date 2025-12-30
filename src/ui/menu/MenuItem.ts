@@ -92,9 +92,10 @@ export class MenuItem extends Phaser.GameObjects.Container {
     this.on("pointerout", () => {
       if (!this.disabled) this.hoverOff();
     });
-    this.on("pointerdown", () => {
-      if (!this.disabled) this.emit("choose");
-    });
+    // TODO: Enable click actions later when mouse controls are supported
+    // this.on("pointerdown", () => {
+    //   if (!this.disabled) this.emit("choose");
+    // });
 
     this.alpha = 0;
 

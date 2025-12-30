@@ -95,11 +95,12 @@ export class GeneralMenuScene extends BaseMenuScene {
       .setOrigin(1, 0.5);
 
     bg.setInteractive({ useHandCursor: true });
-    bg.on("pointerdown", (p: Phaser.Input.Pointer) => {
-      this.setActiveIndex(idx);
-      if (p.x < this.cameras.main.centerX) this.changeLanguage(-1);
-      else this.changeLanguage(+1);
-    });
+    // TODO: Mouse controls will be supported maybe later
+    // bg.on("pointerdown", (p: Phaser.Input.Pointer) => {
+    //   this.setActiveIndex(idx);
+    //   if (p.x < this.cameras.main.centerX) this.changeLanguage(-1);
+    //   else this.changeLanguage(+1);
+    // });
 
     this.modal.add([bg, this.textLanguage, value]);
     this.entries.push({ label: this.textLanguage, value, bg, cx, cy: y, w, h });
