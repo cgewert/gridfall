@@ -29,9 +29,9 @@ import {
   DefaultGameModeDecorators,
   GameActions,
   GameMode,
-  GameModeToString,
   InputActions,
   LogGameAction,
+  RoundPhase,
 } from "../game";
 import * as Decorators from "../ui/decorators/index";
 import { AudioBus } from "../services/AudioBus";
@@ -44,6 +44,7 @@ import { HoldBox } from "../ui/HoldBox";
 import { NextPreview } from "../ui/NextPreview";
 import { LineClearCountdown } from "../ui/decorators/LineClearCountdown";
 import { VictorySceneData } from "./victory-scene";
+import { CountdownOverlay } from "../ui/CountdownOverlay";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -70,12 +71,14 @@ export class GameScene extends Phaser.Scene {
   private previewGroup!: Phaser.GameObjects.Group;
   private lockedBlocksGroup!: Phaser.GameObjects.Group;
   private gridCellGroup!: Phaser.GameObjects.Group;
-  private currentShape!: TetriminoShape;
+  private currentShape!: TetriminoShape | null;
   private currentPosition = { x: 3, y: 0 }; // Starting position
   private currentRotationIndex: Rotation = Rotation.SPAWN; // Starting rotation
   private currentTetriminoType = "T";
   private sakuraEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   private timer?: Decorators.TimerDisplay | null;
+  private phase: RoundPhase = RoundPhase.Idle;
+  private countdown!: CountdownOverlay;
 
   // Lock Delay System Fields
   private lockDelay: number = 2000; // 500ms standard lock delay
@@ -130,6 +133,7 @@ export class GameScene extends Phaser.Scene {
   private allClearSound!: Phaser.Sound.BaseSound;
   private holdSound!: Phaser.Sound.BaseSound;
   private moveSound!: Phaser.Sound.BaseSound;
+  private soundCountdownTick!: Phaser.Sound.BaseSound;
   private softDropSound!: Phaser.Sound.BaseSound;
   private particleManager!: Phaser.GameObjects.Particles.ParticleEmitter;
   private music!: Phaser.Sound.BaseSound;
@@ -222,10 +226,7 @@ export class GameScene extends Phaser.Scene {
     this.fallSpeed = 1.0;
     this.initializeGrid();
     this.spawner = new ShapesSpawner(this.currentSpawnSystem);
-    console.log(
-      "GameScene initialized with Game Mode:",
-      GameModeToString(this.gameMode)
-    );
+    this.currentShape = null;
   }
 
   public preload() {
@@ -245,6 +246,8 @@ export class GameScene extends Phaser.Scene {
     this.load.audio("hold", "assets/audio/sfx/hold.ogg");
     this.load.audio("move", "assets/audio/sfx/move.ogg");
     this.load.audio("softDrop", "assets/audio/sfx/soft-drop.wav");
+    this.load.audio("countdownTick", "assets/audio/sfx/countdown-tick.wav");
+    this.load.audio("countdownGo", "assets/audio/sfx/countdown-go.wav");
     // Loading images
     this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
     this.load.image(
@@ -475,7 +478,17 @@ export class GameScene extends Phaser.Scene {
       this.gridOffsetY + 6
     );
 
-    this.spawnTetrimino();
+    this.countdown = new CountdownOverlay(this);
+    this.renderNextQueue();
+    // When the countdown starts, the round phase changes from idle to countdown
+    this.phase = RoundPhase.Countdown;
+    this.countdown.start({
+      from: 3,
+      beepSoundKey: "countdownTick",
+      onFinished: () => {
+        this.startRound();
+      },
+    });
   }
 
   /**
@@ -522,7 +535,7 @@ export class GameScene extends Phaser.Scene {
             strokeThickness: 2,
             shadow: true,
             useLinearBackground: true,
-            autostart: true,
+            autostart: false,
           });
           this.timer.setDepth(10000);
           this.timer.Padding = 25;
@@ -678,17 +691,15 @@ export class GameScene extends Phaser.Scene {
 
     // TODO: Refactor to use the key objects instead of global events
     this.input.keyboard.on("keydown-SPACE", () => {
-      if (this.isPaused) return;
+      if (this.isPaused || this.phase !== RoundPhase.Running) return;
       this.holdTetrimino();
     });
 
     this.input.keyboard.on("keydown-P", () => {
       if (!this.isPaused) {
         this.pauseGame();
-        this.backgroundVideo.pause();
       } else {
         this.resumeGame();
-        this.backgroundVideo.resume();
       }
     });
 
@@ -697,6 +708,7 @@ export class GameScene extends Phaser.Scene {
         this.pauseIndex = Math.abs(this.pauseIndex - 1) % 2;
         this.updatePauseHighlight();
       } else {
+        if (this.phase !== RoundPhase.Running) return;
         this.hardDrop();
       }
     });
@@ -721,13 +733,13 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on("keydown-Y", () => {
-      if (this.isPaused) return;
+      if (this.isPaused || this.phase !== RoundPhase.Running) return;
       this.rotateTetrimino("left");
       this.resetLockDelay();
     });
 
     this.input.keyboard.on("keydown-X", () => {
-      if (this.isPaused) return;
+      if (this.isPaused || this.phase !== RoundPhase.Running) return;
       this.rotateTetrimino("right");
       this.resetLockDelay();
     });
@@ -749,6 +761,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleMovement(time: number, delta: number): void {
+    if (this.phase !== RoundPhase.Running) return;
     const leftJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.left);
     const rightJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.right);
 
@@ -806,7 +819,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleSoftDrop(delta: number): void {
-    if (this.keys.down.isDown) {
+    if (this.keys.down.isDown && this.phase === RoundPhase.Running) {
       // Soft Drop: Instant fall with SDF speed
       const cellsToFall = this.SDF * (delta / 1000);
       let remainingFall = cellsToFall;
@@ -840,6 +853,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleGravity(delta: number): void {
+    if (this.phase !== RoundPhase.Running) return;
+
     if (this.keys.down.isDown) {
       return; // Soft drop takes precedence over gravity
     }
@@ -896,7 +911,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private pauseGame(): void {
+    this.backgroundVideo?.pause();
     this.timer?.pause();
+    this.countdown.Paused = true;
+    // TODO : Handle pause state properly
+    //this.phase = RoundPhase.;
     this.physics.world.pause();
     this.isPaused = true;
     this.tweens.add({
@@ -911,7 +930,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resumeGame(): void {
+    this.backgroundVideo?.resume();
     this.timer?.resume();
+    this.countdown.Paused = false;
     this.physics.world.resume();
     this.isPaused = false;
     this.sakuraEmitter.killAll();
@@ -993,7 +1014,7 @@ export class GameScene extends Phaser.Scene {
   private createTetriminoBlocks(): void {
     this.currentTetrimino?.clear(true, true);
 
-    this.currentShape.forEach((row, y) => {
+    this.currentShape?.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           const blockX =
@@ -1163,7 +1184,7 @@ export class GameScene extends Phaser.Scene {
       ghostY++;
     }
 
-    this.currentShape.forEach((row, y) => {
+    this.currentShape?.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           const posX =
@@ -1259,30 +1280,32 @@ export class GameScene extends Phaser.Scene {
     const posX = this.currentPosition.x + offsetX;
     const posY = this.currentPosition.y + offsetY;
 
-    return shape.some((row, y) => {
-      return row.some((cell, x) => {
-        if (cell) {
-          const gridX = posX + x;
-          const gridY = posY + y;
+    return (
+      shape?.some((row, y) => {
+        return row?.some((cell, x) => {
+          if (cell) {
+            const gridX = posX + x;
+            const gridY = posY + y;
 
-          if (
-            gridX < 0 ||
-            gridX >= GameScene.gridWidth ||
-            gridY >= GameScene.gridHeight
-          ) {
-            return true;
-          }
+            if (
+              gridX < 0 ||
+              gridX >= GameScene.gridWidth ||
+              gridY >= GameScene.gridHeight
+            ) {
+              return true;
+            }
 
-          if (
-            gridY >= 0 &&
-            this.grid[gridY][gridX] !== GameScene.emptyGridValue
-          ) {
-            return true;
+            if (
+              gridY >= 0 &&
+              this.grid[gridY][gridX] !== GameScene.emptyGridValue
+            ) {
+              return true;
+            }
           }
-        }
-        return false;
-      });
-    });
+          return false;
+        });
+      }) ?? false
+    );
   }
 
   private updateTetriminoPosition(): void {
@@ -1292,8 +1315,8 @@ export class GameScene extends Phaser.Scene {
       this.currentPosition.y + (useFraction ? this.fallProgress : 0);
     const blockSize = GameScene.BLOCKSIZE;
     let blockIndex = 0;
-    this.currentShape.forEach((row, y) => {
-      row.forEach((cell, x) => {
+    this.currentShape?.forEach((row, y) => {
+      row?.forEach((cell, x) => {
         if (cell) {
           const blockX =
             (this.currentPosition.x + x) * blockSize +
@@ -1316,7 +1339,7 @@ export class GameScene extends Phaser.Scene {
   private lockTetrimino(): void {
     LogGameAction(GameActions.LOCK_PIECE);
 
-    this.currentShape.forEach((row, y) => {
+    this.currentShape?.forEach((row, y) => {
       row.forEach((cell, x) => {
         if (cell) {
           const gridX = this.currentPosition.x + x;
@@ -1682,14 +1705,32 @@ export class GameScene extends Phaser.Scene {
     this._holdType = null;
     this.holdBox?.renderHold();
     this.currentTetrimino?.clear(true, true);
+    this.currentShape = null;
     this.ghostGroup?.clear(true, true);
     this.isLocking = false;
     this.lockTimer = 0;
     this.lockResets = 0;
     this.totalLockTime = 0;
     this.holdUsedThisTurn = false;
-    this.spawnTetrimino();
     this._main?.flash(250, 255, 255, 255);
+    this.phase = RoundPhase.Countdown;
+    this.resumeGame();
+    this.countdown.start({
+      from: 3,
+      beepSoundKey: "countdownTick",
+      onFinished: () => {
+        this.startRound();
+      },
+    });
+  }
+
+  private startRound() {
+    this.phase = RoundPhase.Running;
+    this.countdown.stop();
     this.timer?.start();
+    const s = this.sound.get("countdownGo");
+    if (s?.isPlaying) s.stop();
+    this.sound.play("countdownGo", { volume: 1 });
+    this.spawnTetrimino();
   }
 }

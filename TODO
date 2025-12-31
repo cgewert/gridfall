@@ -4,11 +4,14 @@
   ☐ Fix bugs related to tweened animations
   ☐ Fix bug where toggling the language does not update all texts immediately
 
-  Release 1.0.0: (Target Date: 2025-12-31):
+  Release 1.0.0: (Target Date: 2026-01-04):
   ☐ Publish on itch.io
   ☐ Work on UI @started(25-11-08 13:49)
   ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
-  ☐ Add Game Begin Countdown component @started(25-12-31 16:11)
+  ✔ Add Game Begin Countdown component @started(25-12-31 16:11) @done(25-12-31 21:14) @lasted(5h3m59s)
+  ☐ Fix current piece when resuming or countdowning the game
+  ☐ Fix state of timer when pausing,resuming,resetting the game
+  ☐ Fix countdown overlay callback for different game phases
   ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
   ☐ Implement all rudimentary Settings
   ☐ Finish all translations

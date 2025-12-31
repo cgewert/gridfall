@@ -12,6 +12,13 @@ export enum GameMode {
   INFINITY = 3,
 }
 
+export enum RoundPhase {
+  Idle,
+  Countdown,
+  Running,
+  Ended,
+}
+
 export const DefaultGameModeDecorators: { [key in GameMode]: string[] } = {
   [GameMode.ASCENT]: [
     "TimerDisplay",
