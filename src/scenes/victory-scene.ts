@@ -1,12 +1,7 @@
 import Phaser from "phaser";
 import { addSceneBackground } from "../effects/effects";
 import { DEFAULT_MENU_FONT } from "../fonts";
-import {
-  GameMode,
-  GameModeToString,
-  MillisecondsToTimeString,
-  TimeStringToMilliseconds,
-} from "../game";
+import { FormatScore, FormatTime, GameMode, GameModeToString } from "../game";
 import { HighscoreService } from "../services/HighScoreService";
 import { AnimatableText, AnimatableTextTweenType } from "../ui/AnimatableText";
 
@@ -37,14 +32,14 @@ export class VictoryScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const formattedTime = MillisecondsToTimeString(time);
+    const formattedTime = FormatTime(time);
     const victoryInfo = this.add
       .text(
         this.scale.width / 2,
         this.scale.height / 2,
-        `${GameModeToString(
-          gameMode
-        )} Completed!\nScore: ${score}\nTime: ${formattedTime}\nLines Cleared: ${linesCleared}`,
+        `${GameModeToString(gameMode)} Completed!\nScore: ${FormatScore(
+          score
+        )}\nTime: ${formattedTime}\nLines Cleared: ${linesCleared}`,
         {
           fontSize: "32px",
           fontFamily: "Arial",

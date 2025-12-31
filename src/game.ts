@@ -1,3 +1,7 @@
+import i18next from "i18next";
+
+export const ONE_HOUR_MS = 60 * 60_000;
+
 export type GameConfig = {
   gameMode: GameMode;
 };
@@ -41,6 +45,9 @@ export const GameModeToString = (mode: GameMode): string => {
   }
 };
 
+export const FormatScore = (score: number): string =>
+  score.toLocaleString(i18next.language || "en-US");
+
 export enum GameActions {
   CHECK_FOR_LINE_CLEAR,
   CHECK_FOR_WIN_CONDITION,
@@ -79,17 +86,38 @@ export const TimeStringToMilliseconds = (time: string): number => {
   );
 };
 
-export const MillisecondsToTimeString = (ms: number): string => {
-  if (ms === 0) return "--:--:--";
+export const FormatTime = (timeMs: number): string =>
+  timeMs >= ONE_HOUR_MS
+    ? MillisecondsToTimeString(timeMs)
+    : MillisecondsToTimeStringCompact(timeMs);
 
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+export const MillisecondsToTimeString = (msTotal: number): string => {
+  const ms = Math.floor(msTotal % 1000);
+  const totalSeconds = Math.floor(msTotal / 1000);
+
   const seconds = totalSeconds % 60;
+  const totalMinutes = Math.floor(totalSeconds / 60);
 
-  return `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  const minutes = totalMinutes % 60;
+  const hours = Math.floor(totalMinutes / 60);
+
+  const pad2 = (n: number) => n.toString().padStart(2, "0");
+  const pad3 = (n: number) => n.toString().padStart(3, "0");
+
+  return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}.${pad3(ms)}`;
+};
+
+export const MillisecondsToTimeStringCompact = (msTotal: number): string => {
+  const ms = Math.floor(msTotal % 1000);
+  const totalSeconds = Math.floor(msTotal / 1000);
+
+  const seconds = totalSeconds % 60;
+  const minutes = Math.floor(totalSeconds / 60);
+
+  const pad2 = (n: number) => n.toString().padStart(2, "0");
+  const pad3 = (n: number) => n.toString().padStart(3, "0");
+
+  return `${pad2(minutes)}:${pad2(seconds)}.${pad3(ms)}`;
 };
 
 export const GameActionsToString = (action: GameActions): string => {

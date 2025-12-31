@@ -1474,6 +1474,7 @@ export class GameScene extends Phaser.Scene {
       linesCleared: this.linesCleared,
     };
     this.gameOver = true;
+    this.timer?.stop();
     this.music.stop();
     this.scene.start("VictoryScene", sceneData);
   }
@@ -1570,11 +1571,7 @@ export class GameScene extends Phaser.Scene {
     this.sound.stopAll();
     this.music.stop();
     if (this.gameMode === GameMode.INFINITY) {
-      this.scene.start("VictoryScene", {
-        gameMode: this.gameMode,
-        score: this.score,
-        time: this.timer?.format(this.timer.getElapsedMs()) ?? "",
-      });
+      this.triggerVictory();
     } else {
       this.scene.start("GameOverScene", { gameMode: this.gameMode });
     }
