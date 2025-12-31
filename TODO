@@ -8,11 +8,8 @@
   ☐ Publish on itch.io
   ☐ Work on UI @started(25-11-08 13:49)
   ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
-  ☐ Add Game Begin Countdown component
+  ☐ Add Game Begin Countdown component @started(25-12-31 16:11)
   ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
-  ✔ Format scores to have separators for thousands @started(25-12-31 14:56) @done(25-12-31 15:05) @lasted(9m30s)
-  ✔ Make sure round time and cleared lines are displayed properly in gamemode Infinity @started(25-12-31 15:06) @done(25-12-31 15:14) @lasted(8m16s)
-  ✔ Display times with fractions of seconds on victory screen @started(25-12-31 15:07) @done(25-12-31 16:09) @lasted(1h2m39s)
   ☐ Implement all rudimentary Settings
   ☐ Finish all translations
   ☐ Add all assets and replace placeholder assets

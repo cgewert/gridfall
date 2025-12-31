@@ -11,7 +11,8 @@
     "prebuild": "tsc -p ./tsconfig.dev.json",
     "build": "webpack",
     "start": "webpack serve --live-reload",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "author": "Christian Gewert <cgewert@gmail.com>",
   "license": "ISC",
@@ -26,6 +27,7 @@
     "copy-webpack-plugin": "13.0.0",
     "dat.gui": "0.7.9",
     "typescript": "5.8.3",
+    "vitest": "^4.0.16",
     "webpack": "5.99.5",
     "webpack-cli": "6.0.1",
     "webpack-dev-server": "5.2.1"
