@@ -5,7 +5,7 @@ import { t } from "i18next";
 import { Locale } from "../services/LanguageSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { AudioBus } from "../services/AudioBus";
-import { MillisecondsToTimeString } from "../game";
+import { FormatTime } from "../game";
 
 type StackOptions = {
   spacing?: number;
@@ -135,7 +135,7 @@ export class HighscoreScene extends Phaser.Scene {
     // );
 
     this.backText = this.add
-      .text(width / 2, height - 80, t("labels.back"), this.backStyle)
+      .text(width / 2, height - 80, `ESC ${t("labels.back")}`, this.backStyle)
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true })
       .on("pointerover", () => {
@@ -226,8 +226,8 @@ export class HighscoreScene extends Phaser.Scene {
 
     let rowY = colY + 26;
 
-    bestTimes.forEach((entry, index) => {
-      const timeStr = MillisecondsToTimeString(entry.timeMs);
+    bestTimes.forEach((entry, _index) => {
+      const timeStr = FormatTime(entry.timeMs);
       const linesStr = String(entry.linesCleared);
       const dateStr = this.formatDate(entry.achievedAt);
       const vTime = this.add

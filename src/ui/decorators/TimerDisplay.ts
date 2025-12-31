@@ -77,6 +77,7 @@ export class TimerDisplay extends TextBox {
   public start(): void {
     if (this._running) return;
     this._running = true;
+    this._time = 0;
     this._lastStartNow = this.scene.time.now;
   }
 
