@@ -86,13 +86,13 @@ export class MenuItem extends Phaser.GameObjects.Container {
       Phaser.Geom.Rectangle.Contains
     );
 
-    this.on("pointerover", () => {
-      if (!this.disabled) this.hoverOn();
-    });
-    this.on("pointerout", () => {
-      if (!this.disabled) this.hoverOff();
-    });
-    // TODO: Enable click actions later when mouse controls are supported
+    // TODO: Enable events later when mouse controls are supported
+    // this.on("pointerover", () => {
+    //   if (!this.disabled) this.hoverOn();
+    // });
+    // this.on("pointerout", () => {
+    //   if (!this.disabled) this.hoverOff();
+    // });
     // this.on("pointerdown", () => {
     //   if (!this.disabled) this.emit("choose");
     // });

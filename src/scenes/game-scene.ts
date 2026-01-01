@@ -482,6 +482,10 @@ export class GameScene extends Phaser.Scene {
     this.renderNextQueue();
     // When the countdown starts, the round phase changes from idle to countdown
     this.phase = RoundPhase.Countdown;
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onSceneShutdown, this);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.onSceneShutdown, this);
+
     this.countdown.start({
       from: 3,
       beepSoundKey: "countdownTick",
@@ -489,6 +493,17 @@ export class GameScene extends Phaser.Scene {
         this.startRound();
       },
     });
+  }
+
+  private onSceneShutdown<GameScene>(
+    SHUTDOWN: string,
+    onSceneShutdown: any,
+    arg2: this
+  ) {
+    console.log("Shutting down game scene: ", SHUTDOWN);
+    this.music?.stop();
+    this.music?.destroy();
+    this.timer?.stop();
   }
 
   /**
@@ -537,7 +552,6 @@ export class GameScene extends Phaser.Scene {
             useLinearBackground: true,
             autostart: false,
           });
-          this.timer.setDepth(10000);
           this.timer.Padding = 25;
           this.add.existing(this.timer);
           prevRef = lastRef;
@@ -696,7 +710,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on("keydown-P", () => {
-      if (!this.isPaused) {
+      if (!this.isPaused || !this.countdown.Paused) {
         this.pauseGame();
       } else {
         this.resumeGame();
@@ -723,8 +737,10 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ENTER", () => {
       if (!this.isPaused) return;
       if (this.pauseIndex === 0) {
+        // Resuming game from pause menu
         this.resumeGame();
       } else {
+        // Going back to main menu while pause
         const data: GameSceneConfiguration = {
           gameMode: this.gameMode,
         };
@@ -914,9 +930,6 @@ export class GameScene extends Phaser.Scene {
     this.backgroundVideo?.pause();
     this.timer?.pause();
     this.countdown.Paused = true;
-    // TODO : Handle pause state properly
-    //this.phase = RoundPhase.;
-    this.physics.world.pause();
     this.isPaused = true;
     this.tweens.add({
       targets: this.pauseContainer,
@@ -931,10 +944,6 @@ export class GameScene extends Phaser.Scene {
 
   private resumeGame(): void {
     this.backgroundVideo?.resume();
-    this.timer?.resume();
-    this.countdown.Paused = false;
-    this.physics.world.resume();
-    this.isPaused = false;
     this.sakuraEmitter.killAll();
     this.sakuraEmitter.setActive(false);
     this.tweens.add({
@@ -943,6 +952,7 @@ export class GameScene extends Phaser.Scene {
       duration: 250,
       ease: "Sine.easeOut",
     });
+    this.countdown.Paused = false;
   }
 
   private updatePauseHighlight(): void {
@@ -1497,8 +1507,6 @@ export class GameScene extends Phaser.Scene {
       linesCleared: this.linesCleared,
     };
     this.gameOver = true;
-    this.timer?.stop();
-    this.music.stop();
     this.scene.start("VictoryScene", sceneData);
   }
 
@@ -1691,7 +1699,6 @@ export class GameScene extends Phaser.Scene {
     this.grid = [];
     this.lockedBlocksGroup.clear(true, true);
     this.initializeGrid();
-    this.timer?.reset();
     this.score = 0;
     this.scoreText?.setText(`Score: ${this.score}`);
     this.linesCleared = 0;
@@ -1715,6 +1722,7 @@ export class GameScene extends Phaser.Scene {
     this._main?.flash(250, 255, 255, 255);
     this.phase = RoundPhase.Countdown;
     this.resumeGame();
+    this.timer?.reset();
     this.countdown.start({
       from: 3,
       beepSoundKey: "countdownTick",
@@ -1724,13 +1732,26 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Callback used by the countdown overlay, don't call directly.
+   */
   private startRound() {
-    this.phase = RoundPhase.Running;
+    switch (this.phase) {
+      case RoundPhase.Running:
+        // Resuming from pause
+        this.timer?.resume();
+        this.isPaused = false;
+        break;
+      default:
+        // Starting a new round after countdown or if phase is unknown
+        this.phase = RoundPhase.Running;
+        this.timer?.start();
+        this.spawnTetrimino();
+        break;
+    }
     this.countdown.stop();
-    this.timer?.start();
     const s = this.sound.get("countdownGo");
     if (s?.isPlaying) s.stop();
     this.sound.play("countdownGo", { volume: 1 });
-    this.spawnTetrimino();
   }
 }

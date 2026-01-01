@@ -103,9 +103,11 @@ export class TimerDisplay extends TextBox {
     this.setText(this._prefix + this.format(0));
   }
 
-  /** Resumes the timer if paused. Alias for start(). */
+  /** Resumes the timer if paused. */
   public resume(): void {
-    this.start();
+    if (this._running) return;
+    this._running = true;
+    this._lastStartNow = this.scene.time.now;
   }
 
   /** Sets the display to a specific ms time. */
@@ -138,7 +140,6 @@ export class TimerDisplay extends TextBox {
    */
   private onUpdate(): void {
     if (!this._running) return;
-
     const ms = this.getElapsedMs();
     this.setText(this._prefix + this.format(ms));
   }

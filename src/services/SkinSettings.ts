@@ -22,7 +22,7 @@ const ORDER: SkinId[] = [
 
 class SkinSettingsStore {
   private game?: Phaser.Game;
-  private current: SkinId = "neon";
+  private current: SkinId = "minosPastel";
 
   init(game: Phaser.Game) {
     this.game = game;
