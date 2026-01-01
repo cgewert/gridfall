@@ -1736,11 +1736,16 @@ export class GameScene extends Phaser.Scene {
    * Callback used by the countdown overlay, don't call directly.
    */
   private startRound() {
+    this.isPaused = false;
+    this.countdown.stop();
+    const s = this.sound.get("countdownGo");
+    if (s?.isPlaying) s.stop();
+    this.sound.play("countdownGo", { volume: 1 });
+
     switch (this.phase) {
       case RoundPhase.Running:
         // Resuming from pause
         this.timer?.resume();
-        this.isPaused = false;
         break;
       default:
         // Starting a new round after countdown or if phase is unknown
@@ -1749,9 +1754,5 @@ export class GameScene extends Phaser.Scene {
         this.spawnTetrimino();
         break;
     }
-    this.countdown.stop();
-    const s = this.sound.get("countdownGo");
-    if (s?.isPlaying) s.stop();
-    this.sound.play("countdownGo", { volume: 1 });
   }
 }
