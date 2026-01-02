@@ -100,39 +100,30 @@ export class HighscoreScene extends Phaser.Scene {
     // Rush Highscore
     const rushData = HighscoreService.getRushBest();
     if (rushData !== null) {
-      const rushSection = this.createModeSectionRush(width - marginX * 2);
+      const rushSection = this.createRushSection(width - marginX * 2);
       root.add(rushSection);
       sections.push(rushSection);
     }
-    // Später:
-    // sections.push(this.createAscentSection(...))
-    // sections.push(this.createInfinitySection(...))
+    // Ascent Highscore
+    const ascentData = HighscoreService.getAscentBest();
+    if (ascentData !== null) {
+      const ascentSection = this.createAscentSection(width - marginX * 2);
+      root.add(ascentSection);
+      sections.push(ascentSection);
+    }
+
+    // Infinity Highscore
+    const infinityData = HighscoreService.getInfinityBest();
+    if (infinityData !== null) {
+      const infinitySection = this.createInfinitySection(width - marginX * 2);
+      root.add(infinitySection);
+      sections.push(infinitySection);
+    }
 
     layoutVerticalStack(sections, marginX, marginTop, {
       spacing: 20,
       align: "left",
     });
-    // // Ascent Highscore
-    // const ascentData = HighscoreService.getAscentBest();
-    // this.createModeSection(
-    //   width / 2,
-    //   340,
-    //   "Ascent",
-    //   ascentData.time,
-    //   ascentData.score,
-    //   "#4ecdc4"
-    // );
-
-    // // Infinity Highscore
-    // const infinityData = HighScoreSettings.InfinityHighScore;
-    // this.createModeSection(
-    //   width / 2,
-    //   480,
-    //   "Infinity",
-    //   infinityData.time,
-    //   infinityData.score,
-    //   "#ffe66d"
-    // );
 
     this.backText = this.add
       .text(width / 2, height - 80, `ESC ${t("labels.back")}`, this.backStyle)
@@ -165,7 +156,197 @@ export class HighscoreScene extends Phaser.Scene {
     });
   }
 
-  private createModeSectionRush(
+  createInfinitySection(sectionWidth: number) {
+    const section = this.add.container(0, 0);
+
+    const padding = 18;
+    const headerH = 48;
+    const rowH = 44;
+    const sectionHeight = headerH + 10 + rowH + padding * 2;
+
+    const bg = this.add
+      .rectangle(0, 0, sectionWidth, sectionHeight, 0x000000, 0.55)
+      .setOrigin(0, 0);
+    bg.setStrokeStyle(4, 0xffffff, 1);
+
+    section.add(bg);
+
+    // Header
+    const title = this.add
+      .text(padding, padding, "INFINITY (Endless Mode)", {
+        fontFamily: "Orbitron, Arial, sans-serif",
+        fontSize: "26px",
+        color: "#ffffff",
+      })
+      .setOrigin(0, 0);
+
+    section.add(title);
+
+    const colY = padding + headerH;
+    const colStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: "Orbitron, Arial, sans-serif",
+      fontSize: "18px",
+      color: "#ffffff",
+    };
+
+    const colScore = this.add
+      .text(padding, colY, "SCORE", colStyle)
+      .setOrigin(0, 0);
+    const colTime = this.add
+      .text(padding + 260, colY, "TIME", colStyle)
+      .setOrigin(0, 0);
+    const colLines = this.add
+      .text(padding + 430, colY, "LINES", colStyle)
+      .setOrigin(0, 0);
+    const colDate = this.add
+      .text(padding + 560, colY, "DATE", colStyle)
+      .setOrigin(0, 0);
+
+    colScore.setAlpha(0.8);
+    colTime.setAlpha(0.8);
+    colLines.setAlpha(0.8);
+    colDate.setAlpha(0.8);
+
+    section.add([colScore, colTime, colLines, colDate]);
+
+    const bestTimes = HighscoreService.getInfinityTimes(3);
+
+    const valueStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: "Orbitron, Arial, sans-serif",
+      fontSize: "20px",
+      color: "#ffffff",
+    };
+
+    let rowY = colY + 26;
+
+    bestTimes.forEach((entry, _index) => {
+      const scoreStr = String(entry.score);
+      const timeStr = FormatTime(entry.timeMs);
+      const linesStr = String(entry.linesCleared);
+      const dateStr = this.formatDate(entry.achievedAt);
+      const vScore = this.add
+        .text(padding, rowY, scoreStr, valueStyle)
+        .setOrigin(0, 0);
+      const vTime = this.add
+        .text(padding + 260, rowY, timeStr, valueStyle)
+        .setOrigin(0, 0);
+      const vLines = this.add
+        .text(padding + 430, rowY, linesStr, valueStyle)
+        .setOrigin(0, 0);
+      const vDate = this.add
+        .text(padding + 560, rowY, dateStr, valueStyle)
+        .setOrigin(0, 0);
+
+      for (const t of [vScore, vTime, vLines, vDate]) {
+        t.setAlpha(0.9);
+        t.setStroke("#000000", 6);
+      }
+      section.add([vScore, vTime, vLines, vDate]);
+      section.setSize(sectionWidth, sectionHeight);
+
+      rowY += 26;
+      bg.setSize(sectionWidth, rowY + 26);
+    });
+
+    return section;
+  }
+
+  createAscentSection(sectionWidth: number) {
+    const section = this.add.container(0, 0);
+
+    const padding = 18;
+    const headerH = 48;
+    const rowH = 44;
+    const sectionHeight = headerH + 10 + rowH + padding * 2;
+
+    const bg = this.add
+      .rectangle(0, 0, sectionWidth, sectionHeight, 0x000000, 0.55)
+      .setOrigin(0, 0);
+    bg.setStrokeStyle(4, 0xffffff, 1);
+
+    section.add(bg);
+
+    // Header
+    const title = this.add
+      .text(padding, padding, "ASCENT (150 LINES)", {
+        fontFamily: "Orbitron, Arial, sans-serif",
+        fontSize: "26px",
+        color: "#ffffff",
+      })
+      .setOrigin(0, 0);
+
+    section.add(title);
+
+    const colY = padding + headerH;
+    const colStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: "Orbitron, Arial, sans-serif",
+      fontSize: "18px",
+      color: "#ffffff",
+    };
+
+    const colScore = this.add
+      .text(padding, colY, "SCORE", colStyle)
+      .setOrigin(0, 0);
+    const colTime = this.add
+      .text(padding + 260, colY, "TIME", colStyle)
+      .setOrigin(0, 0);
+    const colLines = this.add
+      .text(padding + 430, colY, "LINES", colStyle)
+      .setOrigin(0, 0);
+    const colDate = this.add
+      .text(padding + 560, colY, "DATE", colStyle)
+      .setOrigin(0, 0);
+
+    colScore.setAlpha(0.8);
+    colTime.setAlpha(0.8);
+    colLines.setAlpha(0.8);
+    colDate.setAlpha(0.8);
+
+    section.add([colScore, colTime, colLines, colDate]);
+
+    const bestTimes = HighscoreService.getAscentTimes(3);
+
+    const valueStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: "Orbitron, Arial, sans-serif",
+      fontSize: "20px",
+      color: "#ffffff",
+    };
+
+    let rowY = colY + 26;
+
+    bestTimes.forEach((entry, _index) => {
+      const scoreStr = String(entry.score);
+      const timeStr = FormatTime(entry.timeMs);
+      const linesStr = String(entry.linesCleared);
+      const dateStr = this.formatDate(entry.achievedAt);
+      const vScore = this.add
+        .text(padding, rowY, scoreStr, valueStyle)
+        .setOrigin(0, 0);
+      const vTime = this.add
+        .text(padding + 260, rowY, timeStr, valueStyle)
+        .setOrigin(0, 0);
+      const vLines = this.add
+        .text(padding + 430, rowY, linesStr, valueStyle)
+        .setOrigin(0, 0);
+      const vDate = this.add
+        .text(padding + 560, rowY, dateStr, valueStyle)
+        .setOrigin(0, 0);
+
+      for (const t of [vScore, vTime, vLines, vDate]) {
+        t.setAlpha(0.9);
+        t.setStroke("#000000", 6);
+      }
+      section.add([vScore, vTime, vLines, vDate]);
+      section.setSize(sectionWidth, sectionHeight);
+
+      rowY += 26;
+      bg.setSize(sectionWidth, rowY + 26);
+    });
+
+    return section;
+  }
+
+  private createRushSection(
     sectionWidth: number
   ): Phaser.GameObjects.Container {
     const section = this.add.container(0, 0);
