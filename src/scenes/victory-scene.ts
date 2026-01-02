@@ -94,48 +94,37 @@ export class VictoryScene extends Phaser.Scene {
    * Save to local storage if the current score is a high score.
    */
   private checkHighScore(data: VictorySceneData): boolean {
-    const { gameMode, linesCleared, score, time } = data;
+    const { linesCleared, score, time } = data;
+    let isHighScore;
 
     switch (data.gameMode) {
       case GameMode.ASCENT:
-        // highScore = HighscoreService.AscentHighScore;
-        // if (
-        //   currentScore > highScore.score ||
-        //   TimeStringToMilliseconds(currentTime) < highScore.time
-        // ) {
-        //   HighscoreService.AscentHighScore = {
-        //     score: currentScore,
-        //     time: TimeStringToMilliseconds(currentTime),
-        //   };
-        //   return true;
-        // }
+        isHighScore = HighscoreService.submitAscent({
+          timeMs: time,
+          linesCleared,
+          achievedAt: new Date().toISOString(),
+          score,
+        });
         break;
       case GameMode.RUSH:
-        let isHighScore = HighscoreService.submitRush({
+        isHighScore = HighscoreService.submitRush({
           timeMs: time,
           linesCleared,
           achievedAt: new Date().toISOString(),
         });
-        if (isHighScore.isNewBest) {
-          return true;
-        }
         break;
       case GameMode.INFINITY:
-        // highScore = HighscoreService.InfinityHighScore;
-        // if (
-        //   currentScore > highScore.score ||
-        //   TimeStringToMilliseconds(currentTime) < highScore.time
-        // ) {
-        //   HighscoreService.InfinityHighScore = {
-        //     score: currentScore,
-        //     time: TimeStringToMilliseconds(currentTime),
-        //   };
-        //   return true;
-        // }
+        isHighScore = HighscoreService.submitInfinity({
+          timeMs: time,
+          linesCleared,
+          achievedAt: new Date().toISOString(),
+          score,
+        });
         break;
       default:
         return false;
     }
-    return false;
+
+    return isHighScore.isNewBest;
   }
 }

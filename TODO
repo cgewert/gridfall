@@ -5,28 +5,23 @@
   ☐ Fix bug where toggling the language does not update all texts immediately
 
   Release 1.0.0: (Target Date: 2026-01-04):
-  ☐ Publish on itch.io
-  ☐ Work on UI @started(25-11-08 13:49)
-  ☐ Fix bug were text inputs have different width (all decorators shall have same width as the widest one)
+  ☐ Add controls scene which displays the current keybindings and add a main menu entry for it
+  ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems)
   ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
-  ✔ Fix current piece when resuming or countdowning the game @started(26-01-01 19:11) @done(26-01-01 21:08) @lasted(1h57m29s)
-  ✔ Fix state of timer when pausing,resuming,resetting the game @started(26-01-01 19:11) @done(26-01-01 21:08) @lasted(1h57m35s)
-  ✔ Fix countdown overlay callback for different game phases @started(26-01-01 19:11) @done(26-01-01 21:08) @lasted(1h57m39s)
-  ✔ Fix Bug when pausing / unpausing, sometimes the pause button behaves like the reset button @started(26-01-01 21:09) @done(26-01-01 22:09) @lasted(1h5s)
   ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
+  ☐ The 1.0.0 release shall have 3 game modes and a single player experience
   ☐ Implement all rudimentary Settings
   ☐ Finish all translations
   ☐ Add all assets and replace placeholder assets
-  ☐ The 1.0.0 release shall have 3 game modes and a single player experience
-  ☐ Add controls scene which displays the current keybindings and add a main menu entry for it
-  ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems)
+  ☐ Publish on itch.io
 
   Bugs:
-    ☐ Sometimes the round timer seems not to reset to 0 at the start of a new game
+    ✔ Sometimes the round timer seems not to reset to 0 at the start of a new game @done(26-01-02 14:09)
+    ☐ Fix bug were text inputs have different width (all decorators shall have same width as the widest one)
 
   Ascent:
-    ☐ Add Lines cleared data to high scores
-    ☐ Add date to high scores
+    ✔ Add Lines cleared data to high scores @done(26-01-02 14:10)
+    ✔ Add date to high scores @done(26-01-02 14:10)
     ☐ Implement a proper difficulty curve
 
   Later Releases:
