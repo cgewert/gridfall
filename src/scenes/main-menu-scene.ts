@@ -156,6 +156,13 @@ export class MainMenuScene extends Phaser.Scene {
           disabled: false,
           action: () => this.openSubmenu("OptionsScene"),
         },
+        {
+          identifier: "mnu-help",
+          label: t("labels.mnu-help"),
+          translatable: true,
+          disabled: false,
+          action: () => this.openSubmenu("HelpScene"),
+        },
       ],
     });
 
