@@ -52,5 +52,17 @@
     "tetrimino-art": "Tetrimino Sprites:",
     "specialThanks": "Special Thanks to:",
     "thanksForPlaying": "Thanks for Playing!"
+  },
+  "controls": {
+    "moveLeft": "Move Left",
+    "moveRight": "Move Right",
+    "softDrop": "Soft Drop",
+    "hardDrop": "Hard Drop",
+    "rotateClockwise": "Rotate piece Clockwise",
+    "rotateCounterClockwise": "Rotate piece Counterclockwise",
+    "hold": "Hold piece",
+    "pause": "Pause Game",
+    "restartRound": "Restart Round",
+    "back": "Back"
   }
 }

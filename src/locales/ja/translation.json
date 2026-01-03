@@ -52,5 +52,17 @@
     "tetrimino-art": "テトリミノスプライト:",
     "specialThanks": "特別な感謝を:",
     "thanksForPlaying": "プレイしてくれてありがとう！"
+  },
+  "controls": {
+    "moveLeft": "左に移動",
+    "moveRight": "右に移動",
+    "softDrop": "ソフトドロップ",
+    "hardDrop": "ハードドロップ",
+    "rotateClockwise": "時計回りに回転",
+    "rotateCounterClockwise": "反時計回りに回転",
+    "hold": "ピースをホールド",
+    "pause": "ゲームを一時停止",
+    "restartRound": "ラウンドを再開",
+    "back": "戻る"
   }
 }

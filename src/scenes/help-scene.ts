@@ -8,7 +8,21 @@ export class HelpScene extends Phaser.Scene {
     super(HelpScene.KEY);
   }
 
-  create(): void {
+  private getRotateLeftLabel(): string {
+    const lang = (i18next.language || "en").toLowerCase();
+
+    // de: QWERTZ → Y
+    if (lang.startsWith("de")) return "Y";
+
+    // fr: AZERTY → W
+    if (lang.startsWith("fr")) return "W";
+
+    // ja: JIS QWERTY based → Z
+    // en + default → Z
+    return "Z";
+  }
+
+  public create(): void {
     const { width, height } = this.scale;
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.65);
@@ -22,16 +36,16 @@ export class HelpScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const lines: Array<[string, string]> = [
-      ["Move Left", "←"],
-      ["Move Right", "→"],
-      ["Soft Drop", "↓"],
-      ["Hard Drop", "↑"],
-      ["Rotate CCW", "Z"],
-      ["Rotate CW", "X"],
-      ["Hold", "SPACE"],
-      ["Pause", "P"],
-      ["Restart Round", "R"],
-      ["Back", "Esc"],
+      [i18next.t("controls.moveLeft"), "←"],
+      [i18next.t("controls.moveRight"), "→"],
+      [i18next.t("controls.softDrop"), "↓"],
+      [i18next.t("controls.hardDrop"), "↑"],
+      [i18next.t("controls.rotateCounterClockwise"), this.getRotateLeftLabel()],
+      [i18next.t("controls.rotateClockwise"), "X"],
+      [i18next.t("controls.hold"), "SPACE"],
+      [i18next.t("controls.pause"), "P"],
+      [i18next.t("controls.restartRound"), "R"],
+      [i18next.t("controls.back"), "ESC"],
     ];
 
     const startY = height * 0.22;
