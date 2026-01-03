@@ -5,10 +5,10 @@
   ☐ Fix bug where toggling the language does not update all texts immediately
 
   Release 1.0.0: (Target Date: 2026-01-04):
-  ☐ Add controls scene which displays the current keybindings and add a main menu entry for it
+  ✔ Add controls scene which displays the current keybindings and add a main menu entry for it @done(26-01-03 19:08)
+  ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
   ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems)
   ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
-  ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
   ☐ The 1.0.0 release shall have 3 game modes and a single player experience
   ☐ Implement all rudimentary Settings
   ☐ Finish all translations

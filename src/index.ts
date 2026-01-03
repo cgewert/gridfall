@@ -21,7 +21,7 @@ import { SkinSettings } from "./services/SkinSettings";
 import { SpawnSettings } from "./services/SpawnSettings";
 import { HighscoreService } from "./services/HighScoreService";
 import { HighscoreScene } from "./scenes/high-score-scene";
-import { TestScene } from "./scenes/TestScene";
+import { HelpScene } from "./scenes/help-scene";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
@@ -57,6 +57,7 @@ export class Game extends PHASER.Game {
       OptionsScene,
       ControlsMenuScene,
       HighscoreScene,
+      HelpScene,
     ],
     audio: {
       disableWebAudio: false,

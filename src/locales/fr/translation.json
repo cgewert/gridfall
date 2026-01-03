@@ -23,6 +23,7 @@
     "mnu-highscores": "Hauts scores",
     "mnu-audio": "Audio",
     "mnu-general": "Général",
+    "mnu-help": "Aide",
     "sliderMusicVolume": "Volume de la musique",
     "sliderSfxVolume": "Volume des effets sonores",
     "settings": {
@@ -51,5 +52,17 @@
     "tetrimino-art": "Sprites de Tetrimino:",
     "specialThanks": "Remerciements spéciaux à:",
     "thanksForPlaying": "Merci de jouer !"
+  },
+  "controls": {
+    "moveLeft": "Déplacer à gauche",
+    "moveRight": "Déplacer à droite",
+    "softDrop": "Descente douce",
+    "hardDrop": "Descente rapide",
+    "rotateClockwise": "Tourner la pièce dans le sens des aiguilles d'une montre",
+    "rotateCounterClockwise": "Tourner la pièce dans le sens inverse des aiguilles d'une montre",
+    "hold": "Maintenir la pièce",
+    "pause": "Mettre le jeu en pause",
+    "restartRound": "Redémarrer la manche",
+    "back": "Retour"
   }
 }

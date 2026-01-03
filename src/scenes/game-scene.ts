@@ -23,7 +23,6 @@ import {
   PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
   DEFAULT_FONT_STYLE,
 } from "../fonts";
-import { t } from "i18next";
 import { addSceneBackground } from "../effects/effects";
 import {
   DefaultGameModeDecorators,
@@ -45,6 +44,7 @@ import { NextPreview } from "../ui/NextPreview";
 import { LineClearCountdown } from "../ui/decorators/LineClearCountdown";
 import { VictorySceneData } from "./victory-scene";
 import { CountdownOverlay } from "../ui/CountdownOverlay";
+import { t } from "i18next";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -747,18 +747,6 @@ export class GameScene extends Phaser.Scene {
         this.scene.start("MainMenuScene", data);
       }
     });
-
-    this.input.keyboard.on("keydown-Y", () => {
-      if (this.isPaused || this.phase !== RoundPhase.Running) return;
-      this.rotateTetrimino("left");
-      this.resetLockDelay();
-    });
-
-    this.input.keyboard.on("keydown-X", () => {
-      if (this.isPaused || this.phase !== RoundPhase.Running) return;
-      this.rotateTetrimino("right");
-      this.resetLockDelay();
-    });
   }
 
   private resetLockDelay(): void {
@@ -1319,6 +1307,20 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateTetriminoPosition(): void {
+    if (Phaser.Input.Keyboard.JustDown(this.keys.rotateLeft)) {
+      if (!this.isPaused && this.phase === RoundPhase.Running) {
+        this.rotateTetrimino("left");
+        this.resetLockDelay();
+      }
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.rotateRight)) {
+      if (!this.isPaused && this.phase === RoundPhase.Running) {
+        this.rotateTetrimino("right");
+        this.resetLockDelay();
+      }
+    }
+
     const landed = this.checkCollision(0, 1, this.currentShape);
     const useFraction = !landed;
     const baseY =

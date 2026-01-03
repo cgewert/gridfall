@@ -23,6 +23,7 @@
     "mnu-audio": "Audio",
     "mnu-general": "Allgemein",
     "mnu-highscores": "Highscores",
+    "mnu-help": "Hilfe",
     "sliderMusicVolume": "Musiklautstärke",
     "sliderSfxVolume": "SFX-Lautstärke",
     "settings": {
@@ -51,5 +52,17 @@
     "tetrimino-art": "Tetrimino Sprites:",
     "specialThanks": "Besonderer Dank an:",
     "thanksForPlaying": "Danke fürs Spielen!"
+  },
+  "controls": {
+    "moveLeft": "Nach links bewegen",
+    "moveRight": "Nach rechts bewegen",
+    "softDrop": "Weiches Fallen",
+    "hardDrop": "Schnelles Fallen",
+    "rotateClockwise": "Block im Uhrzeigersinn drehen",
+    "rotateCounterClockwise": "Block gegen den Uhrzeigersinn drehen",
+    "hold": "Block halten",
+    "pause": "Spiel pausieren",
+    "restartRound": "Runde neu starten",
+    "back": "Zurück"
   }
 }
