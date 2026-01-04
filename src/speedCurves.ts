@@ -1,4 +1,25 @@
+/*
+  Speed curve levels in rows/second.
+*/
 export const gravityLevels: number[] = [
-  1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.189, 0.134, 0.089, 0.059, 0.039,
-  0.026, 0.017, 0.011, 0.007, 0.005, 0.0033, 0.0022, 0.0015, 0.001,
+  1.0, // Level 1
+  1.26, // Level 2
+  1.62, // Level 3
+  2.11, // Level 4
+  2.82, // Level 5
+  3.82, // Level 6
+  5.29, // Level 7
+  7.46, // Level 8
+  11.24, // Level 9
+  16.95, // Level 10
+  25.64, // Level 11
+  38.46, // Level 12
+  58.82, // Level 13
+  90.91, // Level 14
+  142.86, // Level 15 - end of Ascent mode
+  200.0, // Level 16  - 16+ only for Infinity mode
+  303.03, // Level 17
+  454.55, // Level 18
+  666.67, // Level 19
+  1000.0, // Level 20
 ];

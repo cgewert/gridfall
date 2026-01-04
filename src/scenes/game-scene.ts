@@ -604,9 +604,7 @@ export class GameScene extends Phaser.Scene {
               width: 300,
               height: 40,
               shadow: true,
-              text: `${t("labels.level")}: 1 (${t(
-                "gravity"
-              )} ${this.fallSpeed.toFixed(2)})`,
+              text: `${t("labels.level")}: 1`,
               textStyle: TEXTBOX_DEFAULT_STYLE,
               fillColor: "#aaaaaa",
               useLinearBackground: true,
@@ -1442,26 +1440,12 @@ export class GameScene extends Phaser.Scene {
         this.combo = 0;
       }
 
+      this.linesText?.setText(`${t("labels.lines")}: ${this.linesCleared}`);
       this.playLineClearSound(clearedLinesCount);
       this.addScore(clearedLinesCount);
 
-      // Level-Up all 10 lines
-      const levelBefore = this.level;
-      this.level = Math.floor(this.linesCleared / 10) + 1;
-
-      if (this.level > levelBefore) {
-        // Change fall speed based on level
-        this.fallSpeed = 1.0 + (this.level - 1) * 0.15; // e.g. slightly increasing
-        console.log(
-          `Level up! New level: ${this.level} - Fall Speed: ${this.fallSpeed}`
-        );
-        this.levelText?.setText(
-          `${t("labels.level")}: ${this.level} (${t(
-            "gravity"
-          )} ${this.fallSpeed.toFixed(2)})`
-        );
-      }
-      this.linesText?.setText(`${t("labels.lines")}: ${this.linesCleared}`);
+      // Check Level Up for Ascent and Infinity modes
+      this.checkLevelUp();
     } else {
       this.combo = 0;
       this.comboActive = false;
@@ -1475,10 +1459,6 @@ export class GameScene extends Phaser.Scene {
         // No additional logic needed for Sprint mode on line clear
         break;
       case GameMode.ASCENT:
-        if (this.linesCleared % 10 === 0) {
-          this.level++;
-          this.updateFallSpeed();
-        }
         break;
       case GameMode.INFINITY:
         break;
@@ -1515,7 +1495,7 @@ export class GameScene extends Phaser.Scene {
   private updateFallSpeed(): void {
     if (this.useSpeedCurve) {
       this.fallSpeed =
-        gravityLevels[Math.min(this.level - 1, gravityLevels.length - 1)] * 60;
+        gravityLevels[Math.min(this.level - 1, gravityLevels.length - 1)];
     } else {
       this.fallSpeed = 1.0 + (this.level - 1) * 0.15;
     }
@@ -1674,6 +1654,25 @@ export class GameScene extends Phaser.Scene {
     this.movementState.right.dasTimer = 0;
     this.movementState.right.arrTimer = 0;
     this.movementState.right.held = false;
+  }
+
+  private checkLevelUp() {
+    if (
+      this.gameMode !== GameMode.ASCENT &&
+      this.gameMode !== GameMode.INFINITY
+    ) {
+      return;
+    }
+
+    const newLevel = Math.floor(this.linesCleared / 10) + 1;
+    if (newLevel > this.level) {
+      this.level = newLevel;
+      this.updateFallSpeed();
+      this.levelText?.setText(`${t("labels.level")}: ${this.level}`);
+      console.log(
+        `Level up! New level: ${this.level} - Fall Speed: ${this.fallSpeed}`
+      );
+    }
   }
 
   private updateLockDelayVisual(): void {
