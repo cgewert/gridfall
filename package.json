@@ -8,8 +8,9 @@
     "node": ">=0.22"
   },
   "scripts": {
-    "prebuild": "tsc -p ./tsconfig.dev.json",
-    "build": "webpack",
+    "build:dev": "webpack --mode development",
+    "build:prod": "webpack --mode production",
+    "typecheck": "tsc -p tsconfig.dev.json",
     "start": "webpack serve --live-reload",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -26,10 +27,11 @@
     "clean-webpack-plugin": "4.0.0",
     "copy-webpack-plugin": "13.0.0",
     "dat.gui": "0.7.9",
-    "typescript": "5.8.3",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.16",
-    "webpack": "5.99.5",
-    "webpack-cli": "6.0.1",
-    "webpack-dev-server": "5.2.1"
+    "webpack": "^5.99.5",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.1"
   }
 }

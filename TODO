@@ -1,35 +1,35 @@
-  Settings:
-  ☐ Implement "Reset to defaults" button functionality
-  ☐ Implement Feedback sound when toggling settings
-  ☐ Fix bugs related to tweened animations
-  ☐ Fix bug where toggling the language does not update all texts immediately
-
   Release 1.0.0: (Target Date: 2026-01-04):
-  ✔ Add controls scene which displays the current keybindings and add a main menu entry for it @done(26-01-03 19:08)
-  ☐ Implement specific High Score modes and screens for each mode @started(25-12-28 17:27)
-  ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems)
-  ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
-  ☐ The 1.0.0 release shall have 3 game modes and a single player experience
-  ☐ Implement all rudimentary Settings
-  ☐ Finish all translations
-  ☐ Add all assets and replace placeholder assets
-  ☐ Publish on itch.io
+    ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems)
+    ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
+    ☐ The 1.0.0 release shall have 3 game modes and a single player experience
+    ☐ Implement all rudimentary Settings
+    ☐ Finish all translations
+    ☐ Make sure all tweens are working without bugs, also changed settings during gameplay shall not break anything
+    ☐ Add all assets and replace placeholder assets
+    ☐ Publish on itch.io
 
   Bugs:
-    ✔ Sometimes the round timer seems not to reset to 0 at the start of a new game @done(26-01-02 14:09)
     ☐ Fix bug were text inputs have different width (all decorators shall have same width as the widest one)
+    ☐ Localized Input labels seem to only load on initialization, changing language does not update them
+    ☐ Help screen text overflows the screen in some languages (e.g., french)
+    ☐ Fix bugs related to tweened animations (All tweens must reset corectly)
+    ☐ Fix bug where toggling the language does not update all texts immediately
 
   Ascent:
-    ✔ Add Lines cleared data to high scores @done(26-01-02 14:10)
-    ✔ Add date to high scores @done(26-01-02 14:10)
+    ☐ Implement a proper difficulty curve
+
+  Infinity:
     ☐ Implement a proper difficulty curve
 
   Later Releases:
-  ☐ Implement 180° piece rotations (Toggleable)
-  ☐ Multiplayer modes
-  ☐ Make game mode decorators configurable in settings
-  Gather statistics for a played round:
-  ☐ Add number of Quad cleared
-  ☐ Add number of T-Spins performed
-  ☐ Add number of combos performed
-  ☐ Add number of perfect clears achieved
+    ☐ Implement 180° piece rotations (Toggleable)
+    ☐ Multiplayer modes
+    ☐ Make game mode decorators configurable in settings
+    Gather statistics for a played round:
+      ☐ Add number of Quad cleared
+      ☐ Add number of T-Spins performed
+      ☐ Add number of combos performed
+      ☐ Add number of perfect clears achieved
+    Settings:
+      ☐ Implement "Reset to defaults" button functionality
+      ☐ Implement Feedback sound when toggling settings
