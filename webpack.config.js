@@ -2,15 +2,32 @@ const path = require('path');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
-module.exports = {
-  entry: './src/index.js',
-  mode: 'development',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js',
-  },
+module.exports = (env, argv) => {
+  const isProd = argv.mode === 'production';
+  console.log(`Building "Gridfall" for ${isProd ? 'production' : 'development'} mode...`);
+  return {
+    entry: './src/index.ts',
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      filename: 'main.js',
+    },
+     resolve: {
+      extensions: ['.ts', '.js'],
+    },
   module: {
     rules: [
+      // transpile typescript files
+      {
+        test: /\.ts$/,
+        use: {
+          loader: 'ts-loader',
+          options: {
+            configFile: isProd ? 'tsconfig.prod.json' : 'tsconfig.dev.json',
+            transpileOnly: true,
+          },
+        },
+        exclude: /node_modules/,
+      },
     ],
   },
   devServer: {
@@ -34,4 +51,5 @@ module.exports = {
       ],
     }),
   ],
+};
 };

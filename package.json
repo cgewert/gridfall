@@ -1,6 +1,6 @@
 {
   "name": "gridfall",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A game about blocks falling into a grid.",
   "main": "main.js",
   "private": "true",
@@ -8,8 +8,9 @@
     "node": ">=0.22"
   },
   "scripts": {
-    "prebuild": "tsc -p ./tsconfig.dev.json",
-    "build": "webpack",
+    "build:dev": "webpack --mode development",
+    "build:prod": "webpack --mode production",
+    "typecheck": "tsc -p tsconfig.dev.json",
     "start": "webpack serve --live-reload",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -17,19 +18,20 @@
   "author": "Christian Gewert <cgewert@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "i18next": "25.3.2",
-    "i18next-browser-languagedetector": "^8.2.0",
+    "i18next": "25.7.3",
+    "i18next-browser-languagedetector": "8.2.0",
     "phaser": "3.90.0"
   },
   "devDependencies": {
     "@types/dat.gui": "0.7.13",
     "clean-webpack-plugin": "4.0.0",
-    "copy-webpack-plugin": "13.0.0",
+    "copy-webpack-plugin": "13.0.1",
     "dat.gui": "0.7.9",
-    "typescript": "5.8.3",
-    "vitest": "^4.0.16",
-    "webpack": "5.99.5",
+    "ts-loader": "9.5.4",
+    "typescript": "5.9.3",
+    "vitest": "4.0.16",
+    "webpack": "5.104.1",
     "webpack-cli": "6.0.1",
-    "webpack-dev-server": "5.2.1"
+    "webpack-dev-server": "5.2.2"
   }
 }

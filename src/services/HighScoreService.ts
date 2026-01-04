@@ -92,24 +92,25 @@ export class HighscoreService {
     return { isNewBest, best };
   }
 
-  public static submitInfinity(entry: InfinityScoreEntry): any {
-    console.log("Submitting infinity score: ", entry);
-
+  public static submitInfinity(entry: InfinityScoreEntry) {
     const data = this.load();
 
     data.infinity.push(entry);
 
     data.infinity.sort((a, b) => {
-      // Primary: smaller time is better
+      // Primary: Higher score is better
+      if (a.score !== b.score) return b.score - a.score;
+      // Secondary: Smaller time is better
       if (a.timeMs !== b.timeMs) return a.timeMs - b.timeMs;
-      // Secondary (optional): more lines as tie-breaker
-      return b.linesCleared - a.linesCleared;
+      // If score and time are equal, earlier date is better
+      return (
+        new Date(a.achievedAt).getTime() - new Date(b.achievedAt).getTime()
+      );
     });
 
     data.infinity = data.infinity.slice(0, MAX_ENTRIES);
 
     this.save(data);
-    console.log("Saved infinity scores: ", data);
 
     const best = data.infinity.length > 0 ? data.infinity[0] : null;
     const isNewBest =
@@ -123,7 +124,6 @@ export class HighscoreService {
   }
 
   public static submitAscent(entry: AscentScoreEntry): any {
-    console.log("Submitting ascent score: ", entry);
     const data = this.load();
 
     data.ascent.push(entry);
@@ -142,7 +142,6 @@ export class HighscoreService {
     data.ascent = data.ascent.slice(0, MAX_ENTRIES);
 
     this.save(data);
-    console.log("Saved ascent scores: ", data);
 
     const best = data.ascent.length > 0 ? data.ascent[0] : null;
     const isNewBest =
