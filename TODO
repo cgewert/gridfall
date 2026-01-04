@@ -1,5 +1,5 @@
   Release 1.0.0: (Target Date: 2026-01-04):
-    ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems)
+    ☐ Polish the rotations and kicktables (Study SRS+ and other rotation systems) @started(26-01-04 13:51)
     ☐ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27)
     ☐ The 1.0.0 release shall have 3 game modes and a single player experience
     ☐ Implement all rudimentary Settings
@@ -8,7 +8,7 @@
     ☐ Add all assets and replace placeholder assets
     ☐ Publish on itch.io
 
-  Bugs:
+  Bugs: 
     ☐ Fix bug were text inputs have different width (all decorators shall have same width as the widest one)
     ☐ Localized Input labels seem to only load on initialization, changing language does not update them
     ☐ Help screen text overflows the screen in some languages (e.g., french)

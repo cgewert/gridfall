@@ -297,4 +297,135 @@ describe("HighScoreService sorting", () => {
     const top = HighscoreService.getInfinityTimes(2);
     expect(top.length).toBe(2);
   });
+
+  it("Infinity mode: returns correct isNewBest flag", () => {
+    const entries: InfinityScoreEntry[] = [
+      {
+        timeMs: 3000,
+        achievedAt: "2026-03-01",
+        linesCleared: 99,
+        score: 999,
+      },
+      {
+        timeMs: 2000,
+        achievedAt: "2026-03-01",
+        linesCleared: 103,
+        score: 444,
+      },
+      {
+        timeMs: 4000,
+        achievedAt: "2026-03-02",
+        linesCleared: 105,
+        score: 5000,
+      },
+    ];
+
+    const newBest1 = HighscoreService.submitInfinity(entries[0]);
+    const noBest = HighscoreService.submitInfinity(entries[1]);
+    const newBest2 = HighscoreService.submitInfinity(entries[2]);
+    expect(newBest1.isNewBest).toBe(true);
+    expect(noBest.isNewBest).toBe(false);
+    expect(newBest2.isNewBest).toBe(true);
+  });
+
+  it("Rush mode: returns correct isNewBest flag", () => {
+    const entries: RushScoreEntry[] = [
+      {
+        timeMs: 3000,
+        achievedAt: "2026-03-01",
+        linesCleared: 99,
+      },
+      {
+        timeMs: 9999,
+        achievedAt: "2026-03-01",
+        linesCleared: 103,
+      },
+      {
+        timeMs: 100,
+        achievedAt: "2026-03-02",
+        linesCleared: 105,
+      },
+      {
+        timeMs: 50,
+        achievedAt: "2026-03-02",
+        linesCleared: 105,
+      },
+      {
+        timeMs: 3500,
+        achievedAt: "2026-03-02",
+        linesCleared: 105,
+      },
+    ];
+
+    const newBest1 = HighscoreService.submitRush(entries[0]);
+    const noBest = HighscoreService.submitRush(entries[1]);
+    const newBest2 = HighscoreService.submitRush(entries[2]);
+    const newBest3 = HighscoreService.submitRush(entries[3]);
+    const noBest2 = HighscoreService.submitRush(entries[4]);
+    expect(newBest1.isNewBest).toBe(true);
+    expect(noBest.isNewBest).toBe(false);
+    expect(newBest2.isNewBest).toBe(true);
+    expect(newBest3.isNewBest).toBe(true);
+    expect(noBest2.isNewBest).toBe(false);
+  });
+
+  it("Infinity mode: returns correct isNewBest flag", () => {
+    const entries: InfinityScoreEntry[] = [
+      {
+        timeMs: 3000,
+        achievedAt: "2026-03-01",
+        linesCleared: 99,
+        score: 999,
+      },
+      {
+        timeMs: 2000,
+        achievedAt: "2026-03-01",
+        linesCleared: 103,
+        score: 444,
+      },
+      {
+        timeMs: 4000,
+        achievedAt: "2026-03-02",
+        linesCleared: 105,
+        score: 5000,
+      },
+    ];
+
+    const newBest1 = HighscoreService.submitInfinity(entries[0]);
+    const noBest = HighscoreService.submitInfinity(entries[1]);
+    const newBest2 = HighscoreService.submitInfinity(entries[2]);
+    expect(newBest1.isNewBest).toBe(true);
+    expect(noBest.isNewBest).toBe(false);
+    expect(newBest2.isNewBest).toBe(true);
+  });
+
+  it("Ascent mode: returns correct isNewBest flag", () => {
+    const entries: AscentScoreEntry[] = [
+      {
+        timeMs: 3000,
+        achievedAt: "2026-03-01",
+        linesCleared: 99,
+        score: 999,
+      },
+      {
+        timeMs: 2000,
+        achievedAt: "2026-03-01",
+        linesCleared: 103,
+        score: 444,
+      },
+      {
+        timeMs: 4000,
+        achievedAt: "2026-03-02",
+        linesCleared: 105,
+        score: 5000,
+      },
+    ];
+
+    const newBest1 = HighscoreService.submitAscent(entries[0]);
+    const noBest = HighscoreService.submitAscent(entries[1]);
+    const newBest2 = HighscoreService.submitAscent(entries[2]);
+    expect(newBest1.isNewBest).toBe(true);
+    expect(noBest.isNewBest).toBe(false);
+    expect(newBest2.isNewBest).toBe(true);
+  });
 });

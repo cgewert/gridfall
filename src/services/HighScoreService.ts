@@ -92,7 +92,7 @@ export class HighscoreService {
     return { isNewBest, best };
   }
 
-  public static submitInfinity(entry: InfinityScoreEntry): any {
+  public static submitInfinity(entry: InfinityScoreEntry) {
     const data = this.load();
 
     data.infinity.push(entry);
