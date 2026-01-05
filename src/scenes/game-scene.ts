@@ -46,6 +46,7 @@ import { VictorySceneData } from "./victory-scene";
 import { CountdownOverlay } from "../ui/CountdownOverlay";
 import { t } from "i18next";
 import { getSrsKicks } from "../rotation/srs";
+import { ExtendedPlacementLockdown } from "../lockdown";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -82,13 +83,10 @@ export class GameScene extends Phaser.Scene {
   private countdown!: CountdownOverlay;
 
   // Lock Delay System Fields
-  private lockDelay: number = 2000; // 500ms standard lock delay
-  private lockTimer: number = 0;
-  private isLocking: boolean = false;
-  private lockResets: number = 0;
-  private maxLockResets: number = 15; // Number of lock resets allowed
-  private maxLockTime: number = 30000; // Maximum lock time in ms
-  private totalLockTime: number = 0; // Accumulated lock time
+  private lockdown = new ExtendedPlacementLockdown({
+    lockDelayMs: 500,
+    maxResets: 15,
+  });
 
   private keys!: InputActions;
 
@@ -201,11 +199,6 @@ export class GameScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
-    this.lockTimer = 0;
-    this.isLocking = false;
-    this.lockResets = 0;
-    this.totalLockTime = 0;
-
     this.currentSpawnSystem = SpawnSettings.get();
     this._blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
@@ -748,19 +741,25 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private resetLockDelay(): void {
-    if (!this.isLocking) return;
+  // private resetLockDelay(): void {
+  //   if (!this.isLocking) return;
 
-    if (this.lockResets < this.maxLockResets) {
-      this.lockTimer = 0;
-      this.lockResets++;
-      console.log(
-        `Lock delay reset (${this.lockResets}/${this.maxLockResets})`
-      );
-      console.log("Lock timer: ", this.lockTimer);
-    } else {
-      console.log("Lock reset limit reached - forcing lock");
-    }
+  //   if (this.lockResets < this.maxLockResets) {
+  //     this.lockTimer = 0;
+  //     this.lockResets++;
+  //     console.log(
+  //       `Lock delay reset (${this.lockResets}/${this.maxLockResets})`
+  //     );
+  //     console.log("Lock timer: ", this.lockTimer);
+  //   } else {
+  //     console.log("Lock reset limit reached - forcing lock");
+  //   }
+  // }
+
+  private resetLockDelay(): void {
+    // Only reset if the piece is currently grounded (lock timer active)
+    // and only after an actually successful move/rotation.
+    this.lockdown.onSuccessfulMoveOrRotate();
   }
 
   private handleMovement(time: number, delta: number): void {
@@ -830,23 +829,11 @@ export class GameScene extends Phaser.Scene {
       while (remainingFall > 0) {
         if (!this.checkCollision(0, 1, this.currentShape)) {
           this.currentPosition.y += 1;
+          this.lockdown.onFellToY(this.currentPosition.y);
           remainingFall -= 1;
-          this.fallProgress = 0; // <-- Reset fall progress
-          this.score += 1; // <-- Soft Drop Score Bonus
-
-          if (this.isLocking) {
-            console.log("Soft drop - CANCELING lock delay");
-            this.isLocking = false;
-            this.lockTimer = 0;
-            this.lockResets = 0;
-          }
+          this.score += 1; // <-- TODO: Implement Guideline Scoring for soft drop
         } else {
           console.log("Soft drop collision detected!");
-          // if (!this.isLocking) {
-          //   console.log("STARTING LOCK DELAY (from soft drop)");
-          //   this.isLocking = true;
-          //   this.lockTimer = 0;
-          // }
           this.checkGroundedState();
           break;
         }
@@ -868,16 +855,9 @@ export class GameScene extends Phaser.Scene {
     while (this.fallProgress >= 1) {
       if (!this.checkCollision(0, 1, this.currentShape)) {
         this.currentPosition.y += 1;
+        this.lockdown.onFellToY(this.currentPosition.y);
         this.fallProgress -= 1.0;
         console.log("Piece moved down one cell");
-
-        if (this.isLocking) {
-          console.log("Piece is falling again - CANCELING lock delay");
-          this.isLocking = false;
-          this.lockTimer = 0;
-          this.lockResets = 0;
-          this.totalLockTime = 0;
-        }
       } else {
         console.log("Collision detected at bottom!");
         this.fallProgress = 0;
@@ -905,25 +885,31 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // private handleLockDelay(delta: number): void {
+  //   if (this.isLocking) {
+  //     this.lockTimer += delta;
+  //     this.totalLockTime += delta;
+  //     console.log(
+  //       `Lock timer: ${this.lockTimer.toFixed(0)}ms / ${
+  //         this.lockDelay
+  //       }ms (resets: ${this.lockResets})`
+  //     );
+  //     if (
+  //       this.lockTimer >= this.lockDelay ||
+  //       this.totalLockTime >= this.maxLockTime
+  //     ) {
+  //       this.lockTetrimino();
+  //       this.isLocking = false;
+  //       this.lockTimer = 0;
+  //       this.lockResets = 0;
+  //       this.totalLockTime = 0;
+  //     }
+  //   }
+  // }
+
   private handleLockDelay(delta: number): void {
-    if (this.isLocking) {
-      this.lockTimer += delta;
-      this.totalLockTime += delta;
-      console.log(
-        `Lock timer: ${this.lockTimer.toFixed(0)}ms / ${
-          this.lockDelay
-        }ms (resets: ${this.lockResets})`
-      );
-      if (
-        this.lockTimer >= this.lockDelay ||
-        this.totalLockTime >= this.maxLockTime
-      ) {
-        this.lockTetrimino();
-        this.isLocking = false;
-        this.lockTimer = 0;
-        this.lockResets = 0;
-        this.totalLockTime = 0;
-      }
+    if (this.lockdown.tick(delta).shouldLock) {
+      this.lockTetrimino();
     }
   }
 
@@ -1011,6 +997,7 @@ export class GameScene extends Phaser.Scene {
     this.currentRotationIndex = 0;
     this.currentShape = SHAPES[this.currentTetriminoType][0];
     this.currentPosition = { x: 3, y: -1 };
+    this.lockdown.onSpawn(this.currentPosition.y);
 
     if (this.checkCollision(0, 0)) {
       this.handleGameOver();
@@ -1060,6 +1047,7 @@ export class GameScene extends Phaser.Scene {
 
     // Spawn pieces above the visible grid
     this.currentPosition = { x: 3, y: -1 };
+    this.lockdown.onSpawn(this.currentPosition.y);
 
     this.renderNextQueue();
     this.createTetriminoBlocks();
@@ -1161,28 +1149,33 @@ export class GameScene extends Phaser.Scene {
     AudioBus.PlaySfx(this, "move");
   }
 
+  // private checkGroundedState(): void {
+  //   const isGrounded = this.checkCollision(0, 1, this.currentShape);
+
+  //   if (isGrounded) {
+  //     if (!this.isLocking) {
+  //       console.log(
+  //         "Piece grounded after movement/rotation - STARTING LOCK DELAY"
+  //       );
+  //       this.isLocking = true;
+  //       this.lockTimer = 0;
+  //     } else {
+  //       console.log("Piece still grounded - lock delay continues");
+  //     }
+  //   } else {
+  //     if (this.isLocking) {
+  //       console.log("Piece no longer grounded - CANCELING LOCK DELAY");
+  //       this.isLocking = false;
+  //       this.lockTimer = 0;
+  //       this.lockResets = 0;
+  //       this.totalLockTime = 0;
+  //     }
+  //   }
+  // }
+
   private checkGroundedState(): void {
     const isGrounded = this.checkCollision(0, 1, this.currentShape);
-
-    if (isGrounded) {
-      if (!this.isLocking) {
-        console.log(
-          "Piece grounded after movement/rotation - STARTING LOCK DELAY"
-        );
-        this.isLocking = true;
-        this.lockTimer = 0;
-      } else {
-        console.log("Piece still grounded - lock delay continues");
-      }
-    } else {
-      if (this.isLocking) {
-        console.log("Piece no longer grounded - CANCELING LOCK DELAY");
-        this.isLocking = false;
-        this.lockTimer = 0;
-        this.lockResets = 0;
-        this.totalLockTime = 0;
-      }
-    }
+    this.lockdown.updateGrounded(isGrounded);
   }
 
   private updateGhost(): void {
@@ -1368,11 +1361,11 @@ export class GameScene extends Phaser.Scene {
     this.checkAndClearLines();
     this.drawLockedBlocks();
 
-    // Reset lock delay variables when spawning a new piece
-    this.isLocking = false;
-    this.lockTimer = 0;
-    this.lockResets = 0;
-    this.totalLockTime = 0;
+    // // Reset lock delay variables when spawning a new piece
+    // this.isLocking = false;
+    // this.lockTimer = 0;
+    // this.lockResets = 0;
+    // this.totalLockTime = 0;
 
     this.spawnTetrimino();
     this.holdUsedThisTurn = false;
@@ -1680,8 +1673,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateLockDelayVisual(): void {
-    if (!this.isLocking || !this.currentTetrimino) {
-      // If not locking, clear any visual lock delay indicators
+    if (!this.currentTetrimino || !this.lockdown.IsActive) {
       this.currentTetrimino.getChildren().forEach((block) => {
         const sprite = block as Phaser.GameObjects.Sprite;
         sprite.clearTint();
@@ -1689,7 +1681,10 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    const lockProgress = Math.min(this.lockTimer / this.lockDelay, 1.0);
+    const lockProgress = Math.min(
+      1 - this.lockdown.TimeLeftMs / this.lockdown.LockDelayMs,
+      1.0
+    );
     const redValue = 255;
     const greenBlueValue = Math.floor(255 * (1 - lockProgress));
     const tintColor = (redValue << 16) | (greenBlueValue << 8) | greenBlueValue;
@@ -1719,10 +1714,6 @@ export class GameScene extends Phaser.Scene {
     this.currentTetrimino?.clear(true, true);
     this.currentShape = null;
     this.ghostGroup?.clear(true, true);
-    this.isLocking = false;
-    this.lockTimer = 0;
-    this.lockResets = 0;
-    this.totalLockTime = 0;
     this.holdUsedThisTurn = false;
     this._main?.flash(250, 255, 255, 255);
     this.phase = RoundPhase.Countdown;
