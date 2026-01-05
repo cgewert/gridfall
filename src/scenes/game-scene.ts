@@ -13,7 +13,7 @@ import {
 import { ShapesSpawner } from "../spawn";
 import { gravityLevels } from "../speedCurves";
 import Phaser, { Display } from "phaser";
-import { Rotation, GetKickData } from "../rotation";
+import { Rotation } from "../game";
 import {
   DEFAULT_MENU_FONT,
   GUI_COMBO_STYLE,
@@ -45,6 +45,7 @@ import { LineClearCountdown } from "../ui/decorators/LineClearCountdown";
 import { VictorySceneData } from "./victory-scene";
 import { CountdownOverlay } from "../ui/CountdownOverlay";
 import { t } from "i18next";
+import { getSrsKicks } from "../rotation/srs";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -890,6 +891,20 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private handleRotationInput(): void {
+    if (this.isPaused || this.phase !== RoundPhase.Running) return;
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.rotateLeft)) {
+      this.rotatePiece("left");
+      this.resetLockDelay();
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.rotateRight)) {
+      this.rotatePiece("right");
+      this.resetLockDelay();
+    }
+  }
+
   private handleLockDelay(delta: number): void {
     if (this.isLocking) {
       this.lockTimer += delta;
@@ -1204,25 +1219,27 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private rotateTetrimino(direction: "left" | "right"): void {
+  private rotatePiece(direction: "left" | "right"): void {
     const from = this.currentRotationIndex;
     const to = this.getNextRotation(from, direction);
-    const kicks = GetKickData(this.currentTetriminoType, from, to) ?? [];
-    const shape = SHAPES[this.currentTetriminoType][to];
 
-    for (const kick of kicks) {
-      const newX = this.currentPosition.x + kick.x;
-      const newY = this.currentPosition.y + kick.y;
+    const targetShape = SHAPES[this.currentTetriminoType][to];
+    const kicks = getSrsKicks(this.currentTetriminoType, from, to);
 
-      if (!this.checkCollision(kick.x, kick.y, shape)) {
+    for (let i = 0; i < kicks.length; i++) {
+      const k = kicks[i];
+
+      if (!this.checkCollision(k.x, k.y, targetShape)) {
         this.currentRotationIndex = to;
-        this.currentShape = shape;
-        this.currentPosition.x = newX;
-        this.currentPosition.y = newY;
-        this.lastMoveWasRotation = true;
-        this.createTetriminoBlocks();
-        this.moveTetrimino(0);
+        this.currentShape = targetShape;
+        this.currentPosition.x += k.x;
+        this.currentPosition.y += k.y;
 
+        this.lastMoveWasRotation = true;
+
+        this.createTetriminoBlocks();
+        this.updateTetriminoPosition();
+        this.updateGhost();
         this.checkGroundedState();
 
         if (this.isTSpin()) {
@@ -1236,8 +1253,8 @@ export class GameScene extends Phaser.Scene {
         return;
       }
     }
-    this.lastMoveWasRotation = false;
 
+    this.lastMoveWasRotation = false;
     console.warn(`${t("debug.rotationNotPossible")}: ${direction}`);
   }
 
@@ -1305,20 +1322,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private updateTetriminoPosition(): void {
-    if (Phaser.Input.Keyboard.JustDown(this.keys.rotateLeft)) {
-      if (!this.isPaused && this.phase === RoundPhase.Running) {
-        this.rotateTetrimino("left");
-        this.resetLockDelay();
-      }
-    }
-
-    if (Phaser.Input.Keyboard.JustDown(this.keys.rotateRight)) {
-      if (!this.isPaused && this.phase === RoundPhase.Running) {
-        this.rotateTetrimino("right");
-        this.resetLockDelay();
-      }
-    }
-
     const landed = this.checkCollision(0, 1, this.currentShape);
     const useFraction = !landed;
     const baseY =
@@ -1632,6 +1635,7 @@ export class GameScene extends Phaser.Scene {
 
     if (!this.isPaused && !this.gameOver) {
       this.handleMovement(time, delta);
+      this.handleRotationInput();
       this.handleSoftDrop(delta);
       this.handleGravity(delta);
       this.handleLockDelay(delta);
