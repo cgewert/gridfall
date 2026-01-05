@@ -11,10 +11,16 @@ A game about blocks falling into a grid.
 ## Setup
 
 ```sh
-npm install && npm run build
+npm install && npm run build:prod
 ```
 
 will install all dependencies and build the application into the /dist folder.
+
+NOTE: You can also build a dev version by using
+
+```sh
+npm run build:dev
+```
 
 ## Run
 

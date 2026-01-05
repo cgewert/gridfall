@@ -2,6 +2,13 @@ import i18next from "i18next";
 
 export const ONE_HOUR_MS = 60 * 60_000;
 
+export enum Rotation {
+  SPAWN = 0,
+  RIGHT = 1,
+  REVERSE = 2,
+  LEFT = 3,
+}
+
 export type GameConfig = {
   gameMode: GameMode;
 };
