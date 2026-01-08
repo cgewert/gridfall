@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyDropPoints, applyGuidelineClearScore } from "./guidelineScoring";
+import { applyDropPoints, applyGuidelineClearScore } from "./guideLineScoring";
 
 describe("guideline scoring", () => {
   it("scores a Quad with level multiplier", () => {

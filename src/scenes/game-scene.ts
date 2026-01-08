@@ -53,7 +53,7 @@ import {
   applyGuidelineClearScore,
   applyDropPoints,
   type ScoreState,
-} from "../scoring/guidelineScoring";
+} from "../scoring/guideLineScoring";
 import { AudioSettings } from "../services/AudioSettings";
 
 export type GridConfiguration = {
