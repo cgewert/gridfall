@@ -34,7 +34,7 @@
     "mnu-default": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
     "mnu-options": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
     "mnu-credits": "ESC Back",
-    "mnu-controls": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
+    "mnu-controls": "↑↓ Navigation  ←→ Change  ⏎ Select  R Reset to Default  ESC Back",
     "mnu-audio": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
     "mnu-general": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back"
   },

@@ -2,6 +2,7 @@
 import { t } from "i18next";
 import { InputSettings } from "../../services/InputSettings";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
+import { AudioBus } from "../../services/AudioBus";
 
 type SliderRef = {
   name: "DAS" | "ARR" | "SDF";
@@ -26,6 +27,7 @@ export class ControlsMenuScene extends BaseMenuScene {
   private static readonly HINT = "hints.mnu-controls";
 
   private sliders: SliderRef[] = [];
+  private onReset!: () => void;
   private activeIndex = 0;
 
   private onUp!: () => void;
@@ -39,6 +41,8 @@ export class ControlsMenuScene extends BaseMenuScene {
 
   create(data: { parentKey?: string } = {}): void {
     super.create(data);
+
+    AudioBus.AddSceneAudio(this, "settings-reset");
 
     // Slider rows
     this.addSlider(
@@ -78,6 +82,7 @@ export class ControlsMenuScene extends BaseMenuScene {
     this.setActiveSlider(0);
 
     const k = this.input.keyboard!;
+    this.onReset = () => this.resetDefaults();
     this.onUp = () => this.setActiveSlider(this.activeIndex - 1);
     this.onDown = () => this.setActiveSlider(this.activeIndex + 1);
     this.onLeft = () => this.nudgeActive(-1);
@@ -87,10 +92,15 @@ export class ControlsMenuScene extends BaseMenuScene {
     k.on("keydown-DOWN", this.onDown);
     k.on("keydown-LEFT", this.onLeft);
     k.on("keydown-RIGHT", this.onRight);
+    k.on("keydown-R", this.onReset);
 
     // TODO: Gamepad support will be added later
     //this.input.gamepad?.on("down", this.onPadDown, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
+  }
+
+  public preload(): void {
+    this.load.audio("settings-reset", "assets/audio/sfx/settings-reset.ogg");
   }
 
   private addSlider(
@@ -233,6 +243,7 @@ export class ControlsMenuScene extends BaseMenuScene {
     k.off("keydown-DOWN", this.onDown);
     k.off("keydown-LEFT", this.onLeft);
     k.off("keydown-RIGHT", this.onRight);
+    k.off("keydown-R", this.onReset);
     //this.input.gamepad?.off("down", this.onPadDown, this);
     this.tweens.killAll();
     this.time.clearPendingEvents();
@@ -242,4 +253,21 @@ export class ControlsMenuScene extends BaseMenuScene {
 
   protected onEntranceCompleted(): void {}
   protected beforeClose(): void {}
+
+  private resetDefaults() {
+    InputSettings.resetToDefaults();
+    this.refreshSlidersFromStore();
+
+    // Feedback
+    AudioBus.PlaySfx(this, "settings-reset");
+  }
+
+  private refreshSlidersFromStore() {
+    for (const s of this.sliders) {
+      const v = s.get();
+      const rel = (v - s.min) / (s.max - s.min);
+      s.fill.width = Math.max(6, rel * s.w);
+      s.value.setText(s.format(v));
+    }
+  }
 }

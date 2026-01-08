@@ -48,9 +48,11 @@ class InputSettingsStore {
   get DAS() {
     return this.data.dasMs;
   }
+
   get ARR() {
     return this.data.arrMs;
   }
+
   get SDF() {
     return this.data.sdfTps;
   }
@@ -59,12 +61,19 @@ class InputSettingsStore {
     this.data.dasMs = Phaser.Math.Clamp(Math.round(v), 0, 250);
     this.save();
   }
-  setARR(v: number) {
+
+  public setARR(v: number) {
     this.data.arrMs = Phaser.Math.Clamp(Math.round(v), 0, 100);
     this.save();
   }
-  setSDF(v: number) {
+
+  public setSDF(v: number) {
     this.data.sdfTps = Phaser.Math.Clamp(Math.round(v), 1, 80);
+    this.save();
+  }
+
+  public resetToDefaults() {
+    this.data = { ...InputSettingsStore.DEFAULTS };
     this.save();
   }
 }

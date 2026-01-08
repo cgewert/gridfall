@@ -34,7 +34,7 @@
     "mnu-default": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
     "mnu-options": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
     "mnu-credits": "ESC 戻る",
-    "mnu-controls": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
+    "mnu-controls": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  R デフォルトにリセット  ESC 戻る",
     "mnu-audio": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
     "mnu-general": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る"
   },
