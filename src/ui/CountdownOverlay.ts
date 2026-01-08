@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { AudioSettings } from "../services/AudioSettings";
 
 // src/ui/CountdownOverlay.ts
 export type CountdownOptions = {
@@ -120,7 +121,7 @@ export class CountdownOverlay {
       const s = this.scene.sound.get(beepKey);
       if (s?.isPlaying) s.stop();
       this.scene.sound.play(beepKey, {
-        volume: this.Volume,
+        volume: AudioSettings.SfxVolume ?? this.Volume,
         rate: Phaser.Math.Clamp(1 + rate, 1.0, 2.0),
       });
     }

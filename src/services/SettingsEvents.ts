@@ -10,7 +10,7 @@ export const SettingsEvents = {
 
   InputChanged: "settings:input-changed",
 
-  TetriminoSkinChanged: "settings:tetrimino-skin-changed", // TODO: Remove all references to tetris names and use generic ones instead.
+  TetriminoSkinChanged: "settings:tetrimino-skin-changed",
 
   SpawnSystemChanged: "settings:spawn-system-changed",
 } as const;

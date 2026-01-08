@@ -47,6 +47,14 @@ import { CountdownOverlay } from "../ui/CountdownOverlay";
 import { t } from "i18next";
 import { getSrsKicks } from "../rotation/srs";
 import { ExtendedPlacementLockdown } from "../lockdown";
+import { ClearCallout } from "../ui/ClearCallout";
+import { detectSpin } from "../scoring/spinDetection";
+import {
+  applyGuidelineClearScore,
+  applyDropPoints,
+  type ScoreState,
+} from "../scoring/guideLineScoring";
+import { AudioSettings } from "../services/AudioSettings";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -127,13 +135,14 @@ export class GameScene extends Phaser.Scene {
   private rotateKickSound!: Phaser.Sound.BaseSound;
   private doubleClearSound!: Phaser.Sound.BaseSound;
   private tripleClearSound!: Phaser.Sound.BaseSound;
-  private tetrisClearSound!: Phaser.Sound.BaseSound;
+  private quadClearSound!: Phaser.Sound.BaseSound;
   private tSpinSound!: Phaser.Sound.BaseSound;
   private allClearSound!: Phaser.Sound.BaseSound;
   private holdSound!: Phaser.Sound.BaseSound;
   private moveSound!: Phaser.Sound.BaseSound;
   private soundCountdownTick!: Phaser.Sound.BaseSound;
   private softDropSound!: Phaser.Sound.BaseSound;
+
   private particleManager!: Phaser.GameObjects.Particles.ParticleEmitter;
   private music!: Phaser.Sound.BaseSound;
 
@@ -153,20 +162,23 @@ export class GameScene extends Phaser.Scene {
   private gridOffsetX = 0;
   private gridOffsetY = 0;
   private borderThickness = 10;
-  private score: number = 0;
-  private combo: number = 0;
+  // Scoring fields
+  private scoreState: ScoreState = {
+    score: 0,
+    level: 1,
+    combo: -1,
+    backToBack: false,
+  };
   private level: number = 1;
   private scoreText?: TextBox | null;
   private levelText?: TextBox | null;
   private linesCountdown?: LineClearCountdown | null;
   private comboText!: Phaser.GameObjects.Text;
-  private comboActive: boolean = false;
 
   private grid!: string[][];
   private blocksGroup!: Phaser.GameObjects.Group;
   private spawner!: ShapesSpawner;
   private lastMoveWasRotation: boolean = false;
-  private lastWasTSpin: boolean = false;
 
   private _main: Phaser.Cameras.Scene2D.Camera | null = null;
   private _viewPortHalfHeight: number = 0;
@@ -177,6 +189,7 @@ export class GameScene extends Phaser.Scene {
   private gameMode!: GameMode;
 
   private checkWinCondition: CallableFunction = () => {};
+  private clearCallout!: ClearCallout;
 
   // Event handlers
   private onInputChanged?: (data: {
@@ -199,6 +212,7 @@ export class GameScene extends Phaser.Scene {
 
   /* Scene initialization logic. */
   public init(data: GameSceneConfiguration) {
+    this.scoreState = { score: 0, level: 1, combo: -1, backToBack: false };
     this.currentSpawnSystem = SpawnSettings.get();
     this._blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
@@ -214,8 +228,6 @@ export class GameScene extends Phaser.Scene {
     this.holdUsedThisTurn = false;
     this._holdType = null;
     this.linesCleared = 0;
-    this.score = 0;
-    this.combo = 0;
     this.level = 1;
     this.fallSpeed = 1.0;
     this.initializeGrid();
@@ -242,6 +254,7 @@ export class GameScene extends Phaser.Scene {
     this.load.audio("softDrop", "assets/audio/sfx/soft-drop.wav");
     this.load.audio("countdownTick", "assets/audio/sfx/countdown-tick.wav");
     this.load.audio("countdownGo", "assets/audio/sfx/countdown-go.wav");
+
     // Loading images
     this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
     this.load.image(
@@ -304,6 +317,7 @@ export class GameScene extends Phaser.Scene {
    */
   public create(data: GameSceneConfiguration) {
     addSceneBackground(this);
+    this.clearCallout = new ClearCallout(this);
     this.backgroundVideo = this.add.video(0, 0, "sakuraGarden");
     const scaleX = this.scale.width / this.backgroundVideo.width;
     const scaleY = this.scale.height / this.backgroundVideo.height;
@@ -365,7 +379,7 @@ export class GameScene extends Phaser.Scene {
     this.rotateKickSound = AudioBus.AddSceneAudio(this, "rotatekick");
     this.doubleClearSound = AudioBus.AddSceneAudio(this, "double");
     this.tripleClearSound = AudioBus.AddSceneAudio(this, "triple");
-    this.tetrisClearSound = AudioBus.AddSceneAudio(this, "tetra");
+    this.quadClearSound = AudioBus.AddSceneAudio(this, "tetra");
     this.tSpinSound = AudioBus.AddSceneAudio(this, "tSpin");
     this.allClearSound = AudioBus.AddSceneAudio(this, "allClear");
     this.holdSound = AudioBus.AddSceneAudio(this, "hold");
@@ -768,15 +782,13 @@ export class GameScene extends Phaser.Scene {
     const rightJustPressed = Phaser.Input.Keyboard.JustDown(this.keys.right);
 
     if (leftJustPressed) {
-      this.moveTetrimino(-1);
-      this.resetLockDelay();
+      if (this.moveTetrimino(-1)) this.resetLockDelay();
       this.movementState.left.dasTimer = time + this.DAS;
       this.movementState.left.arrTimer = 0;
       this.movementState.left.held = true;
       this.movementState.right.held = false;
     } else if (rightJustPressed) {
-      this.moveTetrimino(1);
-      this.resetLockDelay();
+      if (this.moveTetrimino(1)) this.resetLockDelay();
       this.movementState.right.dasTimer = time + this.DAS;
       this.movementState.right.arrTimer = 0;
       this.movementState.right.held = true;
@@ -825,19 +837,29 @@ export class GameScene extends Phaser.Scene {
       // Soft Drop: Instant fall with SDF speed
       const cellsToFall = this.SDF * (delta / 1000);
       let remainingFall = cellsToFall;
+      let softDropCells = 0;
 
       while (remainingFall > 0) {
         if (!this.checkCollision(0, 1, this.currentShape)) {
           this.currentPosition.y += 1;
           this.lockdown.onFellToY(this.currentPosition.y);
+          softDropCells += 1;
           remainingFall -= 1;
-          this.score += 1; // <-- TODO: Implement Guideline Scoring for soft drop
         } else {
-          console.log("Soft drop collision detected!");
           this.checkGroundedState();
           break;
         }
       }
+
+      if (softDropCells > 0) {
+        this.lastMoveWasRotation = false;
+        const res = applyDropPoints(this.scoreState, "SOFT", softDropCells);
+        this.scoreState = res.next;
+        this.scoreText?.setText(
+          `${t("labels.score")}: ${this.scoreState.score}`
+        );
+      }
+
       this.updateTetriminoPosition();
     }
   }
@@ -875,37 +897,13 @@ export class GameScene extends Phaser.Scene {
     if (this.isPaused || this.phase !== RoundPhase.Running) return;
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.rotateLeft)) {
-      this.rotatePiece("left");
-      this.resetLockDelay();
+      if (this.rotatePiece("left")) this.resetLockDelay();
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.keys.rotateRight)) {
-      this.rotatePiece("right");
-      this.resetLockDelay();
+      if (this.rotatePiece("right")) this.resetLockDelay();
     }
   }
-
-  // private handleLockDelay(delta: number): void {
-  //   if (this.isLocking) {
-  //     this.lockTimer += delta;
-  //     this.totalLockTime += delta;
-  //     console.log(
-  //       `Lock timer: ${this.lockTimer.toFixed(0)}ms / ${
-  //         this.lockDelay
-  //       }ms (resets: ${this.lockResets})`
-  //     );
-  //     if (
-  //       this.lockTimer >= this.lockDelay ||
-  //       this.totalLockTime >= this.maxLockTime
-  //     ) {
-  //       this.lockTetrimino();
-  //       this.isLocking = false;
-  //       this.lockTimer = 0;
-  //       this.lockResets = 0;
-  //       this.totalLockTime = 0;
-  //     }
-  //   }
-  // }
 
   private handleLockDelay(delta: number): void {
     if (this.lockdown.tick(delta).shouldLock) {
@@ -997,6 +995,7 @@ export class GameScene extends Phaser.Scene {
     this.currentRotationIndex = 0;
     this.currentShape = SHAPES[this.currentTetriminoType][0];
     this.currentPosition = { x: 3, y: -1 };
+    this.lastMoveWasRotation = false;
     this.lockdown.onSpawn(this.currentPosition.y);
 
     if (this.checkCollision(0, 0)) {
@@ -1047,6 +1046,7 @@ export class GameScene extends Phaser.Scene {
 
     // Spawn pieces above the visible grid
     this.currentPosition = { x: 3, y: -1 };
+    this.lastMoveWasRotation = false;
     this.lockdown.onSpawn(this.currentPosition.y);
 
     this.renderNextQueue();
@@ -1137,41 +1137,19 @@ export class GameScene extends Phaser.Scene {
     this.nextPreview?.centerGroupInBox(this.previewGroup);
   }
 
-  private moveTetrimino(direction: number): void {
-    if (this.checkCollision(direction, 0)) return;
+  private moveTetrimino(direction: number): boolean {
+    if (this.checkCollision(direction, 0)) return false;
 
     this.currentPosition.x += direction;
+    this.lastMoveWasRotation = false;
     this.updateTetriminoPosition();
     this.updateGhost();
 
     this.checkGroundedState();
 
     AudioBus.PlaySfx(this, "move");
+    return true;
   }
-
-  // private checkGroundedState(): void {
-  //   const isGrounded = this.checkCollision(0, 1, this.currentShape);
-
-  //   if (isGrounded) {
-  //     if (!this.isLocking) {
-  //       console.log(
-  //         "Piece grounded after movement/rotation - STARTING LOCK DELAY"
-  //       );
-  //       this.isLocking = true;
-  //       this.lockTimer = 0;
-  //     } else {
-  //       console.log("Piece still grounded - lock delay continues");
-  //     }
-  //   } else {
-  //     if (this.isLocking) {
-  //       console.log("Piece no longer grounded - CANCELING LOCK DELAY");
-  //       this.isLocking = false;
-  //       this.lockTimer = 0;
-  //       this.lockResets = 0;
-  //       this.totalLockTime = 0;
-  //     }
-  //   }
-  // }
 
   private checkGroundedState(): void {
     const isGrounded = this.checkCollision(0, 1, this.currentShape);
@@ -1212,7 +1190,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private rotatePiece(direction: "left" | "right"): void {
+  private rotatePiece(direction: "left" | "right"): boolean {
     const from = this.currentRotationIndex;
     const to = this.getNextRotation(from, direction);
 
@@ -1237,18 +1215,17 @@ export class GameScene extends Phaser.Scene {
 
         if (this.isTSpin()) {
           AudioBus.PlaySfx(this, "rotatekick");
-          this.lastWasTSpin = true;
         } else {
           AudioBus.PlaySfx(this, "rotateSound");
-          this.lastWasTSpin = false;
         }
 
-        return;
+        return true;
       }
     }
 
     this.lastMoveWasRotation = false;
     console.warn(`${t("debug.rotationNotPossible")}: ${direction}`);
+    return false;
   }
 
   private getNextRotation(
@@ -1270,10 +1247,13 @@ export class GameScene extends Phaser.Scene {
       dropDistance++;
     }
 
-    this.score += dropDistance * 2; // Hard Drop Score: 2 points per cell
-    console.log(this.scoreText);
+    if (dropDistance > 0) {
+      this.lastMoveWasRotation = false;
+      const res = applyDropPoints(this.scoreState, "HARD", dropDistance);
+      this.scoreState = res.next;
+      this.scoreText?.setText(`${t("labels.score")}: ${this.scoreState.score}`);
+    }
 
-    this.scoreText?.setText(`Score: ${this.score}`);
     this.updateTetriminoPosition();
     this.lockTetrimino();
   }
@@ -1357,20 +1337,96 @@ export class GameScene extends Phaser.Scene {
       });
     });
 
+    const spin = detectSpin({
+      grid: this.grid,
+      empty: GameScene.emptyGridValue,
+      piece: this.currentTetriminoType,
+      rotation: this.currentRotationIndex,
+      posX: this.currentPosition.x,
+      posY: this.currentPosition.y,
+      shape: this.currentShape!,
+      lastMoveWasRotation: this.lastMoveWasRotation,
+    });
     this.currentTetrimino.clear(true, true);
-    this.checkAndClearLines();
+    const { cleared, perfectClear } = this.checkAndClearLines();
     this.drawLockedBlocks();
 
-    // // Reset lock delay variables when spawning a new piece
-    // this.isLocking = false;
-    // this.lockTimer = 0;
-    // this.lockResets = 0;
-    // this.totalLockTime = 0;
+    // Set texts for line count / level
+    if (cleared > 0) {
+      this.linesCleared += cleared;
+      this.linesCountdown?.applyLineClears(cleared);
+      this.linesText?.setText(`${t("labels.lines")}: ${this.linesCleared}`);
+      this.checkLevelUp();
+    }
+
+    // Apply scores
+    const result = applyGuidelineClearScore({
+      state: this.scoreState,
+      linesCleared: Math.min(4, Math.max(0, cleared)) as 0 | 1 | 2 | 3 | 4,
+      spin,
+      perfectClear,
+    });
+    this.scoreState = result.next;
+
+    this.scoreText?.setText(`${t("labels.score")}: ${this.scoreState.score}`);
+    if (this.scoreState.combo >= 1) {
+      this.comboText.setText(`${t("labels.combo")} x${this.scoreState.combo}`);
+    } else {
+      this.comboText.setText("");
+    }
+
+    // Show Callout
+    if (cleared > 0 && result.calloutText) {
+      this.clearCallout.show(result.calloutText);
+    }
+
+    // Play SFX
+    this.playClearSfx(result, cleared);
 
     this.spawnTetrimino();
     this.holdUsedThisTurn = false;
     this._main?.shake(50, 0.005);
     AudioBus.PlaySfx(this, "lockSound");
+  }
+
+  private playClearSfx(result: { label: any }, cleared: number) {
+    if (
+      cleared <= 0 &&
+      result.label?.label !== "TSPIN" &&
+      result.label?.label !== "SPIN"
+    )
+      return;
+
+    // generic clear
+    if (cleared > 0) AudioBus.PlaySfx(this, "lineClearSound");
+
+    // tspin sound
+    if (result.label?.label === "TSPIN" && result.label.lines >= 1) {
+      AudioBus.PlaySfx(this, "tSpin");
+      return;
+    }
+
+    // classic clear sounds
+    if (cleared === 2) AudioBus.PlaySfx(this, "double");
+    if (cleared === 3) AudioBus.PlaySfx(this, "triple");
+    if (cleared === 4) AudioBus.PlaySfx(this, "tetra");
+
+    // all clear
+    if (
+      this.grid.every((row) => row.every((c) => c === GameScene.emptyGridValue))
+    ) {
+      AudioBus.PlaySfx(this, "allClear");
+    }
+
+    // Combo sound
+    if (this.scoreState.combo >= 1) {
+      const maxPitch = 2.0;
+      const pitch = 1.0 + ((this.scoreState.combo - 2) / 13) * (maxPitch - 1.0);
+      const clampedPitch = Phaser.Math.Clamp(pitch, 1.0, maxPitch);
+      this.time.delayedCall(100, () => {
+        AudioBus.PlaySfx(this, "comboSound", { rate: clampedPitch });
+      });
+    }
   }
 
   private drawLockedBlocks(): void {
@@ -1404,7 +1460,7 @@ export class GameScene extends Phaser.Scene {
     return frame !== undefined ? frame : 7; // Fallback to 7 if not found
   }
 
-  private checkAndClearLines(): void {
+  private checkAndClearLines(): { cleared: number; perfectClear: boolean } {
     LogGameAction(GameActions.CHECK_FOR_LINE_CLEAR);
     let clearedLinesCount = 0;
     for (let y = GameScene.gridHeight - 1; y >= 0; y--) {
@@ -1421,32 +1477,10 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    if (clearedLinesCount > 0) {
-      this.linesCleared += clearedLinesCount;
-      this.linesCountdown?.applyLineClears(clearedLinesCount);
-      if (this.comboActive) {
-        this.combo++;
-        this.comboText.setText(`${t("labels.combo")} x${this.combo}`);
-        const maxPitch = 2.0;
-        const pitch = 1.0 + ((this.combo - 2) / 13) * (maxPitch - 1.0);
-        const clampedPitch = Phaser.Math.Clamp(pitch, 1.0, maxPitch);
-        AudioBus.PlaySfx(this, "comboSound", { rate: clampedPitch });
-      } else {
-        this.comboActive = true;
-        this.combo = 0;
-      }
-
-      this.linesText?.setText(`${t("labels.lines")}: ${this.linesCleared}`);
-      this.playLineClearSound(clearedLinesCount);
-      this.addScore(clearedLinesCount);
-
-      // Check Level Up for Ascent and Infinity modes
-      this.checkLevelUp();
-    } else {
-      this.combo = 0;
-      this.comboActive = false;
-      this.comboText.setText("");
-    }
+    const perfectClear = this.grid.every((row) =>
+      row.every((cell) => cell === GameScene.emptyGridValue)
+    );
+    return { cleared: clearedLinesCount, perfectClear };
   }
 
   private doGameModeLogic() {
@@ -1479,7 +1513,7 @@ export class GameScene extends Phaser.Scene {
 
   private triggerVictory(): void {
     const sceneData: VictorySceneData = {
-      score: this.score,
+      score: this.scoreState.score,
       gameMode: this.gameMode,
       time: this.timer?.getElapsedMs() ?? 0,
       linesCleared: this.linesCleared,
@@ -1503,76 +1537,6 @@ export class GameScene extends Phaser.Scene {
     this.grid.unshift(
       new Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
     );
-  }
-
-  private addScore(linesCleared: number) {
-    let basePoints = 0;
-
-    switch (linesCleared) {
-      case 1:
-        basePoints = 100;
-        break;
-      case 2:
-        basePoints = 300;
-        break;
-      case 3:
-        basePoints = 500;
-        break;
-      case 4:
-        basePoints = 800;
-        break;
-    }
-
-    const comboBonus = this.combo * 50;
-    const points = (basePoints + comboBonus) * this.level;
-    this.score += points;
-
-    this.scoreText?.setText(`Score: ${this.score}`);
-  }
-
-  private playLineClearSound(clearedLinesCount: number) {
-    if (clearedLinesCount > 0) {
-      if (this.comboActive) {
-        this.time.delayedCall(100, () => {
-          this.playLineClearActionSfx(clearedLinesCount);
-        });
-      } else {
-        this.playLineClearActionSfx(clearedLinesCount);
-      }
-    }
-    if (
-      this.grid.every((row) =>
-        row.every((cell) => cell === GameScene.emptyGridValue)
-      )
-    ) {
-      AudioBus.PlaySfx(this, "allClear");
-    }
-  }
-
-  playLineClearActionSfx(clearedLinesCount: number) {
-    if (clearedLinesCount < 1) return;
-
-    AudioBus.PlaySfx(this, "lineClearSound");
-
-    if (this.lastWasTSpin) {
-      // TODO: Detect different T-Spin types
-      AudioBus.PlaySfx(this, "tSpin");
-      return;
-    }
-
-    switch (clearedLinesCount) {
-      case 2:
-        AudioBus.PlaySfx(this, "double");
-        break;
-      case 3:
-        AudioBus.PlaySfx(this, "triple");
-        break;
-      case 4:
-        AudioBus.PlaySfx(this, "tetra");
-        break;
-      default:
-        break;
-    }
   }
 
   private handleGameOver(): void {
@@ -1664,6 +1628,7 @@ export class GameScene extends Phaser.Scene {
     const newLevel = Math.floor(this.linesCleared / 10) + 1;
     if (newLevel > this.level) {
       this.level = newLevel;
+      this.scoreState.level = this.level;
       this.updateFallSpeed();
       this.levelText?.setText(`${t("labels.level")}: ${this.level}`);
       console.log(
@@ -1696,11 +1661,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resetRound() {
+    this.scoreState = { score: 0, level: 1, combo: -1, backToBack: false };
+    this.scoreText?.setText(`${t("labels.score")}: ${this.scoreState.score}`);
     this.grid = [];
     this.lockedBlocksGroup.clear(true, true);
     this.initializeGrid();
-    this.score = 0;
-    this.scoreText?.setText(`Score: ${this.score}`);
     this.linesCleared = 0;
     this.linesText?.setText(`${t("labels.lines")}: ${this.linesCleared}`);
     this.level = 1;
@@ -1736,7 +1701,9 @@ export class GameScene extends Phaser.Scene {
     this.countdown.stop();
     const s = this.sound.get("countdownGo");
     if (s?.isPlaying) s.stop();
-    this.sound.play("countdownGo", { volume: 1 });
+    this.sound.play("countdownGo", {
+      volume: AudioSettings.SfxVolume ?? this.countdown.Volume,
+    });
 
     switch (this.phase) {
       case RoundPhase.Running:
