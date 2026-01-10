@@ -1,5 +1,4 @@
 // src/scenes/menus/ControlsMenuScene.ts
-import { t } from "i18next";
 import { InputSettings } from "../../services/InputSettings";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { AudioBus } from "../../services/AudioBus";
@@ -97,6 +96,8 @@ export class ControlsMenuScene extends BaseMenuScene {
     // TODO: Gamepad support will be added later
     //this.input.gamepad?.on("down", this.onPadDown, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.onShutdown, this);
+    this.events.on(Phaser.Scenes.Events.SLEEP, this.onShutdown, this);
   }
 
   public preload(): void {
@@ -245,9 +246,10 @@ export class ControlsMenuScene extends BaseMenuScene {
     k.off("keydown-RIGHT", this.onRight);
     k.off("keydown-R", this.onReset);
     //this.input.gamepad?.off("down", this.onPadDown, this);
-    this.tweens.killAll();
-    this.time.clearPendingEvents();
-    this.input.removeAllListeners();
+    this.tweens.killTweensOf(this.modal.list);
+    this.tweens.killTweensOf(this.modal);
+    //this.time.clearPendingEvents();
+    //this.input.removeAllListeners();
     this.sliders = [];
   }
 

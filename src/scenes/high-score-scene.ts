@@ -152,7 +152,11 @@ export class HighscoreScene extends Phaser.Scene {
     );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off(SettingsEvents.LanguageChanged);
+      this.game.events.off(
+        SettingsEvents.LanguageChanged,
+        this.onLanguageChange,
+        this
+      );
     });
   }
 
@@ -444,7 +448,7 @@ export class HighscoreScene extends Phaser.Scene {
 
   public onLanguageChange(e: { lang: Locale }) {
     this.titleText.setText(t("labels.mnu-highscores"));
-    this.backText.setText(t("labels.back"));
+    this.backText.setText(`ESC ${t("labels.back")}`);
   }
 
   private formatDate(iso: string): string {
