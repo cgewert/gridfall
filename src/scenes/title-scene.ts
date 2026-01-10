@@ -47,7 +47,7 @@ export class TitleScene extends Phaser.Scene {
     if (!AudioSettings.HasSettings) AudioSettings.save();
     // Load local storage settings as early as possible.
     AudioSettings.load();
-    console.info(
+    console.debug(
       "Loaded audio settings:",
       `Music Volume: ${AudioSettings.MusicVolume}`,
       `SFX Volume: ${AudioSettings.SfxVolume}`

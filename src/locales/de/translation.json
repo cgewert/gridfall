@@ -18,7 +18,7 @@
     "score": "PUNKTE",
     "combo": "KOMBO",
     "mnu-options": "Optionen",
-    "mnu-credits": "Credits",
+    "mnu-credits": "Mitwirkende",
     "mnu-controls": "Steuerung",
     "mnu-audio": "Audio",
     "mnu-general": "Allgemein",
@@ -64,5 +64,16 @@
     "pause": "Spiel pausieren",
     "restartRound": "Runde neu starten",
     "back": "Zurück"
+  },
+  "highscores": {
+    "empty": "Keine Highscores vorhanden.",
+    "date": "Datum",
+    "lines": "Linien",
+    "time": "Zeit",
+    "score": "Punkte",
+    "level": "Level",
+    "RUSH": "RUSH (40 Linien)",
+    "ASCENT": "ASCENT (150 Linien)",
+    "INFINITY": "INFINITY (Endlos Modus)"
   }
 }

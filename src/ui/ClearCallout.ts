@@ -1,4 +1,3 @@
-// src/ui/ClearCallout.ts
 export class ClearCallout {
   constructor(private scene: Phaser.Scene) {}
 

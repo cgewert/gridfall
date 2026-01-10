@@ -21,21 +21,21 @@ export class OptionsScene extends BaseMenuScene {
       onChooseSoundKey: "ui-choose",
       items: [
         {
-          label: "Controls",
+          label: t("labels.mnu-controls"),
           disabled: false,
           action: () => this.openControls(),
           identifier: "mnu-controls",
           translatable: true,
         },
         {
-          label: "Audio",
+          label: t("labels.mnu-audio"),
           disabled: false,
           action: () => this.openAudio(),
           identifier: "mnu-audio",
           translatable: true,
         },
         {
-          label: "General",
+          label: t("labels.mnu-general"),
           disabled: false,
           action: () => this.openGeneral(),
           identifier: "mnu-general",

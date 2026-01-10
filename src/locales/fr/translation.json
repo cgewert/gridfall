@@ -64,5 +64,16 @@
     "pause": "Mettre le jeu en pause",
     "restartRound": "Redémarrer la manche",
     "back": "Retour"
+  },
+  "highscores": {
+    "empty": "Pas de meilleurs scores disponibles.",
+    "date": "Date",
+    "lines": "Lignes",
+    "time": "Temps",
+    "score": "Score",
+    "level": "Niveau",
+    "RUSH": "RUSH (40 Lignes)",
+    "ASCENT": "ASCENT (150 Lignes)",
+    "INFINITY": "INFINITY (Mode Infini)"
   }
 }

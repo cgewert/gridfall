@@ -64,5 +64,16 @@
     "pause": "ゲームを一時停止",
     "restartRound": "ラウンドを再開",
     "back": "戻る"
+  },
+  "highscores": {
+    "empty": "ハイスコアはありません。",
+    "date": "日付",
+    "lines": "ライン",
+    "time": "時間",
+    "score": "スコア",
+    "level": "レベル",
+    "RUSH": "RUSH (40 ライン)",
+    "ASCENT": "ASCENT (150 ライン)",
+    "INFINITY": "INFINITY (エンドレスモード)"
   }
 }
