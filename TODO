@@ -1,10 +1,6 @@
   Release 1.0.0: (Target Date: 2026-01-04):
-    ✔ Implement all Game Modes (Polish score system and difficulty for each mode) @started(25-12-28 17:27) @done(26-01-07 17:57) @lasted(1w3d30m6s)
-    ✔ Implement Spin detection module @started(26-01-06 18:24) @done(26-01-07 17:57) @lasted(23h33m16s)
-    ✔ Implement "Reset to defaults" button functionality @done(26-01-08 22:33)
     ☐ Finalize Callouts (priorities and visual design)
-    ☐ Finish all translations
-    ☐ Make sure all tweens are working without bugs, also changed settings during gameplay shall not break anything
+    ☐ Finish all translations @started(26-01-10 15:49)
     ☐ Add all assets and replace placeholder assets
     ☐ Publish on itch.io
 

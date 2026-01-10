@@ -170,7 +170,7 @@ function buildCalloutText(
 ): string | null {
   const parts: string[] = [];
 
-  if (meta.b2bApplied) parts.push("BACK-TO-BACK");
+  if (meta.b2bApplied) parts.push("B2B");
 
   const main = (() => {
     if (label.label === "NONE") return null;

@@ -152,7 +152,11 @@ export class HighscoreScene extends Phaser.Scene {
     );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off(SettingsEvents.LanguageChanged);
+      this.game.events.off(
+        SettingsEvents.LanguageChanged,
+        this.onLanguageChange,
+        this
+      );
     });
   }
 
@@ -173,7 +177,7 @@ export class HighscoreScene extends Phaser.Scene {
 
     // Header
     const title = this.add
-      .text(padding, padding, "INFINITY (Endless Mode)", {
+      .text(padding, padding, t("highscores.INFINITY").toUpperCase(), {
         fontFamily: "Orbitron, Arial, sans-serif",
         fontSize: "26px",
         color: "#ffffff",
@@ -190,16 +194,16 @@ export class HighscoreScene extends Phaser.Scene {
     };
 
     const colScore = this.add
-      .text(padding, colY, "SCORE", colStyle)
+      .text(padding, colY, t("highscores.score").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colTime = this.add
-      .text(padding + 260, colY, "TIME", colStyle)
+      .text(padding + 260, colY, t("highscores.time").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colLines = this.add
-      .text(padding + 430, colY, "LINES", colStyle)
+      .text(padding + 430, colY, t("highscores.lines").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colDate = this.add
-      .text(padding + 560, colY, "DATE", colStyle)
+      .text(padding + 560, colY, t("highscores.date").toUpperCase(), colStyle)
       .setOrigin(0, 0);
 
     colScore.setAlpha(0.8);
@@ -268,7 +272,7 @@ export class HighscoreScene extends Phaser.Scene {
 
     // Header
     const title = this.add
-      .text(padding, padding, "ASCENT (150 LINES)", {
+      .text(padding, padding, t("highscores.ASCENT").toUpperCase(), {
         fontFamily: "Orbitron, Arial, sans-serif",
         fontSize: "26px",
         color: "#ffffff",
@@ -285,16 +289,16 @@ export class HighscoreScene extends Phaser.Scene {
     };
 
     const colScore = this.add
-      .text(padding, colY, "SCORE", colStyle)
+      .text(padding, colY, t("highscores.score").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colTime = this.add
-      .text(padding + 260, colY, "TIME", colStyle)
+      .text(padding + 260, colY, t("highscores.time").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colLines = this.add
-      .text(padding + 430, colY, "LINES", colStyle)
+      .text(padding + 430, colY, t("highscores.lines").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colDate = this.add
-      .text(padding + 560, colY, "DATE", colStyle)
+      .text(padding + 560, colY, t("highscores.date").toUpperCase(), colStyle)
       .setOrigin(0, 0);
 
     colScore.setAlpha(0.8);
@@ -365,7 +369,7 @@ export class HighscoreScene extends Phaser.Scene {
 
     // Header
     const title = this.add
-      .text(padding, padding, "RUSH (40 LINES)", {
+      .text(padding, padding, t("highscores.RUSH").toUpperCase(), {
         fontFamily: "Orbitron, Arial, sans-serif",
         fontSize: "26px",
         color: "#ffffff",
@@ -382,13 +386,13 @@ export class HighscoreScene extends Phaser.Scene {
     };
 
     const colTime = this.add
-      .text(padding, colY, "TIME", colStyle)
+      .text(padding, colY, t("highscores.time").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colLines = this.add
-      .text(padding + 260, colY, "LINES", colStyle)
+      .text(padding + 260, colY, t("highscores.lines").toUpperCase(), colStyle)
       .setOrigin(0, 0);
     const colDate = this.add
-      .text(padding + 380, colY, "DATE", colStyle)
+      .text(padding + 380, colY, t("highscores.date").toUpperCase(), colStyle)
       .setOrigin(0, 0);
 
     colTime.setAlpha(0.8);
@@ -444,7 +448,7 @@ export class HighscoreScene extends Phaser.Scene {
 
   public onLanguageChange(e: { lang: Locale }) {
     this.titleText.setText(t("labels.mnu-highscores"));
-    this.backText.setText(t("labels.back"));
+    this.backText.setText(`ESC ${t("labels.back")}`);
   }
 
   private formatDate(iso: string): string {

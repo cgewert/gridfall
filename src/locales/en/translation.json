@@ -64,5 +64,16 @@
     "pause": "Pause Game",
     "restartRound": "Restart Round",
     "back": "Back"
+  },
+  "highscores": {
+    "empty": "No Highscores available.",
+    "date": "Date",
+    "lines": "Lines",
+    "time": "Time",
+    "score": "Score",
+    "level": "Level",
+    "RUSH": "RUSH (40 Lines)",
+    "ASCENT": "ASCENT (150 Lines)",
+    "INFINITY": "INFINITY (Endless Mode)"
   }
 }
