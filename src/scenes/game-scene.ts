@@ -216,11 +216,10 @@ export class GameScene extends Phaser.Scene {
     this.currentSpawnSystem = SpawnSettings.get();
     this._blockSkin = SkinSettings.get() as BlockSkin;
     this.gameMode = data?.gameMode ?? GameMode.ASCENT;
-    if (this.gameMode === GameMode.ASCENT) {
-      this.useSpeedCurve = true;
-    } else {
-      this.useSpeedCurve = false;
-    }
+
+    // Determine if speed curve should be used by game modes
+    this.useSpeedCurve =
+      this.gameMode === GameMode.ASCENT || this.gameMode === GameMode.INFINITY;
 
     this.gridCellGroup?.destroy(true, true);
     this.gameOver = false;
@@ -229,7 +228,8 @@ export class GameScene extends Phaser.Scene {
     this._holdType = null;
     this.linesCleared = 0;
     this.level = 1;
-    this.fallSpeed = 1.0;
+    this.scoreState.level = 1;
+    this.updateFallSpeed();
     this.initializeGrid();
     this.spawner = new ShapesSpawner(this.currentSpawnSystem);
     this.currentShape = null;
@@ -867,30 +867,58 @@ export class GameScene extends Phaser.Scene {
   private handleGravity(delta: number): void {
     if (this.phase !== RoundPhase.Running) return;
 
-    if (this.keys.down.isDown) {
-      return; // Soft drop takes precedence over gravity
+    // Soft drop takes precedence over gravity
+    if (this.keys.down.isDown) return;
+
+    const dt = delta / 1000;
+    const effectiveFallSpeed = this.fallSpeed; // rows (cells) per second
+
+    // Accumulate fractional fall distance
+    this.fallProgress += effectiveFallSpeed * dt;
+
+    // 20G-ish behavior.
+    // If gravity would move the piece by ~20+ cells this frame, snap it to the floor
+    // instead of iterating 20+ times
+    // 20G at 60fps => 20 cells/frame => 1200 rows/sec
+    const wouldMoveThisFrame = effectiveFallSpeed * dt;
+    if (wouldMoveThisFrame >= 20) {
+      // Move down until collision (like ghost), but DO NOT lock here.
+      while (!this.checkCollision(0, 1, this.currentShape)) {
+        this.currentPosition.y += 1;
+      }
+      this.fallProgress = 0;
+      this.lockdown.onFellToY(this.currentPosition.y);
+      this.checkGroundedState();
+      return;
     }
 
-    const effectiveFallSpeed = this.fallSpeed;
-    this.fallProgress += effectiveFallSpeed * (delta / 1000);
+    // SAFETY CAP: prevent huge loops on slow frames / tab background / stutters.
+    // Keeps the game responsive even if delta spikes.
+    const MAX_STEPS_PER_TICK = 32;
+    let steps = 0;
 
-    while (this.fallProgress >= 1) {
+    while (this.fallProgress >= 1 && steps < MAX_STEPS_PER_TICK) {
       if (!this.checkCollision(0, 1, this.currentShape)) {
         this.currentPosition.y += 1;
         this.lockdown.onFellToY(this.currentPosition.y);
         this.fallProgress -= 1.0;
-        console.log("Piece moved down one cell");
       } else {
-        console.log("Collision detected at bottom!");
+        // grounded
         this.fallProgress = 0;
         this.checkGroundedState();
-        break;
+        return;
       }
+      steps++;
     }
 
-    if (this.fallProgress < 1) {
-      this.checkGroundedState();
+    // If we hit the cap, keep the remainder (so gravity "catches up" over next frames),
+    // but don't stall this frame.
+    if (steps >= MAX_STEPS_PER_TICK) {
+      // Optional: clamp remainder so it doesn't grow without bound if performance tanks
+      this.fallProgress = Math.min(this.fallProgress, 1.0);
     }
+
+    this.checkGroundedState();
   }
 
   private handleRotationInput(): void {
