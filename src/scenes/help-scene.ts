@@ -50,26 +50,38 @@ export class HelpScene extends Phaser.Scene {
 
     const startY = height * 0.22;
     const rowH = 34;
-    const leftX = width * 0.3;
-    const rightX = width * 0.7;
+    const leftX = width * 0.25;
+    const actionTexts: Phaser.GameObjects.Text[] = [];
+    const keyTexts: Phaser.GameObjects.Text[] = [];
 
     lines.forEach(([action, key], i) => {
       const y = startY + i * rowH;
 
-      this.add
+      const actionText = this.add
         .text(leftX, y, action, {
           fontFamily: "Orbitron",
           fontSize: "22px",
         })
         .setOrigin(0, 0.5);
 
-      this.add
-        .text(rightX, y, key, {
+      const keyText = this.add
+        .text(0, y, key, {
           fontFamily: "Orbitron",
           fontSize: "22px",
         })
         .setOrigin(1, 0.5);
+
+      actionTexts.push(actionText);
+      keyTexts.push(keyText);
     });
+
+    const gap = 24;
+    const maxActionW = Math.max(...actionTexts.map((t) => t.width));
+    const marginRight = 80;
+    const keyRightX = this.scale.width - marginRight;
+    const minKeyRightX = leftX + maxActionW + gap + 1;
+    const finalKeyRightX = Math.max(keyRightX, minKeyRightX);
+    keyTexts.forEach((t) => t.setX(finalKeyRightX));
 
     const hint = "ESC: " + i18next.t("labels.back");
     this.add
