@@ -75,5 +75,9 @@
     "RUSH": "RUSH (40 ライン)",
     "ASCENT": "ASCENT (150 ライン)",
     "INFINITY": "INFINITY (エンドレスモード)"
+  },
+  "units": {
+    "ms": "ms",
+    "cells/s": "セル/秒"
   }
 }

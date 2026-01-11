@@ -1,4 +1,3 @@
-// src/scoring/spinDetection.ts
 import { Rotation } from "../game";
 import type { TetriminoShape } from "../shapes";
 import { collides } from "./gridCollision";
@@ -33,7 +32,7 @@ export function detectSpin(params: {
 
   // --- T-Spin detection (Guideline-like) ---
   if (piece === "T") {
-    // Pivot bei euren 3x3 T-shapes: center = (x+1,y+1)
+    // Pivot for 3x3 T-shapes: center = (x+1,y+1)
     const cx = posX + 1;
     const cy = posY + 1;
 
@@ -45,7 +44,7 @@ export function detectSpin(params: {
     const corners = Number(tl) + Number(tr) + Number(bl) + Number(br);
     if (corners < 3) return { kind: "NONE" };
 
-    // Mini vs Full via "Front corners" (robust, ohne Kick-Index)
+    // Mini vs Full via "Front corners"
     const [f1, f2] =
       rotation === 0
         ? [tl, tr]
@@ -73,7 +72,7 @@ export function detectSpin(params: {
   return { kind: "NONE" };
 }
 
-// Für T-Spin corners: Wände/Boden zählen als "filled", Spawn über Grid nicht
+// For T-Spin corners: Walls/floor count as "filled", spawn above grid does not
 function isCornerFilled(
   grid: string[][],
   empty: string,

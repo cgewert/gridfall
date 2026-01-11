@@ -1,14 +1,10 @@
-// src/scenes/menus/ControlsMenuScene.ts
+import { t } from "i18next";
 import { InputSettings } from "../../services/InputSettings";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { AudioBus } from "../../services/AudioBus";
 
 type SliderRef = {
   name: "DAS" | "ARR" | "SDF";
-  cx: number;
-  cy: number;
-  w: number;
-  h: number;
   bg: Phaser.GameObjects.Rectangle;
   fill: Phaser.GameObjects.Rectangle;
   label: Phaser.GameObjects.Text;
@@ -19,20 +15,28 @@ type SliderRef = {
   step: number;
   min: number;
   max: number;
+  w: number;
+  h: number;
+  leftX: number; // left edge of the slider bar (inside modal)
+  cy: number;
 };
 
 export class ControlsMenuScene extends BaseMenuScene {
   public static readonly KEY = "ControlsMenuScene";
   private static readonly HINT = "hints.mnu-controls";
+  private static readonly CONTENT_PADDING_LEFT = 50;
 
   private sliders: SliderRef[] = [];
-  private onReset!: () => void;
   private activeIndex = 0;
 
+  private onReset!: () => void;
   private onUp!: () => void;
   private onDown!: () => void;
   private onLeft!: () => void;
   private onRight!: () => void;
+
+  // Computed left edge inside the modal container (local coords)
+  private contentLeftX = 0;
 
   constructor() {
     super(ControlsMenuScene.KEY, "labels.mnu-controls", ControlsMenuScene.HINT);
@@ -43,9 +47,19 @@ export class ControlsMenuScene extends BaseMenuScene {
 
     AudioBus.AddSceneAudio(this, "settings-reset");
 
-    // Slider rows
+    // Compute the modal width (fallback if bounds are 0 for any reason)
+    const modalBounds = this.modal.getBounds();
+    const modalW =
+      modalBounds.width && modalBounds.width > 0
+        ? modalBounds.width
+        : Math.min(760, this.scale.width - 80);
+
+    // If the modal background is centered at (0,0) in modal-local space,
+    // its left edge is -modalW/2. Add padding.
+    this.contentLeftX = -modalW / 2 - ControlsMenuScene.CONTENT_PADDING_LEFT;
+
+    // Slider rows (all left-aligned)
     this.addSlider(
-      0,
       -30,
       "DAS",
       () => InputSettings.DAS,
@@ -56,7 +70,6 @@ export class ControlsMenuScene extends BaseMenuScene {
       250
     );
     this.addSlider(
-      0,
       50,
       "ARR",
       () => InputSettings.ARR,
@@ -67,12 +80,11 @@ export class ControlsMenuScene extends BaseMenuScene {
       100
     );
     this.addSlider(
-      0,
       130,
       "SDF",
       () => InputSettings.SDF,
       (v) => InputSettings.setSDF(v),
-      (v) => `${v} tiles/s`,
+      (v) => `${v} ${t("units.cells/s")}`,
       1,
       1,
       80
@@ -81,11 +93,11 @@ export class ControlsMenuScene extends BaseMenuScene {
     this.setActiveSlider(0);
 
     const k = this.input.keyboard!;
-    this.onReset = () => this.resetDefaults();
     this.onUp = () => this.setActiveSlider(this.activeIndex - 1);
     this.onDown = () => this.setActiveSlider(this.activeIndex + 1);
     this.onLeft = () => this.nudgeActive(-1);
     this.onRight = () => this.nudgeActive(+1);
+    this.onReset = () => this.resetDefaults();
 
     k.on("keydown-UP", this.onUp);
     k.on("keydown-DOWN", this.onDown);
@@ -93,8 +105,6 @@ export class ControlsMenuScene extends BaseMenuScene {
     k.on("keydown-RIGHT", this.onRight);
     k.on("keydown-R", this.onReset);
 
-    // TODO: Gamepad support will be added later
-    //this.input.gamepad?.on("down", this.onPadDown, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.onShutdown, this);
     this.events.on(Phaser.Scenes.Events.SLEEP, this.onShutdown, this);
@@ -105,7 +115,6 @@ export class ControlsMenuScene extends BaseMenuScene {
   }
 
   private addSlider(
-    cx: number,
     cy: number,
     name: "DAS" | "ARR" | "SDF",
     get: () => number,
@@ -115,10 +124,14 @@ export class ControlsMenuScene extends BaseMenuScene {
     min: number,
     max: number
   ) {
-    const w = 520,
-      h = 16;
+    const w = 520;
+    const h = 16;
+
+    const leftX = this.contentLeftX;
+    const barCenterX = leftX + w / 2;
+
     const label = this.add
-      .text(cx - w / 2, cy - 36, name, {
+      .text(leftX, cy - 36, name, {
         fontFamily: "Orbitron, sans-serif",
         fontSize: "22px",
         color: "#9ad",
@@ -126,48 +139,28 @@ export class ControlsMenuScene extends BaseMenuScene {
       .setOrigin(0, 1);
 
     const bg = this.add
-      .rectangle(cx, cy, w, h, 0xffffff, 0.08)
+      .rectangle(barCenterX, cy, w, h, 0xffffff, 0.08)
       .setOrigin(0.5)
       .setStrokeStyle(1, 0x00ffff, 0.6);
 
     const norm = (get() - min) / (max - min);
     const fill = this.add
-      .rectangle(cx - w / 2, cy, Math.max(6, norm * w), h, 0x00ffff, 0.75)
+      .rectangle(leftX, cy, Math.max(6, norm * w), h, 0x00ffff, 0.75)
       .setOrigin(0, 0.5)
       .setBlendMode(Phaser.BlendModes.ADD);
 
     const value = this.add
-      .text(cx + w / 2 + 14, cy, format(get()), {
+      .text(leftX + w + 14, cy, format(get()), {
         fontFamily: "Orbitron, sans-serif",
         fontSize: "18px",
         color: "#cfefff",
       })
       .setOrigin(0, 0.5);
 
-    // TODO: Consider: No pointer interaction for now, maybe later
-
-    // bg.setInteractive({ useHandCursor: true });
-    // const onPointer = (p: Phaser.Input.Pointer) => {
-    //   this.focusByName(name);
-    //   const rel = Phaser.Math.Clamp((p.x - (cx - w / 2)) / w, 0, 1);
-    //   const val = Math.round(min + rel * (max - min));
-    //   set(val);
-    //   fill.width = Math.max(6, rel * w);
-    //   value.setText(format(val));
-    // };
-    // bg.on("pointerdown", onPointer);
-    // bg.on("pointermove", (p: Phaser.Input.Pointer) => {
-    //   if (p.isDown) onPointer(p);
-    // });
-
     this.modal.add([label, bg, fill, value]);
 
     this.sliders.push({
       name,
-      cx,
-      cy,
-      w,
-      h,
       bg,
       fill,
       label,
@@ -178,6 +171,10 @@ export class ControlsMenuScene extends BaseMenuScene {
       step,
       min,
       max,
+      w,
+      h,
+      leftX,
+      cy,
     });
   }
 
@@ -202,22 +199,20 @@ export class ControlsMenuScene extends BaseMenuScene {
     });
   }
 
-  private focusByName(name: SliderRef["name"]) {
-    const idx = this.sliders.findIndex((s) => s.name === name);
-    if (idx >= 0) this.setActiveSlider(idx);
-  }
-
   private nudgeActive(dir: -1 | 1) {
     const s = this.sliders[this.activeIndex];
     if (!s) return;
+
     const cur = s.get();
     const next = Phaser.Math.Clamp(cur + dir * s.step, s.min, s.max);
     if (next === cur) return;
 
     s.set(next);
+
     const rel = (next - s.min) / (s.max - s.min);
     s.fill.width = Math.max(6, rel * s.w);
     s.value.setText(s.format(next));
+
     this.tweens.add({
       targets: s.fill,
       alpha: 1,
@@ -226,17 +221,6 @@ export class ControlsMenuScene extends BaseMenuScene {
       ease: "Quad.easeOut",
     });
   }
-
-  // TODO: Gamepad support will be added later
-  //   private onPadDown(_pad: any, btn: any, val: number) {
-  //     if (val === 0) return;
-  //     const idx = typeof btn === "number" ? btn : btn.index;
-  //     if (idx === 12) this.setActiveSlider(this.activeIndex - 1); // Up
-  //     if (idx === 13) this.setActiveSlider(this.activeIndex + 1); // Down
-  //     if (idx === 14) this.nudgeActive(-1); // Left
-  //     if (idx === 15) this.nudgeActive(+1); // Right
-  //     if (idx === 1) this.close(); // B/Circle
-  //   }
 
   private onShutdown() {
     const k = this.input.keyboard!;
@@ -252,9 +236,6 @@ export class ControlsMenuScene extends BaseMenuScene {
     //this.input.removeAllListeners();
     this.sliders = [];
   }
-
-  protected onEntranceCompleted(): void {}
-  protected beforeClose(): void {}
 
   private resetDefaults() {
     InputSettings.resetToDefaults();
@@ -272,4 +253,7 @@ export class ControlsMenuScene extends BaseMenuScene {
       s.value.setText(s.format(v));
     }
   }
+
+  protected onEntranceCompleted(): void {}
+  protected beforeClose(): void {}
 }
