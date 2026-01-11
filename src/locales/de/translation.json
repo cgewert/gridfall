@@ -75,5 +75,9 @@
     "RUSH": "RUSH (40 Linien)",
     "ASCENT": "ASCENT (150 Linien)",
     "INFINITY": "INFINITY (Endlos Modus)"
+  },
+  "units": {
+    "ms": "ms",
+    "cells/s": "Zellen/s"
   }
 }
