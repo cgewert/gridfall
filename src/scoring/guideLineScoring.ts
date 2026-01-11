@@ -26,7 +26,7 @@ export interface ApplyClearOutput {
   gained: number;
   next: ScoreState;
   label: ClearLabel;
-  b2bApplied: boolean;
+  b2bApplied: boolean; // Set to true if B2B multiplier was applied
   calloutText: string | null; // one string (can include \n)
 }
 

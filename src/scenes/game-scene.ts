@@ -47,7 +47,7 @@ import { CountdownOverlay } from "../ui/CountdownOverlay";
 import { t } from "i18next";
 import { getSrsKicks } from "../rotation/srs";
 import { ExtendedPlacementLockdown } from "../lockdown";
-import { ClearCallout } from "../ui/ClearCallout";
+import { ClearCallout } from "../ui/callouts/ClearCallout";
 import { detectSpin } from "../scoring/spinDetection";
 import {
   applyGuidelineClearScore,
@@ -55,6 +55,10 @@ import {
   type ScoreState,
 } from "../scoring/guideLineScoring";
 import { AudioSettings } from "../services/AudioSettings";
+import { TspinCallout } from "../ui/callouts/TspinCallout";
+import { B2BCallout } from "../ui/callouts/B2BCallout";
+import { QuadCallout } from "../ui/callouts/QuadCallout";
+import { PcCallout } from "../ui/callouts/PcCallout";
 
 export type GridConfiguration = {
   borderThickness?: number;
@@ -129,6 +133,13 @@ export class GameScene extends Phaser.Scene {
   private isPaused = false;
   private pauseIndex = 0;
 
+  // Images
+  private pcImage!: Phaser.GameObjects.Image;
+  private quadImage!: Phaser.GameObjects.Image;
+  private singleImage!: Phaser.GameObjects.Image;
+  private doubleImage!: Phaser.GameObjects.Image;
+  private tripleImage!: Phaser.GameObjects.Image;
+
   // Sounds
   private comboSound!: Phaser.Sound.BaseSound;
   private lineClearSound!: Phaser.Sound.BaseSound;
@@ -157,9 +168,9 @@ export class GameScene extends Phaser.Scene {
   private static readonly gridWidth = 10;
   private static readonly gridHeight = 20;
   public static readonly BLOCKSIZE = 40;
-  private static readonly totalGridWidth =
+  public static readonly totalGridWidth =
     GameScene.gridWidth * GameScene.BLOCKSIZE;
-  private static readonly totalGridHeight =
+  public static readonly totalGridHeight =
     GameScene.gridHeight * GameScene.BLOCKSIZE;
   private gridOffsetX = 0;
   private gridOffsetY = 0;
@@ -175,7 +186,6 @@ export class GameScene extends Phaser.Scene {
   private scoreText?: TextBox | null;
   private levelText?: TextBox | null;
   private linesCountdown?: LineClearCountdown | null;
-  private comboText!: Phaser.GameObjects.Text;
 
   private grid!: string[][];
   private blocksGroup!: Phaser.GameObjects.Group;
@@ -191,7 +201,13 @@ export class GameScene extends Phaser.Scene {
   private gameMode!: GameMode;
 
   private checkWinCondition: CallableFunction = () => {};
-  private clearCallout!: ClearCallout;
+
+  // We use 5 callouts for different clear types
+  private quadCallout!: ClearCallout;
+  private tspinCallout!: ClearCallout;
+  private pcCallout!: ClearCallout;
+  private b2bCallout!: ClearCallout;
+  private comboText!: Phaser.GameObjects.Text;
 
   // Event handlers
   private onInputChanged?: (data: {
@@ -267,6 +283,11 @@ export class GameScene extends Phaser.Scene {
       "sakuraParticle2",
       "assets/gfx/particles/sakura_particle2.png"
     );
+    this.load.image("pc_image", "assets/gfx/sprites/pc.png");
+    this.load.image("quad", "assets/gfx/sprites/quad.png");
+    this.load.image("tspin_single", "assets/gfx/sprites/tspin-single.png");
+    this.load.image("tspin_double", "assets/gfx/sprites/tspin-double.png");
+    this.load.image("tspin_triple", "assets/gfx/sprites/tspin-triple.png");
     // Loading videos
     //this.load.video("sakuraGarden", "assets/mov/sakura_garden.mp4");
     this.load.video("sakuraGarden", "assets/mov/bubbles.mp4");
@@ -319,7 +340,25 @@ export class GameScene extends Phaser.Scene {
    */
   public create(data: GameSceneConfiguration) {
     addSceneBackground(this);
-    this.clearCallout = new ClearCallout(this);
+    this.singleImage = this.add.image(0, 0, "tspin_single").setVisible(false);
+    this.doubleImage = this.add.image(0, 0, "tspin_double").setVisible(false);
+    this.tripleImage = this.add.image(0, 0, "tspin_triple").setVisible(false);
+    this.pcImage = this.add
+      .image(this.scale.width / 2, this.scale.height / 2, "pc_image")
+      .setVisible(false);
+    this.quadImage = this.add
+      .image(this.scale.width / 2, this.scale.height / 4, "quad")
+      .setVisible(false);
+
+    this.quadCallout = new QuadCallout(this, this.quadImage);
+    this.b2bCallout = new B2BCallout(this);
+    this.tspinCallout = new TspinCallout(
+      this,
+      this.singleImage,
+      this.doubleImage,
+      this.tripleImage
+    );
+    this.pcCallout = new PcCallout(this, this.pcImage);
     this.backgroundVideo = this.add.video(0, 0, "sakuraGarden");
     const scaleX = this.scale.width / this.backgroundVideo.width;
     const scaleY = this.scale.height / this.backgroundVideo.height;
@@ -503,6 +542,28 @@ export class GameScene extends Phaser.Scene {
         this.startRound();
       },
     });
+
+    this.singleImage.setPosition(
+      this.gridOffsetX - 150,
+      this.gridOffsetY +
+        GameScene.totalGridHeight -
+        this.singleImage.height / 2 -
+        100
+    );
+    this.doubleImage.setPosition(
+      this.gridOffsetX - 150,
+      this.gridOffsetY +
+        GameScene.totalGridHeight -
+        this.doubleImage.height / 2 -
+        100
+    );
+    this.tripleImage.setPosition(
+      this.gridOffsetX - 150,
+      this.gridOffsetY +
+        GameScene.totalGridHeight -
+        this.tripleImage.height / 2 -
+        100
+    );
   }
 
   private onSceneShutdown<GameScene>(
@@ -1375,9 +1436,16 @@ export class GameScene extends Phaser.Scene {
       this.comboText.setText("");
     }
 
-    // Show Callout
+    // Show T-Spin / Spin callouts
     if (cleared > 0 && result.calloutText) {
-      this.clearCallout.show(result.calloutText);
+      // Detect if a PC was cleared (Has precedence over Quad)
+      if (perfectClear) this.pcCallout?.show(null); // Detect Quad clear
+      else if (cleared === 4) this.quadCallout?.show(null);
+
+      // Detect if a T-spin was cleared
+      if (spin.kind === "TSPIN") this.tspinCallout?.show(cleared);
+      // Detect is a B2B was cleared
+      if (result.b2bApplied) this.b2bCallout?.show(null);
     }
 
     // Play SFX
