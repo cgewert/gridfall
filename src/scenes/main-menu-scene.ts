@@ -77,7 +77,7 @@ export class MainMenuScene extends Phaser.Scene {
     });
 
     this.load.audio("ui-move", "assets/audio/sfx/ui-move.ogg");
-    this.load.audio("ui-choose", "assets/audio/sfx/ui-choose.ogg");
+    this.load.audio("ui-choose", "assets/audio/sfx/ui-choose.wav");
     this.load.audio("menuLoop", Soundtrack.menu);
   }
 

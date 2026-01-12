@@ -146,15 +146,13 @@ export class GameScene extends Phaser.Scene {
   private rotateSound!: Phaser.Sound.BaseSound;
   private lockSound!: Phaser.Sound.BaseSound;
   private rotateKickSound!: Phaser.Sound.BaseSound;
-  private doubleClearSound!: Phaser.Sound.BaseSound;
-  private tripleClearSound!: Phaser.Sound.BaseSound;
   private quadClearSound!: Phaser.Sound.BaseSound;
   private tSpinSound!: Phaser.Sound.BaseSound;
-  private allClearSound!: Phaser.Sound.BaseSound;
+  private pcSound!: Phaser.Sound.BaseSound;
   private holdSound!: Phaser.Sound.BaseSound;
   private moveSound!: Phaser.Sound.BaseSound;
   private soundCountdownTick!: Phaser.Sound.BaseSound;
-  private softDropSound!: Phaser.Sound.BaseSound;
+  // private softDropSound!: Phaser.Sound.BaseSound;
 
   private particleManager!: Phaser.GameObjects.Particles.ParticleEmitter;
   private music!: Phaser.Sound.BaseSound;
@@ -256,22 +254,22 @@ export class GameScene extends Phaser.Scene {
   public preload() {
     // Loading music
     this.load.audio("track1", Soundtrack.track1);
+
     // Loading sfx
+    this.load.audio("quad", "assets/audio/sfx/quad.ogg");
+    this.load.audio("pc", "assets/audio/sfx/pc.ogg");
     this.load.audio("comboSound", "assets/audio/sfx/combo.mp3");
     this.load.audio("lineClearSound", "assets/audio/sfx/clear.wav");
     this.load.audio("rotateSound", "assets/audio/sfx/rotate.wav");
     this.load.audio("lockSound", "assets/audio/sfx/lock.wav");
-    this.load.audio("rotatekick", "assets/audio/sfx/rotatekick.ogg");
-    this.load.audio("double", "assets/audio/sfx/double.ogg");
-    this.load.audio("triple", "assets/audio/sfx/triple.ogg");
-    this.load.audio("tetra", "assets/audio/sfx/tetra.wav");
-    this.load.audio("tSpin", "assets/audio/sfx/tspin.ogg");
-    this.load.audio("allClear", "assets/audio/sfx/all_clear.ogg");
-    this.load.audio("hold", "assets/audio/sfx/hold.ogg");
-    this.load.audio("move", "assets/audio/sfx/move.ogg");
-    this.load.audio("softDrop", "assets/audio/sfx/soft-drop.wav");
+    this.load.audio("rotatekick", "assets/audio/sfx/rotatekick.wav");
+    this.load.audio("tSpin", "assets/audio/sfx/tspin.wav");
+    this.load.audio("win", "assets/audio/sfx/win.ogg");
     this.load.audio("countdownTick", "assets/audio/sfx/countdown-tick.wav");
     this.load.audio("countdownGo", "assets/audio/sfx/countdown-go.wav");
+    this.load.audio("move", "assets/audio/sfx/move.wav");
+    this.load.audio("hold", "assets/audio/sfx/hold.wav");
+    // this.load.audio("softDrop", "assets/audio/sfx/softdrop.wav");
 
     // Loading images
     this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
@@ -289,8 +287,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image("tspin_double", "assets/gfx/sprites/tspin-double.png");
     this.load.image("tspin_triple", "assets/gfx/sprites/tspin-triple.png");
     // Loading videos
-    //this.load.video("sakuraGarden", "assets/mov/sakura_garden.mp4");
-    this.load.video("sakuraGarden", "assets/mov/bubbles.mp4");
+    this.load.video("bubbles", "assets/mov/bubbles.mp4");
   }
 
   private createPauseOverlay(): void {
@@ -359,7 +356,7 @@ export class GameScene extends Phaser.Scene {
       this.tripleImage
     );
     this.pcCallout = new PcCallout(this, this.pcImage);
-    this.backgroundVideo = this.add.video(0, 0, "sakuraGarden");
+    this.backgroundVideo = this.add.video(0, 0, "bubbles");
     const scaleX = this.scale.width / this.backgroundVideo.width;
     const scaleY = this.scale.height / this.backgroundVideo.height;
     const scale = Math.max(scaleX, scaleY);
@@ -418,19 +415,13 @@ export class GameScene extends Phaser.Scene {
     this.rotateSound = AudioBus.AddSceneAudio(this, "rotateSound");
     this.lockSound = AudioBus.AddSceneAudio(this, "lockSound");
     this.rotateKickSound = AudioBus.AddSceneAudio(this, "rotatekick");
-    this.doubleClearSound = AudioBus.AddSceneAudio(this, "double");
-    this.tripleClearSound = AudioBus.AddSceneAudio(this, "triple");
-    this.quadClearSound = AudioBus.AddSceneAudio(this, "tetra");
+    this.quadClearSound = AudioBus.AddSceneAudio(this, "quad");
     this.tSpinSound = AudioBus.AddSceneAudio(this, "tSpin");
-    this.allClearSound = AudioBus.AddSceneAudio(this, "allClear");
+    this.pcSound = AudioBus.AddSceneAudio(this, "pc");
     this.holdSound = AudioBus.AddSceneAudio(this, "hold");
     this.moveSound = AudioBus.AddSceneAudio(this, "move");
-    this.softDropSound = AudioBus.AddSceneAudio(this, "softDrop").on(
-      "finish",
-      () => {
-        AudioBus.PlaySfx(this, "softDrop");
-      }
-    );
+    // this.softDropSound = AudioBus.AddSceneAudio(this, "softDrop");
+    AudioBus.AddSceneAudio(this, "win");
 
     this.particleManager = this.add
       .particles(0, 0, "sparkle", {
@@ -866,6 +857,8 @@ export class GameScene extends Phaser.Scene {
       const cellsToFall = this.SDF * (delta / 1000);
       let remainingFall = cellsToFall;
       let softDropCells = 0;
+      // if (!(this.softDropSound.totalDuration < 0.5))
+      //   AudioBus.PlaySfx(this, "softDrop", { loop: true });
 
       while (remainingFall > 0) {
         if (!this.checkCollision(0, 1, this.currentShape)) {
@@ -889,6 +882,8 @@ export class GameScene extends Phaser.Scene {
       }
 
       this.updatePiecePosition();
+    } else {
+      // this.softDropSound.stop();
     }
   }
 
@@ -1475,15 +1470,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     // classic clear sounds
-    if (cleared === 2) AudioBus.PlaySfx(this, "double");
-    if (cleared === 3) AudioBus.PlaySfx(this, "triple");
-    if (cleared === 4) AudioBus.PlaySfx(this, "tetra");
+    if (cleared === 4) AudioBus.PlaySfx(this, "quad");
 
     // all clear
     if (
       this.grid.every((row) => row.every((c) => c === GameScene.emptyGridValue))
     ) {
-      AudioBus.PlaySfx(this, "allClear");
+      AudioBus.PlaySfx(this, "pc");
     }
 
     // Combo sound
@@ -1587,6 +1580,7 @@ export class GameScene extends Phaser.Scene {
       linesCleared: this.linesCleared,
     };
     this.gameOver = true;
+    AudioBus.PlaySfx(this, "win");
     this.scene.start("VictoryScene", sceneData);
   }
 
