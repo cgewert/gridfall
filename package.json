@@ -1,6 +1,6 @@
 {
   "name": "gridfall",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A game about blocks falling into a grid.",
   "main": "main.js",
   "private": "true",
@@ -32,6 +32,7 @@
     "vitest": "4.0.16",
     "webpack": "5.104.1",
     "webpack-cli": "6.0.1",
-    "webpack-dev-server": "5.2.2"
+    "webpack-dev-server": "5.2.2",
+    "workbox-webpack-plugin": "^7.4.0"
   }
 }

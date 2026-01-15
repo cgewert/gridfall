@@ -1,20 +1,22 @@
   Release 1.0.0: (Target Date: 2026-01-04):
-    ☐ Finalize Callouts (priorities and visual design)
-    ☐ Finish all translations @started(26-01-10 15:49)
-    ☐ Add all assets and replace placeholder assets
-    ☐ Publish on itch.io
+    ✔ Finalize Callouts (priorities and visual design) @done(26-01-15 22:01)
+    ✔ Finish all translations @started(26-01-10 15:49) @done(26-01-15 22:01) @lasted(5d6h12m8s)
+    ✔ Add all assets and replace placeholder assets @done(26-01-15 22:01)
+    ✔ Publish on itch.io @done(26-01-15 22:01)
 
+  Release 1.0.1:
+    ✔ Fix game controls interference with browser @done(26-01-15 22:57)
+    ☐ build Standalone download version @started(26-01-15 23:02)
+
+  Release 1.0.2:
+    ☐ Fix T-Spin Triple detection detecting T-Spin double
+    
   Bugs: 
     ☐ Fix bug were text inputs have different width (all decorators shall have same width as the widest one)
-    ☐ Localized Input labels seem to only load on initialization, changing language does not update them
-    ☐ Help screen text overflows the screen in some languages (e.g., french)
-    ☐ Fix bugs related to tweened animations (All tweens must reset corectly)
-    ☐ Fix bug where toggling the language does not update all texts immediately
 
   Later Releases:
     ☐ Implement 180° piece rotations (Toggleable)
     ☐ Multiplayer modes
-    ☐ Make game mode decorators configurable in settings
   Gather statistics for a played round:
     ☐ Add number of Quad cleared
     ☐ Add number of T-Spins performed

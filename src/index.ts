@@ -25,11 +25,12 @@ import { HelpScene } from "./scenes/help-scene";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
-  public static readonly GAME_VERSION = "0.0.1";
+  public static readonly GAME_VERSION = "1.0.0";
   public static readonly GAME_AUTHOR = "cgewert@gmail.com";
 
   private static GAME_CONFIG: Phaser.Types.Core.GameConfig = {
     title: Game.GAME_NAME,
+    parent: "canvas-container",
     type: PHASER.AUTO,
     scale: {
       mode: Phaser.Scale.FIT,
@@ -61,6 +62,24 @@ export class Game extends PHASER.Game {
     ],
     audio: {
       disableWebAudio: false,
+    },
+    input: {
+      keyboard: {
+        capture: [
+          Phaser.Input.Keyboard.KeyCodes.UP,
+          Phaser.Input.Keyboard.KeyCodes.DOWN,
+          Phaser.Input.Keyboard.KeyCodes.LEFT,
+          Phaser.Input.Keyboard.KeyCodes.RIGHT,
+          Phaser.Input.Keyboard.KeyCodes.SPACE,
+          //Phaser.Input.Keyboard.KeyCodes.SHIFT,
+          //Phaser.Input.Keyboard.KeyCodes.CTRL,
+          Phaser.Input.Keyboard.KeyCodes.Z,
+          Phaser.Input.Keyboard.KeyCodes.X,
+          Phaser.Input.Keyboard.KeyCodes.C,
+          Phaser.Input.Keyboard.KeyCodes.ESC,
+          Phaser.Input.Keyboard.KeyCodes.P,
+        ],
+      },
     },
   };
 
@@ -105,3 +124,8 @@ SkinSettings.init(game);
 SpawnSettings.load();
 SpawnSettings.init(game);
 HighscoreService.load();
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
