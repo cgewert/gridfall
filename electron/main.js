@@ -9,6 +9,9 @@ const createWindow = () => {
   win.loadFile('../dist/index.html')
 }
 
+// Disabling the default menu
+//app.applicationMenu = null; // HINT: Also disables F11 Fullscreen toggle
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
