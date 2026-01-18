@@ -1,7 +1,6 @@
 const path = require('path');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin');
 
 module.exports = (env, argv) => {
   const isProd = argv.mode === 'production';
@@ -46,16 +45,11 @@ module.exports = (env, argv) => {
       patterns: [
         {from: '*.css', context: 'src/'},
         {from: 'src/index.html'},
-        {from: 'src/app.webmanifest'},
         {from: 'assets/gfx', to: 'assets/gfx/'},
         {from: 'assets/audio', to: 'assets/audio/'},
         {from: 'assets/mov', to: 'assets/mov/'},
       ],
     }),
-    new WorkboxPlugin.GenerateSW({
-      clientsClaim: true,
-      skipWaiting: true
-    })
-  ],
-};
+  ]
+  };
 };

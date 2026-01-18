@@ -124,8 +124,3 @@ SkinSettings.init(game);
 SpawnSettings.load();
 SpawnSettings.init(game);
 HighscoreService.load();
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js");
-  });
-}
