@@ -1,7 +1,7 @@
 {
   "name": "gridfall",
-  "version": "1.0.2",
-  "description": "A game about blocks falling into a grid.",
+  "version": "1.0.3",
+  "description": "A game about stacking blocks inside a grid.",
   "main": "main.js",
   "private": "true",
   "engines": {
