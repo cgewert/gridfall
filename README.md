@@ -4,9 +4,10 @@
 
 A game about blocks falling into a grid.
 
-## Release 1.0.0
+## Release 1.0.2
 
 [Play now on itch.io: dextercoding.itch.io/gridfall](https://dextercoding.itch.io/gridfall)
+There is also a downloadable standalone version available!
 
 ## Developer
 

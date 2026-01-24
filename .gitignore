@@ -1,4 +1,73 @@
-node_modules
 src/**/*.js
 *.js.map
-dist
+
+# -------------------------
+# OS / Editor
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# Visual Studio / VS Code / JetBrains
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# -------------------------
+# Node / Webpack / Phaser
+# -------------------------
+node_modules/
+dist/
+build/
+.cache/
+.parcel-cache/
+.nyc_output/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.env
+.env.*
+
+
+# -------------------------
+# TypeScript
+# -------------------------
+*.tsbuildinfo
+
+# -------------------------
+# Electron
+# -------------------------
+out/
+release/
+*.asar
+
+# -------------------------
+# .NET / ASP.NET Core
+# -------------------------
+bin/
+obj/
+*.user
+*.lock.json
+
+# Rider / ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# NuGet packages 
+packages/
+
+# ASP.NET Core certs / secrets (avoid committing)
+**/secrets.json
+
+# -------------------------
+# Optional: local runtime data
+# -------------------------
+logs/
+replays/
