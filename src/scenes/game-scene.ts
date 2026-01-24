@@ -1,3 +1,4 @@
+import { GridfallNetClient } from "../net/GridfallNetClient";
 import { Soundtrack } from "../audio";
 import {
   PAUSE_OVERLAY_BACKGROUND_COLOR,
@@ -82,6 +83,7 @@ export class GameScene extends Phaser.Scene {
   private static readonly PAUSE_OVERLAY_DEPTH = 9999;
   private static readonly MAX_ARR_STEPS_PER_UPDATE = 20;
 
+  private net!: GridfallNetClient;
   private currentTetrimino!: Phaser.GameObjects.Group;
   private ghostGroup!: Phaser.GameObjects.Group;
   private previewGroup!: Phaser.GameObjects.Group;
@@ -275,11 +277,11 @@ export class GameScene extends Phaser.Scene {
     this.load.image("sparkle", "assets/gfx/particles/sparkle.png");
     this.load.image(
       "sakuraParticle",
-      "assets/gfx/particles/sakura_particle.png"
+      "assets/gfx/particles/sakura_particle.png",
     );
     this.load.image(
       "sakuraParticle2",
-      "assets/gfx/particles/sakura_particle2.png"
+      "assets/gfx/particles/sakura_particle2.png",
     );
     this.load.image("pc_image", "assets/gfx/sprites/pc.png");
     this.load.image("quad", "assets/gfx/sprites/quad.png");
@@ -300,7 +302,7 @@ export class GameScene extends Phaser.Scene {
       width,
       height,
       PAUSE_OVERLAY_BACKGROUND_COLOR,
-      PAUSE_OVERLAY_OPACITY
+      PAUSE_OVERLAY_OPACITY,
     );
 
     const title = this.add
@@ -321,9 +323,9 @@ export class GameScene extends Phaser.Scene {
           width / 2,
           height / 2 + i * 50,
           text,
-          PAUSE_OVERLAY_FONT_STYLE_ENTRIES
+          PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
         )
-        .setOrigin(0.5)
+        .setOrigin(0.5),
     );
     this.pauseContainer = this.add.container(0, 0, [bg, title, ...optionTexts]);
     this.pauseContainer
@@ -336,6 +338,15 @@ export class GameScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
+    this.createServerConnection();
+    // TODO: Connect to server when multiplayer is implemented
+    // this.net
+    //   .connect("ws://localhost:5155/ws")
+    //   .then(() => {
+    //     console.log("WS connected");
+    //     this.net.hello("SirKnumskull");
+    //   })
+    //   .catch((e) => console.error("WS connect failed", e));
     addSceneBackground(this);
     this.singleImage = this.add.image(0, 0, "tspin_single").setVisible(false);
     this.doubleImage = this.add.image(0, 0, "tspin_double").setVisible(false);
@@ -353,7 +364,7 @@ export class GameScene extends Phaser.Scene {
       this,
       this.singleImage,
       this.doubleImage,
-      this.tripleImage
+      this.tripleImage,
     );
     this.pcCallout = new PcCallout(this, this.pcImage);
     this.backgroundVideo = this.add.video(0, 0, "bubbles");
@@ -441,7 +452,7 @@ export class GameScene extends Phaser.Scene {
       .particles(0, 0, "sakuraParticle", {
         x: {
           onEmit: (
-            particle: Phaser.GameObjects.Particles.Particle | undefined
+            particle: Phaser.GameObjects.Particles.Particle | undefined,
           ) => {
             const x = Phaser.Math.Between(0, this.scale.width);
             return x;
@@ -452,7 +463,7 @@ export class GameScene extends Phaser.Scene {
             _particle: Phaser.GameObjects.Particles.Particle,
             _key,
             t,
-            value
+            value,
           ) => {
             return value + t * 10;
           },
@@ -515,7 +526,7 @@ export class GameScene extends Phaser.Scene {
     this.holdBox.setPosition(this.gridOffsetX - 120, this.gridOffsetY);
     this.nextPreview.setPosition(
       this.gridOffsetX + 30 + GameScene.totalGridWidth,
-      this.gridOffsetY + 6
+      this.gridOffsetY + 6,
     );
 
     this.countdown = new CountdownOverlay(this);
@@ -539,28 +550,83 @@ export class GameScene extends Phaser.Scene {
       this.gridOffsetY +
         GameScene.totalGridHeight -
         this.singleImage.height / 2 -
-        100
+        100,
     );
     this.doubleImage.setPosition(
       this.gridOffsetX - 150,
       this.gridOffsetY +
         GameScene.totalGridHeight -
         this.doubleImage.height / 2 -
-        100
+        100,
     );
     this.tripleImage.setPosition(
       this.gridOffsetX - 150,
       this.gridOffsetY +
         GameScene.totalGridHeight -
         this.tripleImage.height / 2 -
-        100
+        100,
     );
+  }
+
+  private createServerConnection() {
+    this.net = new GridfallNetClient();
+
+    // Server Events
+    this.net.on("welcome", (data) => {
+      console.log("WELCOME playerId:", data.playerId);
+
+      this.net.hello("gridfall-0.1.0");
+      this.net.createRoom("vs", "modern");
+    });
+
+    this.net.on("roomCreated", (data) => {
+      console.log("Room created:", data.roomId);
+    });
+
+    this.net.on("joinedRoom", (data) => {
+      console.log("Joined room:", data.roomId);
+    });
+
+    this.net.on("roomState", (data) => {
+      console.log("Room state:", data);
+    });
+
+    this.net.on("matchStart", (data) => {
+      console.log("Match start seed:", data.seed, "startAt:", data.startAt);
+      // TODO: Store Seed and synchronize start time
+      // Countdown based on startAt
+    });
+
+    this.net.on("garbage", (data) => {
+      console.log(
+        "Incoming garbage lines:",
+        data.lines,
+        "from:",
+        data.fromPlayerId,
+      );
+      // -> feed the garbage queue in the client
+      // e.g. this.garbageSystem.enqueue(data.lines)
+    });
+
+    this.net.on("matchEnd", (data) => {
+      console.log("Match end winner:", data.winnerId);
+      // -> UI: win/lose
+    });
+
+    this.net.on("error", (data) => {
+      console.warn("Server error:", data);
+    });
+
+    this.net.on("disconnected", () => {
+      console.warn("Disconnected from server");
+      // -> UI: reconnect button
+    });
   }
 
   private onSceneShutdown<GameScene>(
     SHUTDOWN: string,
     onSceneShutdown: any,
-    arg2: this
+    arg2: this,
   ) {
     console.log("Shutting down game scene: ", SHUTDOWN);
     this.music?.stop();
@@ -632,7 +698,7 @@ export class GameScene extends Phaser.Scene {
               shadow: true,
               fillColor: "#aaaaaa",
               useLinearBackground: true,
-            })
+            }),
           );
           this.linesText.Padding = 25;
           prevRef = lastRef;
@@ -651,7 +717,7 @@ export class GameScene extends Phaser.Scene {
               textStyle: TEXTBOX_DEFAULT_STYLE,
               fillColor: "#aaaaaa",
               useLinearBackground: true,
-            })
+            }),
           );
           this.scoreText.Padding = 25;
           prevRef = lastRef;
@@ -670,7 +736,7 @@ export class GameScene extends Phaser.Scene {
               textStyle: TEXTBOX_DEFAULT_STYLE,
               fillColor: "#aaaaaa",
               useLinearBackground: true,
-            })
+            }),
           );
           this.levelText.Padding = 25;
           prevRef = lastRef;
@@ -689,7 +755,7 @@ export class GameScene extends Phaser.Scene {
             this.gridOffsetX,
             this.gridOffsetY,
             GameScene.totalGridWidth,
-            GameScene.totalGridHeight
+            GameScene.totalGridHeight,
           );
           this.linesCountdown.setTextStyle({
             fontStyle: "700",
@@ -704,7 +770,7 @@ export class GameScene extends Phaser.Scene {
             "#000000",
             8,
             true,
-            true
+            true,
           );
           this.linesCountdown.fitIntoRect(gridRect, {
             padding: 8,
@@ -722,7 +788,7 @@ export class GameScene extends Phaser.Scene {
         // Placing the first decorator
         lastRef.setPosition(
           this.gridOffsetX + GameScene.gridWidth * GameScene.BLOCKSIZE + 32,
-          this.gridOffsetY + GameScene.BLOCKSIZE * 10 + 20
+          this.gridOffsetY + GameScene.BLOCKSIZE * 10 + 20,
         );
       } else {
         if (lastRef.UseAutoAlign) {
@@ -730,7 +796,7 @@ export class GameScene extends Phaser.Scene {
             lastRef,
             prevRef,
             0,
-            lastRef.ActualRenderHeight + 8
+            lastRef.ActualRenderHeight + 8,
           );
         }
       }
@@ -741,7 +807,7 @@ export class GameScene extends Phaser.Scene {
       this.comboText,
       lastRef!,
       0,
-      this.comboText.displayHeight + 25
+      this.comboText.displayHeight + 25,
     );
   }
 
@@ -767,6 +833,11 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-SPACE", () => {
       if (this.isPaused || this.phase !== RoundPhase.Running) return;
       this.holdTetrimino();
+    });
+
+    // TODO: At a later point setup multiplayer keybinds
+    this.input.keyboard?.on("keydown-Q", () => {
+      this.net?.ready();
     });
 
     this.input.keyboard.on("keydown-P", () => {
@@ -877,7 +948,7 @@ export class GameScene extends Phaser.Scene {
         const res = applyDropPoints(this.scoreState, "SOFT", softDropCells);
         this.scoreState = res.next;
         this.scoreText?.setText(
-          `${t("labels.score")}: ${this.scoreState.score}`
+          `${t("labels.score")}: ${this.scoreState.score}`,
         );
       }
 
@@ -1001,14 +1072,14 @@ export class GameScene extends Phaser.Scene {
     });
 
     const active = this.pauseContainer.getAt(
-      2 + this.pauseIndex
+      2 + this.pauseIndex,
     ) as Phaser.GameObjects.Text;
     active.setStyle(PAUSE_OVERLAY_FONT_STYLE_ACTIVE_ENTRY);
   }
 
   private initializeGrid(): void {
     this.grid = Array.from({ length: GameScene.gridHeight }, () =>
-      Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
+      Array(GameScene.gridWidth).fill(GameScene.emptyGridValue),
     );
   }
 
@@ -1023,7 +1094,7 @@ export class GameScene extends Phaser.Scene {
         GameScene.gridWidth * GameScene.BLOCKSIZE + this.borderThickness,
         GameScene.gridHeight * GameScene.BLOCKSIZE + this.borderThickness,
         0xffffff,
-        1.0
+        1.0,
       )
       .setOrigin(0);
     // Add grid cells
@@ -1175,19 +1246,19 @@ export class GameScene extends Phaser.Scene {
                   previewX + x * (GameScene.BLOCKSIZE / 2),
                   previewY + y * (GameScene.BLOCKSIZE / 2),
                   this._blockSkin,
-                  SHAPE_TO_BLOCKSKIN_FRAME[type]
+                  SHAPE_TO_BLOCKSKIN_FRAME[type],
                 )
                 .setOrigin(0)
                 .setDisplaySize(
                   GameScene.BLOCKSIZE / 2,
-                  GameScene.BLOCKSIZE / 2
+                  GameScene.BLOCKSIZE / 2,
                 );
 
               this.previewGroup.add(block);
             }
           });
         });
-      }
+      },
     );
     this.previewGroup.setDepth(500);
     this.nextPreview?.centerGroupInBox(this.previewGroup);
@@ -1286,7 +1357,7 @@ export class GameScene extends Phaser.Scene {
 
   private getNextRotation(
     from: Rotation,
-    direction: "left" | "right"
+    direction: "left" | "right",
   ): Rotation {
     if (direction === "right") return (from + 1) % 4;
     if (direction === "left") return (from + 3) % 4;
@@ -1317,7 +1388,7 @@ export class GameScene extends Phaser.Scene {
   private checkCollision(
     offsetX: number,
     offsetY: number,
-    shape = this.currentShape
+    shape = this.currentShape,
   ): boolean {
     const posX = this.currentPosition.x + offsetX;
     const posY = this.currentPosition.y + offsetY;
@@ -1434,7 +1505,8 @@ export class GameScene extends Phaser.Scene {
     // Show T-Spin / Spin callouts
     if (cleared > 0 && result.calloutText) {
       // Detect if a PC was cleared (Has precedence over Quad)
-      if (perfectClear) this.pcCallout?.show(null); // Detect Quad clear
+      if (perfectClear)
+        this.pcCallout?.show(null); // Detect Quad clear
       else if (cleared === 4) this.quadCallout?.show(null);
 
       // Detect if a T-spin was cleared
@@ -1505,7 +1577,7 @@ export class GameScene extends Phaser.Scene {
                 this.gridOffsetY +
                 this.borderThickness / 2,
               this._blockSkin,
-              this.getOriginalSkinFrame(cell)
+              this.getOriginalSkinFrame(cell),
             )
             .setOrigin(0)
             .setDisplaySize(GameScene.BLOCKSIZE, GameScene.BLOCKSIZE);
@@ -1539,7 +1611,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const perfectClear = this.grid.every((row) =>
-      row.every((cell) => cell === GameScene.emptyGridValue)
+      row.every((cell) => cell === GameScene.emptyGridValue),
     );
     return { cleared: clearedLinesCount, perfectClear };
   }
@@ -1597,7 +1669,7 @@ export class GameScene extends Phaser.Scene {
     LogGameAction(GameActions.LINE_CLEAR);
     this.grid.splice(lineIndex, 1);
     this.grid.unshift(
-      new Array(GameScene.gridWidth).fill(GameScene.emptyGridValue)
+      new Array(GameScene.gridWidth).fill(GameScene.emptyGridValue),
     );
   }
 
@@ -1644,7 +1716,7 @@ export class GameScene extends Phaser.Scene {
     this.doGameModeLogic();
 
     const resetRoundJustPressed = Phaser.Input.Keyboard.JustDown(
-      this.keys.resetRound
+      this.keys.resetRound,
     );
 
     if (resetRoundJustPressed) {
@@ -1694,7 +1766,7 @@ export class GameScene extends Phaser.Scene {
       this.updateFallSpeed();
       this.levelText?.setText(`${t("labels.level")}: ${this.level}`);
       console.log(
-        `Level up! New level: ${this.level} - Fall Speed: ${this.fallSpeed}`
+        `Level up! New level: ${this.level} - Fall Speed: ${this.fallSpeed}`,
       );
     }
   }
@@ -1710,7 +1782,7 @@ export class GameScene extends Phaser.Scene {
 
     const lockProgress = Math.min(
       1 - this.lockdown.TimeLeftMs / this.lockdown.LockDelayMs,
-      1.0
+      1.0,
     );
     const redValue = 255;
     const greenBlueValue = Math.floor(255 * (1 - lockProgress));

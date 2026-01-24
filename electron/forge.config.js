@@ -4,6 +4,10 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    icon: './assets/icons/win/gridfall',
+    extraResource: [
+      "../dist",
+    ]
   },
   rebuildConfig: {},
   makers: [
@@ -21,7 +25,11 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        options: {
+            icon: './assets/icons/win/gridfall'
+          }
+      },
     },
     {
       name: '@electron-forge/maker-rpm',

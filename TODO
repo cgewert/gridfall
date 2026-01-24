@@ -2,7 +2,12 @@
   Release 1.0.2:
     ☐ Fix T-Spin Triple detection detecting T-Spin double
     ☐ build Standalone download version based on electron app @started(26-01-15 23:02)
-    
+
+    Standalone version tasks:
+      ✔ Add icon to executable @done(26-01-19 21:09)
+      ☐ Deploy dist folder into resources of electron app
+      ✔ Customize App Menu @done(26-01-19 21:09)
+
   Bugs: 
     ☐ Fix bug were text inputs have different width (all decorators shall have same width as the widest one)
 
