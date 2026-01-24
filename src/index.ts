@@ -25,7 +25,6 @@ import { HelpScene } from "./scenes/help-scene";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
-  public static readonly GAME_VERSION = "1.0.0";
   public static readonly GAME_AUTHOR = "cgewert@gmail.com";
 
   private static GAME_CONFIG: Phaser.Types.Core.GameConfig = {
