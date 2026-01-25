@@ -44,7 +44,7 @@ const createWindow = () => {
       app.quit();
     });
   } else {
-    mainWindow.loadURL('http://localhost:3000').catch((err) => {
+    mainWindow.loadURL('http://localhost:9000').catch((err) => {
       dialog.showErrorBox("Gridfall - Dev server error", String(err));
       app.quit();
     });

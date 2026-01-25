@@ -1,5 +1,6 @@
 {
   "name": "gridfall",
+  "productName": "Gridfall",
   "version": "1.0.3",
   "description": "A game about stacking blocks inside a grid.",
   "main": "main.js",
@@ -7,7 +8,8 @@
     "start": "electron-forge start",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
-    "make": "npm --prefix .. run build:prod && electron-forge make --platform=win32 --platform=linux"
+    "make:linux": "npm --prefix .. run build:prod && electron-forge make --platform=linux",
+    "make:win": "npm --prefix .. run build:prod && electron-forge make --platform=win32"
   },
   "author": "Christian Gewert <cgewert@gmail.com>",
   "license": "ISC",
@@ -22,7 +24,5 @@
     "@electron/fuses": "^1.8.0",
     "electron": "^40.0.0"
   },
-  "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
-  }
+  "dependencies": {}
 }
