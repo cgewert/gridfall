@@ -7,21 +7,21 @@ module.exports = {
     icon: './assets/icons/win/gridfall',
     extraResource: [
       "../dist",
-    ]
+    ],
+    win32metadata: {
+      CompanyName: "Christian Gewert",
+      ProductName: "Gridfall",
+      FileDescription: "Gridfall",
+      OriginalFilename: "gridfall.exe",
+      InternalName: "gridfall",
+      LegalCopyright: "Licensed under CC BY-SA 4.0"
+    }
   },
   rebuildConfig: {},
   makers: [
     {
-      name: '@electron-forge/maker-squirrel',
-      config: {
-        name: 'gridfall',
-        author: 'Christian Gewert <cgewert@gmail.com>',
-        exe: 'gridfall.exe',
-      },
-    },
-    {
       name: '@electron-forge/maker-zip',
-      platforms: ['linux'],
+      platforms: ['linux', "win32"],
     },
   ],
   plugins: [
