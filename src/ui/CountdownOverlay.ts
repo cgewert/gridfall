@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { AudioSettings } from "../services/AudioSettings";
+import { DEFAULT_MENU_FONT } from "../fonts";
 
 // src/ui/CountdownOverlay.ts
 export type CountdownOptions = {
@@ -44,7 +45,7 @@ export class CountdownOverlay {
 
     this.text = scene.add
       .text(width / 2, height / 2, "", {
-        fontFamily: "Orbitron",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "128px",
         fontStyle: "bold",
         color: "#ffffff",

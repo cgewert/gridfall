@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { t } from "i18next";
 import pkg from "./../../../package.json";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 export class CreditsScene extends BaseMenuScene {
   public static readonly KEY = "CreditsScene";
@@ -24,8 +25,8 @@ export class CreditsScene extends BaseMenuScene {
       {
         fontSize: "26px",
         color: "#fff",
-        fontFamily: "Orbitron, sans-serif",
-      }
+        fontFamily: DEFAULT_MENU_FONT,
+      },
     );
     const authorText = this.add.text(
       0,
@@ -34,8 +35,8 @@ export class CreditsScene extends BaseMenuScene {
       {
         fontSize: "18px",
         color: "#fff",
-        fontFamily: "Orbitron, sans-serif",
-      }
+        fontFamily: DEFAULT_MENU_FONT,
+      },
     );
     const tetriminoArtText = this.add.text(
       this.modal.x - 150,
@@ -44,8 +45,8 @@ export class CreditsScene extends BaseMenuScene {
       {
         fontSize: "18px",
         color: "#fff",
-        fontFamily: "Orbitron, sans-serif",
-      }
+        fontFamily: DEFAULT_MENU_FONT,
+      },
     );
     const testingAndFeedbackText = this.add.text(
       this.modal.x - 150,
@@ -54,8 +55,8 @@ export class CreditsScene extends BaseMenuScene {
       {
         fontSize: "18px",
         color: "#fff",
-        fontFamily: "Orbitron, sans-serif",
-      }
+        fontFamily: DEFAULT_MENU_FONT,
+      },
     );
 
     this.texts.push(versionText);
@@ -69,7 +70,7 @@ export class CreditsScene extends BaseMenuScene {
       testingAndFeedbackText,
       tetriminoArtText,
       0,
-      20
+      20,
     );
   }
 

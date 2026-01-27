@@ -1,12 +1,7 @@
 import { Soundtrack } from "../audio";
-import {
-  addAnimatedGridBackground,
-  addScanlines,
-  addSceneBackground,
-} from "../effects/effects";
+import { addSceneBackground } from "../effects/effects";
 import * as Phaser from "phaser";
-import { DEFAULT_FONT_STYLE } from "../fonts";
-import { DEFAULT_COLORS } from "../colors";
+import { TITLE_FONT_STYLE } from "../fonts";
 import { t } from "i18next";
 import { AudioAnalysis, CreateAudioAnalysis } from "../game";
 import { AudioSettings } from "../services/AudioSettings";
@@ -22,8 +17,8 @@ export class TitleScene extends Phaser.Scene {
   private music!: Phaser.Sound.BaseSound;
   private audioAnalyser?: AudioAnalysis;
   private lastTime: number = 0;
-  private logo: Phaser.GameObjects.Image = null!;
-  private scan?: ReturnType<typeof addScanlines>;
+  private bgCross!: Phaser.GameObjects.Image;
+  private logo!: Phaser.GameObjects.Image;
 
   constructor() {
     super(TitleScene.CONFIG);
@@ -35,7 +30,6 @@ export class TitleScene extends Phaser.Scene {
   public preload() {
     this.load.audio("title_music", Soundtrack.title);
     this.load.image("title_logo", "assets/gfx/logos/Gridfall.png");
-    this.load.image("scanlines", "assets/gfx/sprites/scanlines.png");
     this.load.image("gridCell", "assets/gfx/sprites/grid_cell.png");
   }
 
@@ -43,18 +37,15 @@ export class TitleScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: unknown) {
+    const { width: w, height: h } = this.scale;
+    this._main = this.cameras.main;
+    this._main.setBackgroundColor("#000000");
+
     // If the audio settings were not saved previously, create a local storage entry.
     if (!AudioSettings.HasSettings) AudioSettings.save();
     // Load local storage settings as early as possible.
     AudioSettings.load();
-    console.debug(
-      "Loaded audio settings:",
-      `Music Volume: ${AudioSettings.MusicVolume}`,
-      `SFX Volume: ${AudioSettings.SfxVolume}`
-    );
 
-    this._main = this.cameras.main;
-    this._main.setBackgroundColor("#000000");
     this.sound.pauseOnBlur = false;
     if (this.sound.locked) {
       this.sound.once("unlocked", () => this.startAudioVis());
@@ -66,18 +57,65 @@ export class TitleScene extends Phaser.Scene {
     AudioBus.PlayMusic(this, "title_music");
 
     addSceneBackground(this);
-    const bgColor = Phaser.Display.Color.ValueToColor(
-      DEFAULT_COLORS[Phaser.Math.Between(0, 6)]
-    );
-    addAnimatedGridBackground(this, 40, 20, bgColor);
-    this.addTitle();
+
+    this.ensureCrossTexture("bgCrossTex", 420);
+    this.bgCross = this.add.image(-200, h * 0.45, "bgCrossTex");
+    this.bgCross.setAlpha(0.18);
+    this.bgCross.setDepth(0);
+    this.bgCross.setScale(1.0);
+    this.addTitle(w, h);
     this.addPressKeyPrompt();
-    this.addStartInputListener();
-    this.scan = addScanlines(this, {
-      alpha: 0.15,
-      blendMode: Phaser.BlendModes.MULTIPLY,
-      speedY: 0.55,
+    const logoTargetX = w * 0.5;
+    const logoTargetY = h * 0.32;
+    const crossTargetX = logoTargetX;
+    const crossTargetY = logoTargetY + this.logo.displayHeight * 0.05;
+    const chain1 = this.tweens.chain({
+      targets: this.bgCross,
+      persist: true,
+      tweens: [
+        {
+          x: crossTargetX,
+          y: crossTargetY,
+          angle: 20,
+          duration: 700,
+          ease: "Cubic.easeOut",
+        },
+        {
+          angle: 12,
+          duration: 220,
+          yoyo: true,
+          ease: "Sine.easeInOut",
+        },
+      ],
     });
+    const chain2 = this.tweens.chain({
+      targets: this.logo,
+      persist: true,
+      tweens: [
+        {
+          x: logoTargetX,
+          y: logoTargetY,
+          duration: 750,
+          ease: "Back.easeOut",
+        },
+        {
+          y: logoTargetY + 6,
+          duration: 180,
+          yoyo: true,
+          ease: "Sine.easeInOut",
+        },
+      ],
+    });
+    let pending = 2;
+    const done = () => {
+      pending--;
+      if (pending === 0) this.startCrossIdleMotion();
+    };
+    chain1.setCallback("onComplete", () => done());
+    chain2.setCallback("onComplete", () => done());
+    chain1.play();
+    chain2.play();
+    this.addStartInputListener();
   }
 
   private startAudioVis() {
@@ -85,7 +123,6 @@ export class TitleScene extends Phaser.Scene {
     if (analyser) this.audioAnalyser = analyser;
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.audioAnalyser?.disconnect && this.audioAnalyser.disconnect();
-      this.scan?.destroy();
     });
   }
 
@@ -106,29 +143,28 @@ export class TitleScene extends Phaser.Scene {
     }
   }
 
-  private addTitle(): void {
-    const logo = this.add.image(
-      this.scale.width / 2,
-      this.scale.height / 2 - 100,
-      "title_logo"
-    );
-    logo.setScale(0.5).setAlpha(0.9);
-    this.logo = logo;
+  private addTitle(w: number, h: number): void {
+    this.logo = this.add.image(w + 200, -120, "title_logo");
+    this.logo.setAlpha(0.9).setDepth(10);
+    const targetLogoWidth = w * 0.42;
+    const logoScale = targetLogoWidth / this.logo.width;
+    this.logo.setScale(logoScale);
   }
 
   private addPressKeyPrompt(): void {
     this.pressKeyText = this.add.text(
       this.scale.width / 2,
       this.scale.height / 2 + 120,
-      t("pressAnyKey"),
-      DEFAULT_FONT_STYLE
+      t("pressAnyKey").toLocaleUpperCase(),
+      TITLE_FONT_STYLE,
     );
-    this.pressKeyText.setOrigin(0.5);
+    this.pressKeyText.setOrigin(0.5).setAlpha(0);
 
     this.tweens.add({
       targets: this.pressKeyText,
-      alpha: 0,
+      alpha: 1,
       duration: 800,
+      hold: 1500,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
@@ -153,5 +189,83 @@ export class TitleScene extends Phaser.Scene {
     audioAnalysis.analyser.getByteFrequencyData(data);
 
     return data;
+  }
+
+  private startCrossIdleMotion() {
+    const { width: w, height: h } = this.scale;
+
+    // Sanfter Drift (Ellipse/Parallax-like)
+    // Variante A: Tween zwischen zwei Punkten (yoyo), wirkt sehr ruhig
+    this.tweens.add({
+      targets: this.bgCross,
+      // x: { from: this.bgCross.x, to: w * 0.54 },
+      // y: { from: this.bgCross.y, to: h * 0.48 },
+      x: `+=${w * 0.4}`, // ca. 4% der Breite nach rechts
+      y: `+=${h * 0.4}`, // ca. 8% der Höhe nach unten
+      duration: 10000,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
+    // Langsame Rotation
+    this.tweens.add({
+      targets: this.bgCross,
+      angle: "+=360",
+      duration: 16000,
+      repeat: -1,
+      ease: "Linear",
+    });
+  }
+
+  private ensureCrossTexture(key: string, size: number) {
+    if (this.textures.exists(key)) return;
+
+    const g = this.make.graphics({ x: 0, y: 0 });
+
+    const fill = 0x4aa3ff;
+    const alpha = 0.9;
+
+    const center = size / 2;
+    const armThickness = Math.floor(size * 0.14);
+    const armLength = Math.floor(size * 0.42);
+    const radius = Math.floor(armThickness * 0.45); // leicht abgerundete Ecken
+
+    g.fillStyle(fill, alpha);
+
+    g.fillRoundedRect(
+      center - armThickness / 2,
+      center - armLength,
+      armThickness,
+      armLength * 2,
+      radius,
+    );
+
+    g.fillRoundedRect(
+      center - armLength,
+      center - armThickness / 2,
+      armLength * 2,
+      armThickness,
+      radius,
+    );
+
+    g.lineStyle(Math.max(2, Math.floor(size * 0.01)), 0xffffff, 0.58);
+    g.strokeRoundedRect(
+      center - armThickness / 2,
+      center - armLength,
+      armThickness,
+      armLength * 2,
+      radius,
+    );
+    g.strokeRoundedRect(
+      center - armLength,
+      center - armThickness / 2,
+      armLength * 2,
+      armThickness,
+      radius,
+    );
+
+    g.generateTexture(key, size, size);
+    g.destroy();
   }
 }

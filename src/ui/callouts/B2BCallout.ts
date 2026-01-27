@@ -1,3 +1,4 @@
+import { DEFAULT_MENU_FONT } from "../../fonts";
 import { GameScene } from "../../scenes/game-scene";
 import { ClearCallout } from "./ClearCallout";
 
@@ -12,7 +13,7 @@ export class B2BCallout extends ClearCallout {
   protected override init(): void {
     this.text = this.scene.add
       .text(0, 0, B2BCallout.CALLOUT_TEXT, {
-        fontFamily: "Orbitron",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "36px",
         color: "#d822cc",
         stroke: "#000000",
@@ -28,7 +29,7 @@ export class B2BCallout extends ClearCallout {
           GameScene.totalGridWidth,
         this.scene.scale.height / 2 -
           this.text.height +
-          GameScene.totalGridHeight / 2
+          GameScene.totalGridHeight / 2,
       )
       .setDepth(1000);
   }

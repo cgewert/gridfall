@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { TextBox, TextBoxConfig } from "./TextBox";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 /**
  * Configuration options for TimerDisplay.
@@ -30,7 +31,7 @@ export class TimerDisplay extends TextBox {
       height: 50,
       text: "",
       textStyle: {
-        fontFamily: "Orbitron, monospace",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "32px",
         color: "#FFFFFF",
       },
@@ -40,13 +41,13 @@ export class TimerDisplay extends TextBox {
       autostart: true,
       prefix: "TIME: ",
       align: "left",
-    }
+    },
   ) {
     TimerDisplay._instance_counter++;
 
     console.debug(
       "TimerDisplay: Creating instance",
-      TimerDisplay._instance_counter
+      TimerDisplay._instance_counter,
     );
 
     super(scene, {

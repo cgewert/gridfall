@@ -2,6 +2,7 @@ import { t } from "i18next";
 import { InputSettings } from "../../services/InputSettings";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { AudioBus } from "../../services/AudioBus";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 type SliderRef = {
   name: "DAS" | "ARR" | "SDF";
@@ -67,7 +68,7 @@ export class ControlsMenuScene extends BaseMenuScene {
       (v) => `${v} ms`,
       5,
       0,
-      250
+      250,
     );
     this.addSlider(
       50,
@@ -77,7 +78,7 @@ export class ControlsMenuScene extends BaseMenuScene {
       (v) => `${v} ms`,
       1,
       0,
-      100
+      100,
     );
     this.addSlider(
       130,
@@ -87,7 +88,7 @@ export class ControlsMenuScene extends BaseMenuScene {
       (v) => `${v} ${t("units.cells/s")}`,
       1,
       1,
-      80
+      80,
     );
 
     this.setActiveSlider(0);
@@ -122,7 +123,7 @@ export class ControlsMenuScene extends BaseMenuScene {
     format: (v: number) => string,
     step: number,
     min: number,
-    max: number
+    max: number,
   ) {
     const w = 520;
     const h = 16;
@@ -132,7 +133,7 @@ export class ControlsMenuScene extends BaseMenuScene {
 
     const label = this.add
       .text(leftX, cy - 36, name, {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "22px",
         color: "#9ad",
       })
@@ -151,7 +152,7 @@ export class ControlsMenuScene extends BaseMenuScene {
 
     const value = this.add
       .text(leftX + w + 14, cy, format(get()), {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "18px",
         color: "#cfefff",
       })

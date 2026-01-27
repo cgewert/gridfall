@@ -2,6 +2,7 @@ import { AudioSettings } from "../../services/AudioSettings";
 import { AudioBus } from "../../services/AudioBus";
 import { BaseMenuScene } from "../../ui/menu/BaseMenu";
 import { t } from "i18next";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 type SliderRef = {
   name: "Music" | "SFX";
@@ -24,7 +25,7 @@ export class AudioMenuScene extends BaseMenuScene {
   private sliders: SliderRef[] = [];
   private activeIndex = 0;
   private labelStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-    fontFamily: "Orbitron, sans-serif",
+    fontFamily: DEFAULT_MENU_FONT,
     fontSize: "22px",
   };
 
@@ -41,7 +42,7 @@ export class AudioMenuScene extends BaseMenuScene {
       0,
       "Music",
       () => AudioSettings.MusicVolume,
-      (v) => this.setMusic(v)
+      (v) => this.setMusic(v),
     );
     // SFX volume slider
     this.createSlider(
@@ -49,14 +50,14 @@ export class AudioMenuScene extends BaseMenuScene {
       100,
       "SFX",
       () => AudioSettings.SfxVolume,
-      (v) => this.setSfx(v)
+      (v) => this.setSfx(v),
     );
 
     this.input.keyboard?.on("keydown-UP", () =>
-      this.setActiveSlider(this.activeIndex - 1)
+      this.setActiveSlider(this.activeIndex - 1),
     );
     this.input.keyboard?.on("keydown-DOWN", () =>
-      this.setActiveSlider(this.activeIndex + 1)
+      this.setActiveSlider(this.activeIndex + 1),
     );
     this.input.keyboard?.on("keydown-LEFT", () => this.nudgeActive(-0.05));
     this.input.keyboard?.on("keydown-RIGHT", () => this.nudgeActive(+0.05));
@@ -78,7 +79,7 @@ export class AudioMenuScene extends BaseMenuScene {
     cy: number,
     name: "Music" | "SFX",
     getter: () => number,
-    setter: (v: number) => void
+    setter: (v: number) => void,
   ) {
     const sliderWidth = 420;
     const sliderHeight = 16;
@@ -93,7 +94,7 @@ export class AudioMenuScene extends BaseMenuScene {
         Math.max(6, getter() * sliderWidth), // TODO: Rework for 100 % values
         sliderHeight,
         0x00ffff,
-        0.6
+        0.6,
       )
       .setOrigin(0, 0.5)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -106,7 +107,7 @@ export class AudioMenuScene extends BaseMenuScene {
           cx - sliderWidth / 2,
           cy,
           t("labels.sliderMusicVolume"),
-          this.labelStyle
+          this.labelStyle,
         )
         .setOrigin(0, 1);
       sliderLabel.setY(sliderLabel.y - sliderLabel.height);
@@ -118,7 +119,7 @@ export class AudioMenuScene extends BaseMenuScene {
           cx - sliderWidth / 2,
           cy,
           t("labels.sliderSfxVolume"),
-          this.labelStyle
+          this.labelStyle,
         )
         .setOrigin(0, 1);
       sliderLabel.setY(sliderLabel.y - sliderLabel.height);

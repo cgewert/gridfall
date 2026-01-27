@@ -1,11 +1,12 @@
 import * as Phaser from "phaser";
-import { addScanlines, addSceneBackground } from "../effects/effects";
+import { addSceneBackground } from "../effects/effects";
 import { HighscoreService } from "../services/HighScoreService";
 import { t } from "i18next";
 import { Locale } from "../services/LanguageSettings";
 import { SettingsEvents } from "../services/SettingsEvents";
 import { AudioBus } from "../services/AudioBus";
 import { FormatTime } from "../game";
+import { DEFAULT_MENU_FONT } from "../fonts";
 
 type StackOptions = {
   spacing?: number;
@@ -16,7 +17,7 @@ function layoutVerticalStack(
   items: Phaser.GameObjects.Container[],
   startX: number,
   startY: number,
-  opts?: StackOptions
+  opts?: StackOptions,
 ): void {
   const spacing = opts?.spacing ?? 18;
   //const align = opts?.align ?? "left";
@@ -46,25 +47,25 @@ export class HighscoreScene extends Phaser.Scene {
   private backText!: Phaser.GameObjects.Text;
 
   private titleStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-    fontFamily: "Orbitron, sans-serif",
+    fontFamily: "Noto Sans KR, sans-serif",
     fontSize: "48px",
     color: "#00ffff",
   };
 
   private labelStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-    fontFamily: "Orbitron, sans-serif",
+    fontFamily: "Noto Sans KR, sans-serif",
     fontSize: "28px",
     color: "#cfefff",
   };
 
   private valueStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-    fontFamily: "Orbitron, sans-serif",
+    fontFamily: "Noto Sans KR, sans-serif",
     fontSize: "22px",
     color: "#9ad",
   };
 
   private backStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-    fontFamily: "Orbitron, sans-serif",
+    fontFamily: "Noto Sans KR, sans-serif",
     fontSize: "28px",
     color: "#888888",
   };
@@ -85,7 +86,6 @@ export class HighscoreScene extends Phaser.Scene {
     const marginX = 80;
 
     addSceneBackground(this);
-    addScanlines(this, { alpha: 0.12, speedY: 1.2 });
 
     const root = this.add.container(0, 0);
     const sections: Phaser.GameObjects.Container[] = [];
@@ -148,14 +148,14 @@ export class HighscoreScene extends Phaser.Scene {
     this.game.events.on(
       SettingsEvents.LanguageChanged,
       this.onLanguageChange,
-      this
+      this,
     );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off(
         SettingsEvents.LanguageChanged,
         this.onLanguageChange,
-        this
+        this,
       );
     });
   }
@@ -178,7 +178,7 @@ export class HighscoreScene extends Phaser.Scene {
     // Header
     const title = this.add
       .text(padding, padding, t("highscores.INFINITY").toUpperCase(), {
-        fontFamily: "Orbitron, Arial, sans-serif",
+        fontFamily: "Noto Sans KR, Arial, sans-serif",
         fontSize: "26px",
         color: "#ffffff",
       })
@@ -188,7 +188,7 @@ export class HighscoreScene extends Phaser.Scene {
 
     const colY = padding + headerH;
     const colStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontFamily: "Orbitron, Arial, sans-serif",
+      fontFamily: "Noto Sans KR, Arial, sans-serif",
       fontSize: "18px",
       color: "#ffffff",
     };
@@ -216,7 +216,7 @@ export class HighscoreScene extends Phaser.Scene {
     const bestTimes = HighscoreService.getInfinityTimes(3);
 
     const valueStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontFamily: "Orbitron, Arial, sans-serif",
+      fontFamily: "Noto Sans KR, Arial, sans-serif",
       fontSize: "20px",
       color: "#ffffff",
     };
@@ -273,7 +273,7 @@ export class HighscoreScene extends Phaser.Scene {
     // Header
     const title = this.add
       .text(padding, padding, t("highscores.ASCENT").toUpperCase(), {
-        fontFamily: "Orbitron, Arial, sans-serif",
+        fontFamily: "Noto Sans KR, Arial, sans-serif",
         fontSize: "26px",
         color: "#ffffff",
       })
@@ -283,7 +283,7 @@ export class HighscoreScene extends Phaser.Scene {
 
     const colY = padding + headerH;
     const colStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontFamily: "Orbitron, Arial, sans-serif",
+      fontFamily: DEFAULT_MENU_FONT,
       fontSize: "18px",
       color: "#ffffff",
     };
@@ -311,7 +311,7 @@ export class HighscoreScene extends Phaser.Scene {
     const bestTimes = HighscoreService.getAscentTimes(3);
 
     const valueStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontFamily: "Orbitron, Arial, sans-serif",
+      fontFamily: DEFAULT_MENU_FONT,
       fontSize: "20px",
       color: "#ffffff",
     };
@@ -351,7 +351,7 @@ export class HighscoreScene extends Phaser.Scene {
   }
 
   private createRushSection(
-    sectionWidth: number
+    sectionWidth: number,
   ): Phaser.GameObjects.Container {
     const section = this.add.container(0, 0);
 
@@ -370,7 +370,7 @@ export class HighscoreScene extends Phaser.Scene {
     // Header
     const title = this.add
       .text(padding, padding, t("highscores.RUSH").toUpperCase(), {
-        fontFamily: "Orbitron, Arial, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "26px",
         color: "#ffffff",
       })
@@ -380,7 +380,7 @@ export class HighscoreScene extends Phaser.Scene {
 
     const colY = padding + headerH;
     const colStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontFamily: "Orbitron, Arial, sans-serif",
+      fontFamily: DEFAULT_MENU_FONT,
       fontSize: "18px",
       color: "#ffffff",
     };
@@ -404,7 +404,7 @@ export class HighscoreScene extends Phaser.Scene {
     const bestTimes = HighscoreService.getRushTimes(3);
 
     const valueStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontFamily: "Orbitron, Arial, sans-serif",
+      fontFamily: DEFAULT_MENU_FONT,
       fontSize: "20px",
       color: "#ffffff",
     };

@@ -46,8 +46,8 @@ module.exports = (env, argv) => {
         {from: '*.css', context: 'src/'},
         {from: 'src/index.html'},
         {from: 'assets/gfx', to: 'assets/gfx/'},
+        {from: 'assets/fonts', to: 'assets/fonts/'},
         {from: 'assets/audio', to: 'assets/audio/'},
-        {from: 'assets/mov', to: 'assets/mov/'},
       ],
     }),
   ]

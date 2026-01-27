@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { Locale } from "../../services/LanguageSettings";
 import { t } from "i18next";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 export type MenuAction = () => void;
 
@@ -62,7 +63,7 @@ export class MenuItem extends Phaser.GameObjects.Container {
 
     this.labelText = scene.add
       .text(0, 0, label, {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "28px",
         fontStyle: this.disabled ? "italic" : "normal",
         color: this.disabled ? "#888" : "#ffffff",
@@ -83,7 +84,7 @@ export class MenuItem extends Phaser.GameObjects.Container {
     this.setSize(520, 48);
     this.setInteractive(
       new Phaser.Geom.Rectangle(-260, -24, 520, 48),
-      Phaser.Geom.Rectangle.Contains
+      Phaser.Geom.Rectangle.Contains,
     );
 
     // TODO: Enable events later when mouse controls are supported

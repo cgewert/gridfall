@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { MenuItem, MenuItemConfig } from "./MenuItem";
 import { AudioBus } from "../../services/AudioBus";
 import { Locale } from "../../services/LanguageSettings";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 export interface MenuListConfig {
   x: number;
@@ -54,7 +55,7 @@ export class MenuList extends Phaser.GameObjects.Container {
       .setStrokeStyle(1, 0x00ffff, 0.65);
     this.descText = scene.add
       .text(12, 0, "", {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "16px",
         color: "#cfefff",
         wordWrap: { width: 380 - 24 },
@@ -82,7 +83,7 @@ export class MenuList extends Phaser.GameObjects.Container {
    */
   public selectItem(identifier: string) {
     const index = this.items.findIndex(
-      (item) => item.Identifier === identifier
+      (item) => item.Identifier === identifier,
     );
     if (index !== -1) {
       this.index = index;
@@ -133,7 +134,7 @@ export class MenuList extends Phaser.GameObjects.Container {
       if (this.descContainer) {
         this.descBox.setSize(
           this.descText ? this.descText.width + 50 : 260,
-          this.descText.height + 50
+          this.descText.height + 50,
         );
         this.repositionDescBox();
         this.descText.setWordWrapWidth(this.descBox.width - 24, true);

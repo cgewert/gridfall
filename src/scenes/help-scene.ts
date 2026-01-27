@@ -30,7 +30,7 @@ export class HelpScene extends Phaser.Scene {
     const title = i18next.t("labels.mnu-help");
     this.add
       .text(width / 2, height * 0.12, title, {
-        fontFamily: "Orbitron",
+        fontFamily: "Noto Sans KR",
         fontSize: "40px",
       })
       .setOrigin(0.5);
@@ -59,14 +59,14 @@ export class HelpScene extends Phaser.Scene {
 
       const actionText = this.add
         .text(leftX, y, action, {
-          fontFamily: "Orbitron",
+          fontFamily: "Noto Sans KR",
           fontSize: "22px",
         })
         .setOrigin(0, 0.5);
 
       const keyText = this.add
         .text(0, y, key, {
-          fontFamily: "Orbitron",
+          fontFamily: "Noto Sans KR",
           fontSize: "22px",
         })
         .setOrigin(1, 0.5);
@@ -86,7 +86,7 @@ export class HelpScene extends Phaser.Scene {
     const hint = "ESC: " + i18next.t("labels.back");
     this.add
       .text(width / 2, height * 0.9, hint, {
-        fontFamily: "Orbitron",
+        fontFamily: "Noto Sans KR",
         fontSize: "18px",
       })
       .setOrigin(0.5);

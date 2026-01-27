@@ -1,3 +1,5 @@
+import { DEFAULT_MENU_FONT } from "../fonts";
+
 export type AnimatableTextOptions = {
   x?: number;
   y?: number;
@@ -36,13 +38,13 @@ export class AnimatableText extends Phaser.GameObjects.Container {
         y: 0,
         text: opts.text ?? "",
         style: {
-          fontFamily: opts.fontFamily ?? "Orbitron, monospace",
+          fontFamily: opts.fontFamily ?? DEFAULT_MENU_FONT,
           fontSize: `${opts.fontSize ?? 32}px`,
           color: opts.color ?? "#FFFFFF",
           align: opts.align ?? "left",
         },
       },
-      false
+      false,
     );
 
     if (opts.stroke) {

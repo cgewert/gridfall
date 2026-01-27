@@ -18,6 +18,6 @@ export const DEFAULT_COLORS: Record<number, number> = {
   6: 0xffa500, // orange
 };
 
-export const ACCENT_COLOR = 0x101020; // This color will be the main accent color for the game, used in UI and backgrounds.
-export const PAUSE_OVERLAY_BACKGROUND_COLOR = 0x3333333; // This color will be the background color for the pause overlay.
+export const ACCENT_COLOR = 0xffffff; // This color will be the main accent color for the game, used in UI and backgrounds.
+export const PAUSE_OVERLAY_BACKGROUND_COLOR = 0x333333; // This color will be the background color for the pause overlay.
 export const PAUSE_OVERLAY_OPACITY = 0.65; // This value will be the opacity for the pause overlay.

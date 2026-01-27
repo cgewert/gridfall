@@ -6,6 +6,7 @@ import { SPAWN_LABEL } from "../../spawn";
 import { t } from "i18next";
 import { SkinId, SkinSettings } from "../../services/SkinSettings";
 import { SHAPE_TO_BLOCKSKIN_FRAME, SKIN_LABEL } from "../../shapes";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 export class GeneralMenuScene extends BaseMenuScene {
   public static readonly KEY = "GeneralMenuScene";
@@ -80,7 +81,7 @@ export class GeneralMenuScene extends BaseMenuScene {
       .setStrokeStyle(1, 0x00ffff, 0.6);
     this.textLanguage = this.add
       .text(cx - w / 2 + 14, y, t("labels.settings.language"), {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "22px",
         color: "#9ad",
       })
@@ -88,7 +89,7 @@ export class GeneralMenuScene extends BaseMenuScene {
     const val = LOCALE_NAME[LanguageSettings.get()];
     const value = this.add
       .text(cx + w / 2 - 14, y, val, {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "22px",
         color: "#cfefff",
       })
@@ -121,14 +122,14 @@ export class GeneralMenuScene extends BaseMenuScene {
       .setStrokeStyle(1, 0x00ffff, 0.6);
     const label = this.add
       .text(cx - w / 2 + 14, y, "Spawn System", {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "22px",
         color: "#9ad",
       })
       .setOrigin(0, 0.5);
     const value = this.add
       .text(cx + w / 2 - 14, y, SPAWN_LABEL[SpawnSettings.get()], {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "22px",
         color: "#cfefff",
       })
@@ -279,14 +280,14 @@ export class GeneralMenuScene extends BaseMenuScene {
       .setStrokeStyle(1, 0x00ffff, 0.6);
     const label = this.add
       .text(-w / 2 + 14, y, "Block Skin", {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "22px",
         color: "#9ad",
       })
       .setOrigin(0, 0.5);
     const value = this.add
       .text(w / 2 - 14, y, this.getSkinLabel(SkinSettings.get()), {
-        fontFamily: "Orbitron, sans-serif",
+        fontFamily: DEFAULT_MENU_FONT,
         fontSize: "22px",
         color: "#cfefff",
       })

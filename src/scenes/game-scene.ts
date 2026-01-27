@@ -19,10 +19,10 @@ import {
   DEFAULT_MENU_FONT,
   GUI_COMBO_STYLE,
   TEXTBOX_DEFAULT_STYLE,
-  MENU_TITLE_FONT_COLOR,
   PAUSE_OVERLAY_FONT_STYLE_ACTIVE_ENTRY,
   PAUSE_OVERLAY_FONT_STYLE_ENTRIES,
   DEFAULT_FONT_STYLE,
+  DEFAULT_FONT_COLOR,
 } from "../fonts";
 import { addSceneBackground } from "../effects/effects";
 import {
@@ -159,9 +159,6 @@ export class GameScene extends Phaser.Scene {
   private particleManager!: Phaser.GameObjects.Particles.ParticleEmitter;
   private music!: Phaser.Sound.BaseSound;
 
-  // Video
-  private backgroundVideo!: Phaser.GameObjects.Video;
-
   private gameOver: boolean = false;
   private static readonly previewSize = 5; // Size of the Tetrimino preview
   private static readonly emptyGridValue = "Q"; // Placeholder for empty grid cells
@@ -288,8 +285,6 @@ export class GameScene extends Phaser.Scene {
     this.load.image("tspin_single", "assets/gfx/sprites/tspin-single.png");
     this.load.image("tspin_double", "assets/gfx/sprites/tspin-double.png");
     this.load.image("tspin_triple", "assets/gfx/sprites/tspin-triple.png");
-    // Loading videos
-    this.load.video("bubbles", "assets/mov/bubbles.mp4");
   }
 
   private createPauseOverlay(): void {
@@ -309,7 +304,7 @@ export class GameScene extends Phaser.Scene {
       .text(width / 2, height / 2 - 80, t("pause.title"), {
         fontFamily: DEFAULT_MENU_FONT,
         fontSize: "32px",
-        color: MENU_TITLE_FONT_COLOR,
+        color: DEFAULT_FONT_COLOR,
         align: "center",
         stroke: "#000000",
         strokeThickness: 4,
@@ -367,17 +362,6 @@ export class GameScene extends Phaser.Scene {
       this.tripleImage,
     );
     this.pcCallout = new PcCallout(this, this.pcImage);
-    this.backgroundVideo = this.add.video(0, 0, "bubbles");
-    const scaleX = this.scale.width / this.backgroundVideo.width;
-    const scaleY = this.scale.height / this.backgroundVideo.height;
-    const scale = Math.max(scaleX, scaleY);
-    this.backgroundVideo.setSize(this.scale.width, this.scale.height);
-    this.backgroundVideo.setScale(scale);
-    this.backgroundVideo.play(true);
-    const videoElement = this.backgroundVideo.video;
-    if (videoElement) {
-      videoElement.playbackRate = 0.33;
-    }
     // Load input settings and apply them
     this.applyInputSettings();
     // Listen for live changes from the Controls menu
@@ -1034,7 +1018,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private pauseGame(): void {
-    this.backgroundVideo?.pause();
     this.timer?.pause();
     this.countdown.Paused = true;
     this.isPaused = true;
@@ -1050,7 +1033,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resumeGame(): void {
-    this.backgroundVideo?.resume();
     this.sakuraEmitter.killAll();
     this.sakuraEmitter.setActive(false);
     this.tweens.add({

@@ -1,7 +1,7 @@
 import * as Phaser from "phaser";
 import { GameSceneConfiguration } from "./game-scene";
 import { BlockSkin } from "../shapes";
-import { addScanlines, addSceneBackground } from "../effects/effects";
+import { addSceneBackground } from "../effects/effects";
 import {
   AudioAnalysis,
   CreateAudioAnalysis,
@@ -58,7 +58,7 @@ export class MainMenuScene extends Phaser.Scene {
       {
         frameWidth: 120,
         frameHeight: 120,
-      }
+      },
     );
 
     this.load.spritesheet("minos2", "assets/gfx/spritesheets/minos-2.png", {
@@ -92,7 +92,6 @@ export class MainMenuScene extends Phaser.Scene {
     AudioBus.AddSceneAudio(this, "menuLoop", { loop: true });
 
     addSceneBackground(this);
-    addScanlines(this, { alpha: 0.12, speedY: 1.2 });
 
     this.menu = new MenuList(this, {
       x: width / 2,
@@ -219,11 +218,11 @@ export class MainMenuScene extends Phaser.Scene {
             (sc as any).onLanguageChange(e.lang);
           }
         });
-      }
+      },
     );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
-      this.game.events.off(SettingsEvents.LanguageChanged)
+      this.game.events.off(SettingsEvents.LanguageChanged),
     );
   }
 
@@ -244,7 +243,7 @@ export class MainMenuScene extends Phaser.Scene {
     if (this.music && this.music.isPlaying) return; // already started
     this.music = AudioBus.PlayMusic(
       this,
-      "menuLoop"
+      "menuLoop",
     ) as Phaser.Sound.WebAudioSound;
     this.audioAnalyser = CreateAudioAnalysis(this);
 

@@ -1,9 +1,9 @@
 import Phaser from "phaser";
-import { addScanlines } from "../../effects/effects";
 import { Locale } from "../../services/LanguageSettings";
 import { t } from "i18next";
 import { SettingsEvents } from "../../services/SettingsEvents";
 import { MenuList } from "./MenuList";
+import { DEFAULT_MENU_FONT } from "../../fonts";
 
 export abstract class BaseMenuScene extends Phaser.Scene {
   protected parentKey?: string;
@@ -14,7 +14,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
   protected title!: string; // Set the translation identifier for the title here
   protected hint!: string; // Set the translation identifier for the hint here
   protected textStyleTitle: Phaser.Types.GameObjects.Text.TextStyle = {
-    fontFamily: "Orbitron, sans-serif",
+    fontFamily: DEFAULT_MENU_FONT,
     fontSize: "42px",
     stroke: "#00ffff",
     strokeThickness: 1,
@@ -59,9 +59,6 @@ export abstract class BaseMenuScene extends Phaser.Scene {
       .setOrigin(0)
       .setInteractive();
 
-    // Add scanline effect
-    addScanlines(this, { alpha: 0.12, speedY: 1.2 });
-
     // Create content panel
     this.modal = this.add.container(width * 0.5, height * 0.52);
     const panelWidth = 720;
@@ -75,7 +72,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
       -panelHeight / 2,
       panelWidth,
       panelHeight,
-      radius
+      radius,
     );
     g.lineStyle(2, 0x00ffff, 0.85);
     g.strokeRoundedRect(
@@ -83,7 +80,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
       -panelHeight / 2,
       panelWidth,
       panelHeight,
-      radius
+      radius,
     );
     this.modal.add(g);
 
@@ -150,7 +147,7 @@ export abstract class BaseMenuScene extends Phaser.Scene {
     this.events.off(
       SettingsEvents.LanguageChanged,
       this.onLanguageChange,
-      this
+      this,
     );
   }
 }

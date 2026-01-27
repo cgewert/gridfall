@@ -1,14 +1,22 @@
 // FONTS
-export const DEFAULT_MENU_FONT = "Orbitron, sans-serif";
+export const DEFAULT_MENU_FONT = "Noto Sans KR, sans-serif";
 
 export const DEFAULT_FONT_SIZE = 32;
 export const DEFAULT_FONT_COLOR = "#FFFFFF";
 export const MENU_ENTRY_FONT_COLOR = "#DAECC1"; // This color will be used for menu entries, it is a pastel green color.
-export const MENU_TITLE_FONT_COLOR = DEFAULT_FONT_COLOR;
 
 export const COLOR_BLACK = "#000000";
 
 // FONT STYLES
+export const TITLE_FONT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
+  fontFamily: DEFAULT_MENU_FONT,
+  fontSize: "48px",
+  fontStyle: "bolder",
+  color: DEFAULT_FONT_COLOR,
+  align: "center",
+  stroke: "#2eafef",
+  strokeThickness: 20,
+};
 
 export const DEFAULT_FONT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   fontFamily: DEFAULT_MENU_FONT,
@@ -70,7 +78,7 @@ export const TEXTBOX_DEFAULT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   strokeThickness: 2,
 };
 export const TIMER_DISPLAY_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
-  fontFamily: "Orbitron, monospace",
+  fontFamily: DEFAULT_MENU_FONT,
   fontSize: "32px",
   color: "#FFFFFF",
 };
