@@ -13,11 +13,13 @@ pipeline {
     stage('Install') {
       steps {
         sh 'npm ci'
+        sh 'npm ci --prefix electron'
       }
     }
     stage('Build') {
       steps {
-        sh 'npm run build'
+        sh 'npm run make:linux --prefix electron'
+        sh 'npm run make:win --prefix electron'
       }
     }
     stage('Version') {
