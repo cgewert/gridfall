@@ -338,15 +338,6 @@ export class GameScene extends Phaser.Scene {
    * @param data - Custom data provided to the scene.
    */
   public create(data: GameSceneConfiguration) {
-    this.createServerConnection();
-    // TODO: Connect to server when multiplayer is implemented
-    // this.net
-    //   .connect("ws://localhost:5155/ws")
-    //   .then(() => {
-    //     console.log("WS connected");
-    //     this.net.hello("SirKnumskull");
-    //   })
-    //   .catch((e) => console.error("WS connect failed", e));
     addSceneBackground(this);
     this.singleImage = this.add.image(0, 0, "tspin_single").setVisible(false);
     this.doubleImage = this.add.image(0, 0, "tspin_double").setVisible(false);
@@ -566,61 +557,6 @@ export class GameScene extends Phaser.Scene {
         this.tripleImage.height / 2 -
         100,
     );
-  }
-
-  private createServerConnection() {
-    this.net = new GridfallNetClient();
-
-    // Server Events
-    this.net.on("welcome", (data) => {
-      console.log("WELCOME playerId:", data.playerId);
-
-      this.net.hello("gridfall-0.1.0");
-      this.net.createRoom("vs", "modern");
-    });
-
-    this.net.on("roomCreated", (data) => {
-      console.log("Room created:", data.roomId);
-    });
-
-    this.net.on("joinedRoom", (data) => {
-      console.log("Joined room:", data.roomId);
-    });
-
-    this.net.on("roomState", (data) => {
-      console.log("Room state:", data);
-    });
-
-    this.net.on("matchStart", (data) => {
-      console.log("Match start seed:", data.seed, "startAt:", data.startAt);
-      // TODO: Store Seed and synchronize start time
-      // Countdown based on startAt
-    });
-
-    this.net.on("garbage", (data) => {
-      console.log(
-        "Incoming garbage lines:",
-        data.lines,
-        "from:",
-        data.fromPlayerId,
-      );
-      // -> feed the garbage queue in the client
-      // e.g. this.garbageSystem.enqueue(data.lines)
-    });
-
-    this.net.on("matchEnd", (data) => {
-      console.log("Match end winner:", data.winnerId);
-      // -> UI: win/lose
-    });
-
-    this.net.on("error", (data) => {
-      console.warn("Server error:", data);
-    });
-
-    this.net.on("disconnected", () => {
-      console.warn("Disconnected from server");
-      // -> UI: reconnect button
-    });
   }
 
   private onSceneShutdown<GameScene>(

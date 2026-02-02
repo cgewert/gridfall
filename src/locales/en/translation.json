@@ -1,4 +1,10 @@
 {
+  "multiplayer": {
+    "connecting": "Connecting...",
+    "connected": "Connected to server.",
+    "connectedPlayers": "Connected Players:",
+    "login": "Connect"
+  },
   "pressAnyKey": "Press any key",
   "gravity": "Gravity",
   "pause": {
@@ -28,7 +34,10 @@
     "sliderSfxVolume": "SFX Volume",
     "settings": {
       "language": "Language"
-    }
+    },
+    "username": "Username",
+    "password": "Password",
+    "login": "Login"
   },
   "hints": {
     "mnu-default": "↑↓ Navigation  ←→ Change  ⏎ Select  ESC Back",
@@ -44,7 +53,8 @@
   "descriptions": {
     "mnu-infinity": "Endless mode, only ends when you top out. How long can you survive?",
     "mnu-rush": "Clear 40 lines as fast as you can!",
-    "mnu-ascent": "Clear 150 lines! Gravity increases every 10 lines."
+    "mnu-ascent": "Clear 150 lines! Gravity increases every 10 lines.",
+    "mnu-multiplayer": "Play online with or against other player(s)."
   },
   "credits": {
     "programming": "Programming:",
@@ -79,5 +89,10 @@
   "units": {
     "ms": "ms",
     "cells/s": "cells/s"
+  },
+  "errors": {
+    "connectionLost": "Lost connection to the server.",
+    "failedToConnect": "Failed to connect to the server.",
+    "missingCredentials": "Please fill in all fields."
   }
 }

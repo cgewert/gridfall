@@ -1,4 +1,10 @@
 {
+  "multiplayer": {
+    "connecting": "Connexion en cours...",
+    "connected": "Connecté au serveur.",
+    "connectedPlayers": "Joueurs connectés:",
+    "login": "Se connecter"
+  },
   "pressAnyKey": "Appuyez sur n'importe quelle touche",
   "gravity": "Gravité",
   "pause": {
@@ -28,7 +34,10 @@
     "sliderSfxVolume": "Volume des effets sonores",
     "settings": {
       "language": "Langue"
-    }
+    },
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "login": "Se connecter"
   },
   "hints": {
     "mnu-default": "↑↓ Navigation  ←→ Changer  ⏎ Sélectionner  ESC Retour",
@@ -44,7 +53,8 @@
   "descriptions": {
     "mnu-infinity": "Mode infini, se termine uniquement lorsque vous atteignez le sommet. Combien de temps pouvez-vous survivre ?",
     "mnu-rush": "Effacez 40 lignes aussi vite que possible !",
-    "mnu-ascent": "Effacez 150 lignes ! La gravité augmente toutes les 10 lignes."
+    "mnu-ascent": "Effacez 150 lignes ! La gravité augmente toutes les 10 lignes.",
+    "mnu-multiplayer": "Jouez en ligne avec ou contre d'autres joueur(s)."
   },
   "credits": {
     "programming": "Programmation:",
@@ -79,5 +89,10 @@
   "units": {
     "ms": "ms",
     "cells/s": "cellules/s"
+  },
+  "errors": {
+    "connectionLost": "Connexion au serveur perdue.",
+    "failedToConnect": "Échec de la connexion au serveur.",
+    "missingCredentials": "Veuillez remplir tous les champs."
   }
 }

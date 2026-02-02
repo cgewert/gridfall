@@ -5,7 +5,6 @@ export type Locale = "de" | "en" | "fr" | "ja";
 
 export const SUPPORTED_LOCALES: Locale[] = ["de", "en", "fr", "ja"];
 
-// Für die Anzeige im Menü
 export const LOCALE_NAME: Record<Locale, string> = {
   de: "Deutsch",
   en: "English",

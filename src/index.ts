@@ -22,10 +22,14 @@ import { SpawnSettings } from "./services/SpawnSettings";
 import { HighscoreService } from "./services/HighScoreService";
 import { HighscoreScene } from "./scenes/high-score-scene";
 import { HelpScene } from "./scenes/help-scene";
+import { ConnectScene } from "./scenes/connect-scene";
+import { LobbyScene } from "./scenes/lobby-scene";
 
 export class Game extends PHASER.Game {
   public static readonly GAME_NAME = "GRIDFALL";
   public static readonly GAME_AUTHOR = "cgewert@gmail.com";
+  public static readonly SERVER_IP = "192.168.178.86";
+  public static readonly SERVER_PORT = 4215;
 
   private static GAME_CONFIG: Phaser.Types.Core.GameConfig = {
     title: Game.GAME_NAME,
@@ -58,6 +62,8 @@ export class Game extends PHASER.Game {
       ControlsMenuScene,
       HighscoreScene,
       HelpScene,
+      ConnectScene,
+      LobbyScene,
     ],
     audio: {
       disableWebAudio: false,
@@ -72,6 +78,7 @@ export class Game extends PHASER.Game {
           Phaser.Input.Keyboard.KeyCodes.SPACE,
           //Phaser.Input.Keyboard.KeyCodes.SHIFT,
           //Phaser.Input.Keyboard.KeyCodes.CTRL,
+          Phaser.Input.Keyboard.KeyCodes.R,
           Phaser.Input.Keyboard.KeyCodes.Z,
           Phaser.Input.Keyboard.KeyCodes.X,
           Phaser.Input.Keyboard.KeyCodes.C,

@@ -16,6 +16,10 @@ import { SettingsEvents } from "../services/SettingsEvents";
 import { Locale } from "../services/LanguageSettings";
 import { SpawnSettings } from "../services/SpawnSettings";
 import { SkinSettings } from "../services/SkinSettings";
+import { GridfallNetClient } from "../net/GridfallNetClient";
+import { OnlineBadge } from "../ui/OnlineBadge";
+import { ConnectScene } from "./connect-scene";
+import { Snackbar, SnackbarType } from "../ui/Snackbar";
 
 export class MainMenuScene extends Phaser.Scene {
   private static CONFIG: Phaser.Types.Scenes.SettingsConfig = {
@@ -29,6 +33,9 @@ export class MainMenuScene extends Phaser.Scene {
   private currentSpawn = "sevenBag";
   private blockSkin: BlockSkin = BlockSkin.MINOS2;
   private gameMode: GameMode = GameMode.INFINITY;
+  private net!: GridfallNetClient;
+  private onlineBadge?: OnlineBadge;
+  private snackbar?: Snackbar;
 
   constructor() {
     super(MainMenuScene.CONFIG);
@@ -58,7 +65,7 @@ export class MainMenuScene extends Phaser.Scene {
       {
         frameWidth: 120,
         frameHeight: 120,
-      }
+      },
     );
 
     this.load.spritesheet("minos2", "assets/gfx/spritesheets/minos-2.png", {
@@ -84,7 +91,7 @@ export class MainMenuScene extends Phaser.Scene {
   /*
    * @param data - Custom data provided to the scene.
    */
-  public create(data: GameSceneConfiguration) {
+  public create(_data: GameSceneConfiguration) {
     const { width, height } = this.scale;
 
     AudioBus.AddSceneAudio(this, "ui-move");
@@ -134,6 +141,14 @@ export class MainMenuScene extends Phaser.Scene {
             this.startGame({
               gameMode: GameMode.RUSH,
             }),
+        },
+        {
+          identifier: "mnu-multiplayer",
+          label: "Multiplayer",
+          translatable: false,
+          disabled: this.net && !this.net.IsConnected,
+          description: t("descriptions.mnu-multiplayer"),
+          action: () => this.scene.start("ConnectScene"),
         },
         {
           identifier: "mnu-highscores",
@@ -197,6 +212,33 @@ export class MainMenuScene extends Phaser.Scene {
       this.startAudio();
     }
 
+    if (this.registry.has("net")) {
+      this.net = this.registry.get("net") as GridfallNetClient;
+    } else {
+      this.net = new GridfallNetClient(this.game);
+      this.registry.set("net", this.net);
+    }
+
+    // Show server connection status
+    if (this.net.Player) {
+      // Server is connected, and player is logged in
+      this.showOnlineBadge();
+    } else {
+      // Player is not logged in, hide badge and connect to server if needed
+      this.hideOnlineBadge();
+      if (!this.net.IsConnected)
+        this.net
+          .connect(ConnectScene.getWsUrl())
+          .then(() => {
+            if (!this.net.IsConnected)
+              this.showSnackbar(t("errors.failedToConnect"), "error");
+            else this.showSnackbar(t("multiplayer.connected"), "success");
+          })
+          .catch(() => {
+            this.showSnackbar(t("errors.failedToConnect"), "error");
+          });
+    }
+
     // Register event handlers
     this.events.on(Phaser.Scenes.Events.CREATE, () => {
       this.menu.setPosition(width / 2, 200);
@@ -206,6 +248,7 @@ export class MainMenuScene extends Phaser.Scene {
       this.music?.stop();
       this.audioAnalyser?.disconnect && this.audioAnalyser.disconnect();
       this.tweens.killAll();
+      this.snackbar?.destroy();
     });
 
     // Handle language change events
@@ -219,16 +262,47 @@ export class MainMenuScene extends Phaser.Scene {
             (sc as any).onLanguageChange(e.lang);
           }
         });
-      }
+      },
     );
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
-      this.game.events.off(SettingsEvents.LanguageChanged)
+      this.game.events.off(SettingsEvents.LanguageChanged),
     );
   }
 
   private startGame(config: GameConfig) {
     this.scene.start("GameScene", config);
+  }
+
+  private ensureOnlineBadge(): OnlineBadge {
+    if (this.onlineBadge) return this.onlineBadge;
+
+    const margin = 24;
+    const x = this.scale.width - OnlineBadge.DEFAULT_WIDTH - margin;
+    const y = margin;
+    this.onlineBadge = new OnlineBadge(this, x, y, { depth: 1000 });
+    return this.onlineBadge;
+  }
+
+  private showOnlineBadge(): void {
+    const badge = this.ensureOnlineBadge();
+    const nickname = this.net?.Player?.nickname ?? "";
+    badge.setPlayerName(nickname);
+    badge.setVisible(true);
+  }
+
+  private hideOnlineBadge(): void {
+    if (this.onlineBadge) this.onlineBadge.setVisible(false);
+  }
+
+  private ensureSnackbar(): Snackbar {
+    if (this.snackbar) return this.snackbar;
+    this.snackbar = new Snackbar(this);
+    return this.snackbar;
+  }
+
+  private showSnackbar(message: string, type: SnackbarType = "info"): void {
+    this.ensureSnackbar().show(message, type, 3000);
   }
 
   /**
@@ -244,7 +318,7 @@ export class MainMenuScene extends Phaser.Scene {
     if (this.music && this.music.isPlaying) return; // already started
     this.music = AudioBus.PlayMusic(
       this,
-      "menuLoop"
+      "menuLoop",
     ) as Phaser.Sound.WebAudioSound;
     this.audioAnalyser = CreateAudioAnalysis(this);
 

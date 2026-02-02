@@ -1,3 +1,6 @@
+import { NetEvents } from "./NetEvents";
+import { Player, RoomInfo } from "./types";
+
 export type InMessage<T = any> = {
   type: string;
   data?: T;
@@ -8,44 +11,59 @@ export type OutMessage<T = any> = {
   data?: T;
 };
 
-type Handler = (data: any, raw: InMessage) => void;
-
 export class GridfallNetClient {
-  private ws?: WebSocket;
-  private handlers = new Map<string, Set<Handler>>();
+  private _ws?: WebSocket;
+  private _player: Player | null = null;
+  private _room: RoomInfo | null = null;
+  private _isConnected = false;
 
-  public playerId: string | null = null;
-  public roomId: string | null = null;
-  public isConnected = false;
+  public constructor(private _game: Phaser.Game) {}
+
+  public get IsConnected(): boolean {
+    return this._isConnected;
+  }
+
+  public get Player(): Player | null {
+    return this._player;
+  }
+
+  public get RoomId(): string | null {
+    return this._room?.roomId ?? null;
+  }
+
+  public get RoomPlayerList(): string[] {
+    return this._room?.currentPlayers ?? [];
+  }
 
   /** Connect to ws://host:port/ws (or wss://...) */
   connect(url: string): Promise<void> {
     if (
-      this.ws &&
-      (this.ws.readyState === WebSocket.OPEN ||
-        this.ws.readyState === WebSocket.CONNECTING)
+      this._ws &&
+      (this._ws.readyState === WebSocket.OPEN ||
+        this._ws.readyState === WebSocket.CONNECTING)
     ) {
       return Promise.resolve();
     }
 
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(url);
-      this.ws = ws;
+      this._ws = ws;
 
       ws.onopen = () => {
-        this.isConnected = true;
+        this._isConnected = true;
         resolve();
       };
 
       ws.onerror = (ev) => {
+        this._isConnected = false;
         reject(ev);
       };
 
       ws.onclose = () => {
-        this.isConnected = false;
-        this.playerId = null;
-        this.roomId = null;
-        this.emitLocal("disconnected", {});
+        this._isConnected = false;
+        this._player = null;
+        this._room = null;
+        this.emit("disconnected", {});
       };
 
       ws.onmessage = (evt) => {
@@ -55,43 +73,30 @@ export class GridfallNetClient {
   }
 
   disconnect(): void {
-    if (!this.ws) return;
+    if (!this._ws) return;
     try {
-      this.ws.close();
+      this._ws.close();
     } catch {
       /* ignore */
     }
-    this.ws = undefined;
-  }
-
-  /** Subscribe to server message type */
-  on(type: string, handler: Handler): () => void {
-    if (!this.handlers.has(type)) this.handlers.set(type, new Set());
-    this.handlers.get(type)!.add(handler);
-
-    return () => {
-      this.handlers.get(type)!.delete(handler);
-    };
+    this._ws = undefined;
+    this._isConnected = false;
   }
 
   /** Send typed message */
   send<T = any>(type: string, data?: T): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    if (!this._ws || this._ws.readyState !== WebSocket.OPEN) return;
 
     const msg: OutMessage<T> = { type, data };
-    this.ws.send(JSON.stringify(msg));
+    this._ws.send(JSON.stringify(msg));
   }
 
-  // Convenience API (matches the server skeleton)
   hello(clientVersion: string): void {
     this.send("hello", { clientVersion });
   }
 
-  createRoom(
-    mode: "vs" | string = "vs",
-    ruleset: "modern" | string = "modern",
-  ): void {
-    this.send("createRoom", { mode, ruleset });
+  createRoom(mode: "vs" | string = "vs", room: string): void {
+    this.send("createRoom", { mode, room });
   }
 
   joinRoom(roomId: string): void {
@@ -100,7 +105,7 @@ export class GridfallNetClient {
 
   leaveRoom(): void {
     this.send("leaveRoom", {});
-    this.roomId = null;
+    this._room = null;
   }
 
   ready(): void {
@@ -129,49 +134,88 @@ export class GridfallNetClient {
   // -------- internals --------
 
   private handleMessage(payload: any): void {
-    let msg: InMessage | null = null;
-
+    let msg: any;
     try {
-      msg = JSON.parse(payload) as InMessage;
+      msg = JSON.parse(payload);
     } catch {
+      console.error("[NetClient] Could not parse server message: ", payload);
       return;
     }
 
-    if (!msg || typeof msg.type !== "string") return;
+    if (!msg?.type) return;
 
-    // capture a few common states
-    if (msg.type === "welcome") {
-      this.playerId = msg.data?.playerId ?? null;
-    }
-    if (msg.type === "joinedRoom") {
-      this.roomId = msg.data?.roomId ?? null;
-    }
-    if (msg.type === "leftRoom") {
-      this.roomId = null;
-    }
-    if (msg.type === "roomCreated") {
-      // server sends roomCreated after createRoom; joinedRoom comes too
-      // keep roomId also from roomCreated for safety
-      this.roomId = msg.data?.roomId ?? this.roomId;
+    // Capture Server messages and emit phaser events for subscribers
+    switch (msg.type) {
+      case "welcome":
+        const welcomeMessage = msg.data ?? null;
+        console.debug(
+          `[NetClient] Server sends Welcome message: ${welcomeMessage}`,
+        );
+        break;
+      case "loginOk":
+        const loginOkData = msg.data as Player;
+        this._player = loginOkData;
+        if (this._player) {
+          console.debug(
+            `[NetClient] Login successful for player ${this._player.nickname}`,
+          );
+          this._isConnected = true;
+        } else {
+          console.warn(
+            `[NetClient] LoginOk received but no player data present.`,
+          );
+          this._isConnected = false;
+          this.emit("loginFailed", loginOkData);
+        }
+        break;
+      case "loginFailed":
+        const loginFailedData = msg.data;
+        console.debug(
+          `[NetClient] Login failed for player ${JSON.stringify(loginFailedData)}`,
+        );
+        this._isConnected = false;
+        break;
+      case "joinedRoom":
+        this._room = msg.data ?? null;
+        console.debug(
+          `[NetClient] Player ${this.Player} joined room ${this._room}`,
+        );
+        break;
+      case "leftRoom":
+        this._room = null;
+        console.debug(
+          `[NetClient] Player ${this.Player} left room ${this._room}`,
+        );
+        break;
+      case "roomState":
+        console.debug("[NetClient] Received roomstate for room: ", msg.data);
+        // TODO: Fill this.room with data
+        break;
+      case "roomCreated":
+        // server sends roomCreated after createRoom; joinedRoom comes too
+        // keep roomId also from roomCreated for safety
+        this._room = msg.data?.roomId ?? this._room;
+        console.debug(`[NetClient] Room created: ${this._room}`);
+        break;
+      case "disconnected":
+        console.debug(`[NetClient] Player ${this.Player} disconnected`);
+        break;
+      default:
+        console.warn("[NetClient] Unhandled server message type: ", msg.type);
+        break;
     }
 
-    this.emit(msg.type, msg.data, msg);
+    this.emit(msg.type, msg.data);
   }
 
-  private emit(type: string, data: any, raw: InMessage): void {
-    const set = this.handlers.get(type);
-    if (!set || set.size === 0) return;
-    for (const h of set) {
-      try {
-        h(data, raw);
-      } catch {
-        /* ignore handler errors */
-      }
-    }
-  }
-
-  private emitLocal(type: string, data: any): void {
-    // for local events like "disconnected"
-    this.emit(type, data, { type, data });
+  /**
+   *  Emit a network event to the Phaser event system.
+   * @param type A string specifying the message type.
+   * @param data Arbitrary data linked to the message.
+   */
+  private emit(type: string, data: any): void {
+    let eventName = NetEvents[type as keyof typeof NetEvents];
+    console.debug("[NetClient] emits Server message: ", eventName);
+    this._game.events.emit(eventName, data);
   }
 }

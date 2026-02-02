@@ -1,4 +1,10 @@
 {
+  "multiplayer": {
+    "connecting": "Verbinde...",
+    "connected": "Mit Server verbunden.",
+    "connectedPlayers": "Verbundene Spieler:",
+    "login": "Verbinden"
+  },
   "pressAnyKey": "Beliebige Taste drücken",
   "gravity": "Schwerkraft",
   "pause": {
@@ -28,7 +34,10 @@
     "sliderSfxVolume": "SFX-Lautstärke",
     "settings": {
       "language": "Sprache"
-    }
+    },
+    "username": "Benutzername",
+    "password": "Passwort",
+    "login": "Anmelden"
   },
   "hints": {
     "mnu-default": "↑↓ Navigation  ←→ Ändern  ⏎ Auswahl  ESC Zurück",
@@ -44,7 +53,8 @@
   "descriptions": {
     "mnu-infinity": "Endlosmodus, endet nur, wenn du oben ankommst. Wie lange kannst du überleben?",
     "mnu-rush": "Löse so schnell wie möglich 40 Linien auf.",
-    "mnu-ascent": "Löse 150 Linien auf! Die Schwerkraft erhöht sich alle 10 Linien."
+    "mnu-ascent": "Löse 150 Linien auf! Die Schwerkraft erhöht sich alle 10 Linien.",
+    "mnu-multiplayer": "Spiele online mit oder gegen andere Spieler(n)."
   },
   "credits": {
     "programming": "Programmierung:",
@@ -79,5 +89,10 @@
   "units": {
     "ms": "ms",
     "cells/s": "Zellen/s"
+  },
+  "errors": {
+    "connectionLost": "Verbindung zum Server verloren.",
+    "failedToConnect": "Verbindung zum Server fehlgeschlagen.",
+    "missingCredentials": "Bitte alle Felder ausfüllen."
   }
 }

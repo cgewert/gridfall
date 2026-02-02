@@ -1,4 +1,10 @@
 {
+  "multiplayer": {
+    "connecting": "接続中...",
+    "connected": "サーバーに接続されました。",
+    "connectedPlayers": "接続中のプレイヤー:",
+    "login": "接続"
+  },
   "pressAnyKey": "任意のキーを押してください",
   "gravity": "重力",
   "pause": {
@@ -28,7 +34,10 @@
     "sliderSfxVolume": "SFXの音量",
     "settings": {
       "language": "言語"
-    }
+    },
+    "username": "ユーザー名",
+    "password": "パスワード",
+    "login": "ログイン"
   },
   "hints": {
     "mnu-default": "↑↓ ナビゲーション  ←→ 変更  ⏎ 選択  ESC 戻る",
@@ -44,7 +53,8 @@
   "descriptions": {
     "mnu-infinity": "エンドレスモード、上に達するまで終了しません。どれだけ生き残れますか？",
     "mnu-rush": "40ラインをできるだけ早くクリアしよう！",
-    "mnu-ascent": "150ラインをクリアしよう！10ラインごとに重力が増加します。"
+    "mnu-ascent": "150ラインをクリアしよう！10ラインごとに重力が増加します。",
+    "mnu-multiplayer": "他のプレイヤーとオンラインで対戦または協力プレイができます。"
   },
   "credits": {
     "programming": "プログラミング:",
@@ -79,5 +89,10 @@
   "units": {
     "ms": "ms",
     "cells/s": "セル/秒"
+  },
+  "errors": {
+    "connectionLost": "サーバーとの接続が失われました。",
+    "failedToConnect": "サーバーへの接続に失敗しました。",
+    "missingCredentials": "すべてのフィールドに入力してください。"
   }
 }
